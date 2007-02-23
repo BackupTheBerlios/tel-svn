@@ -68,7 +68,7 @@ DEF_FILENAME = os.path.join(CONFIG_DIR, 'phonebook.csv')
 
 class Entry(object):
     """This class stores a single adress entry.
-    
+
     :ivar index: a unique index (like a db primary key)
     :ivar firstname:
     :ivar lastname:
@@ -80,7 +80,7 @@ class Entry(object):
     :ivar email:
     :ivar birthdate:
     """
-                  
+
     def __init__(self):
         # init all fields
         self.index = None
@@ -185,8 +185,8 @@ class PhoneBook:
     def __setitem__(self, key, value):
         if not isinstance(value, Entry):
             raise TypeError('PhoneBook only supports Entry objects')
-        if not key:
-            if value.index:
+        if key is None:
+            if value.index is None:
                 # use the index of entry
                 key = value.index
             else:
@@ -297,7 +297,7 @@ class PhoneBook:
 class CommandHelpFormatter(IndentedHelpFormatter):
     """A Formatter, which respects certain command properties
     like args"""
-    
+
     def format_option_strings(self, option):
         if option.command and not option.args == 'no':
             arg_name = option.metavar or 'indices'
@@ -308,7 +308,7 @@ class CommandHelpFormatter(IndentedHelpFormatter):
             return ', '.join(lopts)
         else:
             return IndentedHelpFormatter.format_option_strings(self, option)
-    
+
 
 class CommandOption(Option):
     """This class supported two additional option attributes
@@ -332,7 +332,7 @@ class CommandOption(Option):
                               "'no'", self)
 
     CHECK_METHODS = Option.CHECK_METHODS + [_check_attrs, _check_command]
-    
+
 
 make_option = CommandOption
 
@@ -340,7 +340,7 @@ make_option = CommandOption
 def print_license(*args, **kwargs):
     print __license__
     sys.exit()
-        
+
 
 def print_copyright(*args, **kwargs):
     print __license__.splitlines()[0]
@@ -392,7 +392,7 @@ class ConsoleEntryEditor:
         ('email', _('eMail: '), _('You entered an invalid eMail address'
                                   '...')),
         ('birthdate', _('Date of birth: '), None)]
-         
+
     def verify_phone_number(self, number):
         return bool(self.phone_number_pattern.match(number))
 
@@ -419,18 +419,18 @@ class ConsoleEntryEditor:
             return self.verify_postal_code(value)
         else:
             return True
-        
+
     try:
         # force raising a NameError if readline isn't present
         readline
-        
+
         def _input_hook(self):
             """displays the current value in the input line"""
             if self.edited_entry:
                 val = getattr(self.edited_entry, self.current_field)
                 readline.insert_text(val)
                 readline.redisplay()
-        
+
         # an edit method with readline support
         def edit(self, entry=None):
             """Edits the specified `entry`. If `entry` is None, a new entry
@@ -443,7 +443,7 @@ class ConsoleEntryEditor:
                 print _('Creating a new entry...\n'
                         'Please fill the following fields. To leave a '
                         'field empty, just press ENTER without entering '
-                        'something.')    
+                        'something.')
             else:
                 self.edited_entry = entry
                 print _('Editing entry %r\n'
@@ -461,7 +461,7 @@ class ConsoleEntryEditor:
             # remove input hook
             readline.set_pre_input_hook(None)
             return entry
-        
+
     except NameError:
         # the non-readline version
         def edit(self, entry=None):
@@ -475,7 +475,7 @@ class ConsoleEntryEditor:
                 print _('Creating a new entry...\n'
                         'Please fill the following fields. To leave a '
                         'field empty, just press ENTER without entering '
-                        'something.')    
+                        'something.')
             else:
                 print _('Editing entry %r\n'
                         'Please fill the following fields.\n'
@@ -492,7 +492,7 @@ class ConsoleEntryEditor:
                     resp = raw_input(msg).strip()
                 setattr(entry, field[0], resp)
             return entry
-            
+
 
 class ConsoleIFace:
     """Provides a console interface to Tel"""
@@ -557,7 +557,7 @@ class ConsoleIFace:
         editor = ConsoleEntryEditor()
         entry = editor.edit(entry)
         self.phonebook.add(entry)
-        self.phonebook.save()    
+        self.phonebook.save()
 
     # UTILITIES
 
@@ -679,7 +679,7 @@ class ConsoleIFace:
     def _cmd_show(self, options, *args):
         """Show a single entry"""
         if args:
-            entries = self.parse_indices(*args)            
+            entries = self.parse_indices(*args)
         else:
             entries = self.phonebook
         self.print_long_list(entries)
@@ -721,7 +721,7 @@ class ConsoleIFace:
             if resp.lower() == 'y':
                 self.phonebook.remove(entry)
         self.phonebook.save()
-        
+
     ## COMMAND SUPPORT FUNCTIONS
 
     def _get_cmd_function(self, arg):
@@ -737,7 +737,7 @@ class ConsoleIFace:
     # OPTION PARSING
 
     usage = '%prog [global options] command [arguments]'
-             
+
     description = _('Tel is a little address book program for your '
                     'terminal.')
 
@@ -817,14 +817,14 @@ class ConsoleIFace:
 
         if not hasattr(options, 'command'):
             parser.error(_('Please specify a command'))
-        
+
         if options.args == 'required' and not args:
             msg = _('The command %s need arguments')
             parser.error(msg % options.command)
         elif options.args == 'no' and args:
             msg = _('The command %s doesn\'t take any arguments')
             parser.error(msg % options.command)
-        
+
         # get the command function
         options.command_function = self._get_cmd_function(options.command)
         return (options, args)
@@ -837,7 +837,7 @@ class ConsoleIFace:
             options.command_function(options, *args)
         except KeyboardInterrupt:
             sys.exit(_('Dying peacefully ...'))
-    
+
 
 if __name__ == '__main__':
     ConsoleIFace().start()
