@@ -22,17 +22,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE."""
 
-__version__ = '0.1.4.2'
+__version__ = '0.1.5-pre1'
 
 __authors__ = ['Sebastian Wiesner <basti.wiesner@gmx.net>']
 
 import os
 import sys
 import csv
-import gettext
 import itertools
 import shutil
 import re
+import textwrap
+import gettext
 _ = gettext.gettext
 
 try:
@@ -47,7 +48,7 @@ from optparse import (Option, OptionError, OptionParser, OptionValueError,
 # some ideas
 # FIXME: add --force option to suppress warnings and confirmation requests
 # TODO: implement encryption
-# TODO: search could support regular expressions
+# TODO: search could support case-insensitive searching
 # TODO: show and table should accept an argument, which specifies the
 #       fields to show
 # TODO: search command should accept an argument, which specifies the
@@ -56,7 +57,8 @@ from optparse import (Option, OptionError, OptionParser, OptionValueError,
 #       fields should be printed
 # TODO: mark fields, which matched the search pattern
 # TODO: support sorting for list, show and table commands
-# TODO: import more file formats
+# TODO: import more file formats (mainly vcard)
+# TODO: export to mutt?
 
 # The directory, where tel stores its config
 CONFIG_DIR = os.path.expanduser(os.path.join('~', '.tel'))
@@ -65,10 +67,14 @@ if not os.path.exists(CONFIG_DIR):
 # the default phonebook
 DEF_FILENAME = os.path.join(CONFIG_DIR, 'phonebook.csv')
 
+# PHONEBOOK CLASSES
 
 class Entry(object):
     """This class stores a single adress entry.
 
+    :cvar translations: Maps fieldnames to user-readable translations
+    :cvar default_order: A list of all field names in the default order in
+    which they should be saved or printed
     :ivar index: a unique index (like a db primary key)
     :ivar firstname:
     :ivar lastname:
@@ -81,6 +87,25 @@ class Entry(object):
     :ivar birthdate:
     """
 
+    # mainly important for table printing and field specifications
+    translations = {
+        'index': _('Index'),
+        'firstname': _('First name'),
+        'lastname': _('Last name'),
+        'street': _('Street'),
+        'postcode': _('Postal code'),
+        'town': _('Town'),
+        'mobile': _('Mobile'),
+        'phone': _('Phone'),
+        'email': _('eMail'),
+        'birthdate': _('Date of birth')
+        }
+
+    default_order = ['index', 'firstname', 'lastname', 'street', 'postcode',
+                     'town', 'mobile', 'phone', 'email', 'birthdate']
+
+    # FIXME: convert attributes into properties to support type checking
+                  
     def __init__(self):
         # init all fields
         self.index = None
@@ -96,6 +121,8 @@ class Entry(object):
 
     def __str__(self):
         # return a pretty representation
+        # NOTE: this doesn't respect field translations to allow pretty
+        # printing without being bound to field limits
         msg = _('Index:          %(index)s\n'
                 'Name:           %(firstname)s %(lastname)s\n'
                 'Street:         %(street)s\n'
@@ -135,30 +162,29 @@ class Entry(object):
 
     def __repr__(self):
         # return a short representation
-        return '[%(index)s] %(firstname)s %(lastname)s' % self.__dict__
+        return _('[%(index)s] %(firstname)s %(lastname)s') % self.__dict__
 
     def _fields(self):
         """:returns: A list of all fields"""
-        fields = filter(lambda field: not field.startswith('_'),
-                        self.__dict__.keys())
-        return sorted(fields)
+        return self.default_order
 
-    def matches(self, pattern):
+    def matches(self, pattern, regexp=False, fields=None):
         """Note, that this method does *not* support regular expressions.
         :param pattern: A string pattern, which is searched in this entry
+        :param regexp: Whether pattern is a regular expression or not
+        :param fields: the fields to search in
         :returns: True, if any field in this entry matches `pattern`,
         False otherwise"""
-        for field in self._fields():
-            # very simple searching algo ;)
-            if field == 'index':
-                try:
-                    if int(pattern) == self.index:
-                        return True
-                except ValueError:
-                    # ignore, if pattern is no integer
-                    pass
-            elif pattern in getattr(self, field):
-                return True
+        if fields is None:
+            fields = self._fields()
+        for field in fields:
+            if regexp:
+                if bool(re.search(pattern, str(getattr(self, field)))):
+                    return True
+            else:
+                # very simple searching algo ;)
+                if pattern in str(getattr(self, field)):
+                    return True
         return False
 
 
@@ -185,8 +211,8 @@ class PhoneBook:
     def __setitem__(self, key, value):
         if not isinstance(value, Entry):
             raise TypeError('PhoneBook only supports Entry objects')
-        if key is None:
-            if value.index is None:
+        if not key:
+            if value.index is not None:
                 # use the index of entry
                 key = value.index
             else:
@@ -245,7 +271,7 @@ class PhoneBook:
     def save(self):
         """Writes the phone book back to the file"""
         stream = open(self.path, 'wb')
-        fields = Entry()._fields()
+        fields = Entry.default_order
         # write a head line containing the names of the fields
         writer = csv.writer(stream)
         writer.writerow(fields)
@@ -274,12 +300,12 @@ class PhoneBook:
             index = entry
         del self[index]
 
-    def search(self, pattern):
-        """Searchs the phone book for `pattern`.
-        :returns: A list of entries which match the pattern"""
+    def search(self, *args):
+        """Searchs the phone book.
+        `*args` are the same as for Entry.matches"""
         found_entries = []
         for entry in self:
-            if entry.matches(pattern):
+            if entry.matches(*args):
                 found_entries.append(entry)
         return found_entries
 
@@ -293,12 +319,42 @@ class PhoneBook:
         # TODO implement
         raise NotImplementedError('Encryption is not yet supported')
 
+# EXTENDING OptionParser
 
 class CommandHelpFormatter(IndentedHelpFormatter):
     """A Formatter, which respects certain command properties
     like args"""
 
+    def format_option(self, option):
+        """Extend option formatting to include formatting of supported
+        options."""
+        result = IndentedHelpFormatter.format_option(self, option)
+        if option.command and option.options:
+            result = [result]
+            options = ', '.join(option.options)
+            msg = _('Supported options: ')
+            # build the complete options string and wrap it to width of the
+            # help
+            opt_str = ''.join([msg, options])
+            lines = textwrap.wrap(opt_str, self.help_width)
+            # this is the first line, which includes the message
+            first_line = lines[0]
+            first_indent = self.help_position
+            # reindent and wrap the remaining option lines
+            opt_str = ' '.join(lines[1:])
+            options_indent = first_indent + len(msg)
+            lines = textwrap.wrap(opt_str, self.help_width - len(msg))
+
+            result.append('%*s%s\n' % (first_indent, '', first_line))
+            result.extend(['%*s%s\n' % (options_indent, '', line) for line
+                           in lines])
+            result = ''.join(result)
+        return result
+        
+    
     def format_option_strings(self, option):
+        """Extend option string formatting to support arguments for
+        commands"""
         if option.command and not option.args == 'no':
             arg_name = option.metavar or 'indices'
             if option.args == 'optional':
@@ -308,21 +364,23 @@ class CommandHelpFormatter(IndentedHelpFormatter):
             return ', '.join(lopts)
         else:
             return IndentedHelpFormatter.format_option_strings(self, option)
-
+    
 
 class CommandOption(Option):
     """This class supported two additional option attributes
 
     :ivar args: Whether this option need arguments. Must be one of
     'optional', 'required', 'no'. Defaults to 'optional'
+    :ivar options: A list of all options, this command supports. Only used
+    for help formatting.
     :command: whether this option is a command. Important for help
     formatting"""
-    ATTRS = Option.ATTRS + ['args']
+    ATTRS = Option.ATTRS + ['args', 'options']
 
     def _check_command(self):
         # command options can be identified by checking the callback
         # keyword
-        self.command = self.callback == _cb_cmd_opt
+        self.command = self.callback == cb_cmd_opt
 
     def _check_attrs(self):
         if self.args is None:
@@ -331,28 +389,74 @@ class CommandOption(Option):
             raise OptionError("args must be on of: 'optional', 'required', "
                               "'no'", self)
 
-    CHECK_METHODS = Option.CHECK_METHODS + [_check_attrs, _check_command]
-
+    def _check_options(self):
+        if self.options and not isinstance(self.options, (tuple, list)):
+            raise OptionError('options must be a tuple or a list', self)
+            
+    CHECK_METHODS = Option.CHECK_METHODS + [_check_attrs, _check_command,
+                                            _check_options]
+    
 
 make_option = CommandOption
 
+# OPTION CALLBACKS
 
-def print_license(*args, **kwargs):
+def cb_print_license(*args, **kwargs):
+    """Print license information"""
     print __license__
     sys.exit()
+        
 
-
-def print_copyright(*args, **kwargs):
+def cb_print_copyright(*args, **kwargs):
+    """Print copyright information"""
     print __license__.splitlines()[0]
     sys.exit()
 
-
-def print_authors(*args, **kwargs):
+def cb_print_authors(*args, **kwargs):
+    """Print author information"""
     print '\n'.join(__authors__)
     sys.exit()
 
+def cb_print_fields(*args, **kwargs):
+    """Print fields"""
+    items = [(Entry.translations[field], field) for field in
+             Entry.default_order]
+    headline = [_('Field'), _('Internal name')]
+    column_widths = map(len, headline)
+    for item in items:
+        column_widths = map(max, map(len, item), column_widths)
+    headline = ' - '.join(map(str.center, headline, column_widths))
+    separator = '-' * (column_widths[0] + column_widths[1] + 5)
+    print ' ', headline
+    print '', separator
+    for item in items:
+        item = ' - '.join(map(str.ljust, item, column_widths))
+        print ' ', item
+    sys.exit()
 
-def _cb_cmd_opt(option, opt_str, value, parser):
+def cb_output(option, opt_str, value, parser):
+    """Parses the --output option into a list of fields"""
+    warning_msg = _('WARNING: There is no field %s')
+    items = map(str.strip, value.split(','))
+    fields_to_show = []
+    fields_to_hide = []
+    for item in items:
+        name = item.lstrip('-')
+        if name not in Entry.default_order:
+            print >> sys.stderr, warning_msg % name
+            continue
+        if item.startswith('-'):
+            fields_to_hide.append(name)
+        else:
+            fields_to_show.append(name)
+    if not fields_to_show:
+        fields_to_show = Entry.default_order[:]
+    for field in fields_to_hide:
+        if field in fields_to_show:
+            fields_to_show.remove(field)
+    parser.values.output = fields_to_show
+
+def cb_cmd_opt(option, opt_str, value, parser):
     """OptionParser callback, which handles command options"""
     if hasattr(parser.values, 'command'):
         # raise error if two exlusive commands appeared
@@ -376,23 +480,18 @@ class ConsoleEntryEditor:
     # this is a list of all editable fields
     # each item is a tuple containing the following values:
     #  'fieldname' as used by the Entry class
-    #  'prompt' the prompt string
     #  'error_message' when verification failed
     fields = [
-        ('firstname', _('First name: '), None),
-        ('lastname', _('Last name: '), None),
-        ('street', _('Street and street number: '), None),
-        ('postcode', _('Postal code: '), _('You entered an invalid postal '
-                                           'code...')),
-        ('town', _('Town: '), None),
-        ('mobile', _('Mobile: '), _('You entered an invalid mobile number'
-                                    '...')),
-        ('phone', _('Phone: '), _('You entered an invalid phone number'
-                                  '...')),
-        ('email', _('eMail: '), _('You entered an invalid eMail address'
-                                  '...')),
-        ('birthdate', _('Date of birth: '), None)]
-
+        ('firstname', None),
+        ('lastname', None),
+        ('street', None),
+        ('postcode', _('You entered an invalid postal code!')),
+        ('town', None),
+        ('mobile', _('You entered an invalid mobile number!')),
+        ('phone', _('You entered an invalid phone number!')),
+        ('email', _('You entered an invalid eMail address!')),
+        ('birthdate', None)]
+         
     def verify_phone_number(self, number):
         return bool(self.phone_number_pattern.match(number))
 
@@ -419,18 +518,18 @@ class ConsoleEntryEditor:
             return self.verify_postal_code(value)
         else:
             return True
-
+        
     try:
         # force raising a NameError if readline isn't present
         readline
-
+        
         def _input_hook(self):
             """displays the current value in the input line"""
             if self.edited_entry:
                 val = getattr(self.edited_entry, self.current_field)
                 readline.insert_text(val)
                 readline.redisplay()
-
+        
         # an edit method with readline support
         def edit(self, entry=None):
             """Edits the specified `entry`. If `entry` is None, a new entry
@@ -443,7 +542,7 @@ class ConsoleEntryEditor:
                 print _('Creating a new entry...\n'
                         'Please fill the following fields. To leave a '
                         'field empty, just press ENTER without entering '
-                        'something.')
+                        'something.')    
             else:
                 self.edited_entry = entry
                 print _('Editing entry %r\n'
@@ -453,15 +552,16 @@ class ConsoleEntryEditor:
             print
             for field in self.fields:
                 self.current_field = field[0]
-                resp = raw_input(field[1]).strip()
+                prompt = '%s: ' % Entry.translations[field[0]]
+                resp = raw_input(prompt).strip()
                 while not self.verify_field(field[0], resp):
-                    print field[2]
-                    resp = raw_input(field[1]).strip()
+                    print field[1]
+                    resp = raw_input(prompt).strip()
                 setattr(entry, field[0], resp)
             # remove input hook
             readline.set_pre_input_hook(None)
             return entry
-
+        
     except NameError:
         # the non-readline version
         def edit(self, entry=None):
@@ -475,7 +575,7 @@ class ConsoleEntryEditor:
                 print _('Creating a new entry...\n'
                         'Please fill the following fields. To leave a '
                         'field empty, just press ENTER without entering '
-                        'something.')
+                        'something.')    
             else:
                 print _('Editing entry %r\n'
                         'Please fill the following fields.\n'
@@ -485,14 +585,15 @@ class ConsoleEntryEditor:
             print
             for field in self.fields:
                 self.current_field = field[0]
-                msg = '%s[%s] ' % (field[1], getattr(entry, field[0]))
-                resp = raw_input(msg).strip()
+                prompt = '%s: [%s] ' % (Entry.translations[field[0]],
+                                        getattr(entry, field[0]))
+                resp = raw_input(prompt).strip()
                 while not self.verify_field(field[0], resp):
-                    print field[2]
-                    resp = raw_input(msg).strip()
+                    print field[1]
+                    resp = raw_input(prompt).strip()
                 setattr(entry, field[0], resp)
             return entry
-
+            
 
 class ConsoleIFace:
     """Provides a console interface to Tel"""
@@ -516,39 +617,34 @@ class ConsoleIFace:
             print '-'*20
             print entry
 
-    def print_table(self, entries):
+    def print_table(self, entries, fields):
         """Prints `entries` as a table. If `entries` is None, all entries
         are printed"""
         print
         # this is the head line of the table
-        headline = (_('Index'), _('First name'), _('Last name'),
-                    _('Street'), _('Postal code'), _('Town'), _('Mobile'),
-                    _('Phone'), _('eMail'), _('Date of birth'))
+        headline = map(Entry.translations.get, fields)
         table_body = []
         # widths for each column
         column_widths = map(len, headline)
         for entry in entries:
             # create and add a row for each entry
-            row = [str(entry.index), entry.firstname, entry.lastname,
-                   entry.street, entry.postcode, entry.town, entry.mobile,
-                   entry.phone, entry.email, entry.birthdate]
+            row = [str(getattr(entry, field)) for field in fields]
             table_body.append(row)
             # correct the column width, if an entry is too width
             column_widths = map(max, map(len, row), column_widths)
         # print the headline
         headline = map(str.center, headline, column_widths)
-        headline = ' | '.join(headline)
+        headline = '| %s |' % ' | '.join(headline)
         separator = map(lambda width: '-' * (width+2), column_widths)
-        separator = '|'.join(separator)
+        separator = '|%s|' % '|'.join(separator)
         # this adds two spaces add begin and and of the row
-        print '', headline, ''
+        print headline
         print separator
         for row in table_body:
-            # format and print every row
-            row[0] = row[0].rjust(column_widths[0])
-            row[1:] = map(str.ljust, row[1:], column_widths[1:])
-            row = ' | '.join(row)
-            print '', row, ''
+            # FIXME: index should be right-justified
+            row = map(str.ljust, row, column_widths)
+            row = '| %s |' % ' | '.join(row)
+            print row
 
     def edit_entry(self, entry=None):
         """Allows interactive editing of entries. If `entry` is None, a new
@@ -557,7 +653,7 @@ class ConsoleIFace:
         editor = ConsoleEntryEditor()
         entry = editor.edit(entry)
         self.phonebook.add(entry)
-        self.phonebook.save()
+        self.phonebook.save()    
 
     # UTILITIES
 
@@ -666,7 +762,7 @@ class ConsoleIFace:
             entries = self.parse_indices(*args)
         else:
             entries = self.phonebook
-        self.print_table(entries)
+        self.print_table(entries, options.output)
 
     def _cmd_list(self, options, *args):
         """Print a list"""
@@ -679,7 +775,7 @@ class ConsoleIFace:
     def _cmd_show(self, options, *args):
         """Show a single entry"""
         if args:
-            entries = self.parse_indices(*args)
+            entries = self.parse_indices(*args)            
         else:
             entries = self.phonebook
         self.print_long_list(entries)
@@ -688,7 +784,7 @@ class ConsoleIFace:
         """Search the phone book for `pattern`"""
         found = []
         for pattern in args:
-            entries = self.phonebook.search(pattern)
+            entries = self.phonebook.search(pattern, options.regexp)
             # add all entries which aren't already in found. This avoids
             # printing entries twice, which are matched by more than one
             # pattern
@@ -721,7 +817,7 @@ class ConsoleIFace:
             if resp.lower() == 'y':
                 self.phonebook.remove(entry)
         self.phonebook.save()
-
+        
     ## COMMAND SUPPORT FUNCTIONS
 
     def _get_cmd_function(self, arg):
@@ -737,24 +833,31 @@ class ConsoleIFace:
     # OPTION PARSING
 
     usage = '%prog [global options] command [arguments]'
-
+             
     description = _('Tel is a little address book program for your '
                     'terminal.')
 
     defaults = {
-        'file': DEF_FILENAME
+        'file': DEF_FILENAME,
+        'output': Entry.default_order
         }
 
     parser_options = [
         make_option('--license', action='callback',
-                    callback=print_license,
+                    callback=cb_print_license,
                     help=_('show license information and exit')),
         make_option('--copyright', action='callback',
-                    callback=print_copyright,
+                    callback=cb_print_copyright,
                     help=_('show copyright information and exit')),
         make_option('--authors', action='callback',
-                    callback=print_authors,
-                    help=_('show author information and exit'))]
+                    callback=cb_print_authors,
+                    help=_('show author information and exit')),
+        make_option('--help-fields', action='callback',
+                    callback=cb_print_fields,
+                    help=_('print a list of all fields and exit. The '
+                           'internal name as printed by this options must '
+                           'be used, when specifying fields on command '
+                           'line.'))]
 
     global_options = [
         make_option('-f', '--file', action='store', dest='file',
@@ -762,34 +865,45 @@ class ConsoleIFace:
 
     command_options = [
         # command options
-        make_option('--list', action='callback', callback=_cb_cmd_opt,
+        make_option('--list', action='callback', callback=cb_cmd_opt,
                     help=_('print a short list of the specified entries')),
-        make_option('--table', action='callback', callback=_cb_cmd_opt,
-                    help=_('prints a tables with the specified entries.')),
-        make_option('--show', action='callback', callback=_cb_cmd_opt,
-                    help=_('shows the specified entries.')),
+        make_option('--table', action='callback', callback=cb_cmd_opt,
+                    help=_('prints a table with the specified entries.')),
+        make_option('--show', action='callback', callback=cb_cmd_opt,
+                    help=_('shows the specified entries.'),
+                    options=['--output']),
         make_option('--search', action='callback', args='required',
                     help=_('searches the phonebook for the specified '
-                           'patterns'), callback=_cb_cmd_opt,
-                    metavar='patterns'),
-        make_option('--create', action='callback', callback=_cb_cmd_opt,
+                           'patterns'), callback=cb_cmd_opt,
+                    metavar='patterns', options=['--regexp']),
+        make_option('--create', action='callback', callback=cb_cmd_opt,
                     help=_('creates the specified number of new entries'),
                     metavar='number'),
-        make_option('--edit', action='callback', callback=_cb_cmd_opt,
+        make_option('--edit', action='callback', callback=cb_cmd_opt,
                     help=_('edits the entries at the specified indices'),
                     args='required'),
         make_option('--remove', action='callback', args='required',
                     help=_('remove the entries at the specified indices'),
-                    callback=_cb_cmd_opt),
+                    callback=cb_cmd_opt),
         make_option('--export', action='callback', args='required',
                     help=_('export phone book to all specified locations'),
-                    callback=_cb_cmd_opt, metavar='targets'),
+                    callback=cb_cmd_opt, metavar='targets'),
         make_option('--import', action='callback', args='required',
                     help=_('import all specified phone books'),
-                    callback=_cb_cmd_opt, metavar='files')
-        ]
+                    callback=cb_cmd_opt, metavar='files')]
 
-    local_options = []
+    local_options = [
+        make_option('-r', '--regexp', action='store_true', dest='regexp',
+                    help=_('enable regular expressions. tel uses the '
+                           'Python-syntax. You can find an overview at the '
+                           'following URL: '
+                           'http://docs.python.org/lib/re-syntax.html')),
+        make_option('-o', '--output', action='callback', callback=cb_output,
+                    type='string', metavar='fields',
+                    help=_('specifies the fields to show. Takes a '
+                           'comma-separated list of internal names as '
+                           'printed by --help-fields. Fields prefixed '
+                           'with "-" are hidden.'))]
 
     def _parse_args(self):
         """Parses command line arguments"""
@@ -811,20 +925,24 @@ class ConsoleIFace:
         desc = _('These options are valid with every command')
         group = parser.add_option_group(_('Global options'), desc)
         group.add_options(self.global_options)
-
+        desc = _('These options are only supported by certain commands. If '
+                 'you use them with other commands, they are just ignored.')
+        group = parser.add_option_group(_('Special options'), desc)
+        group.add_options(self.local_options)
+            
         parser.set_defaults(**self.defaults)
         (options, args) = parser.parse_args()
 
         if not hasattr(options, 'command'):
             parser.error(_('Please specify a command'))
-
+        
         if options.args == 'required' and not args:
             msg = _('The command %s need arguments')
             parser.error(msg % options.command)
         elif options.args == 'no' and args:
             msg = _('The command %s doesn\'t take any arguments')
             parser.error(msg % options.command)
-
+        
         # get the command function
         options.command_function = self._get_cmd_function(options.command)
         return (options, args)
@@ -837,7 +955,7 @@ class ConsoleIFace:
             options.command_function(options, *args)
         except KeyboardInterrupt:
             sys.exit(_('Dying peacefully ...'))
-
+    
 
 if __name__ == '__main__':
     ConsoleIFace().start()
