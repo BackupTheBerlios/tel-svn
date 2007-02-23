@@ -22,7 +22,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 # Tel version
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 import os
 import sys
@@ -31,6 +31,12 @@ import inspect
 import gettext
 import itertools
 _ = gettext.gettext
+
+try:
+    # more comfortable line editing
+    import readline
+except ImportError:
+    pass
 
 from optparse import OptionParser
 
@@ -71,7 +77,7 @@ class Entry(object):
 
     def __str__(self):
         # return a pretty representation
-        msg = _('Index: %(index)i\n'
+        msg = _('Index: %(index)s\n'
                 'Name: %(firstname)s %(lastname)s\n'
                 'Street: %(street)s\n'
                 'Town: %(postcode)s %(town)s\n'
@@ -110,7 +116,7 @@ class Entry(object):
 
     def __repr__(self):
         # return a short representation
-        return '[%(index)i] -- %(lastname)s, %(firstname)s' % self.__dict__
+        return '[%(index)s] -- %(lastname)s, %(firstname)s' % self.__dict__
 
     def _fields(self):
         """:returns: A list of all fields"""
@@ -262,12 +268,12 @@ class PhoneBook:
     def decrypt(self):
         """Decrypts phonebook"""
         # TODO implement
-        pass
+        raise NotImplementedError('Encryption is not yet supported')
 
     def encrypt(self):
         """Encrypts phonebook"""
         # TODO implement
-        pass
+        raise NotImplementedError('Encryption is not yet supported')
 
 
 class ConsoleIFace:
@@ -306,6 +312,41 @@ class ConsoleIFace:
             print str(entry)
             print '-'*20
 
+    def print_table(self, entries=None):
+        """Prints `entries` as a table. If `entries` is None, all entries
+        are printed"""
+        if entries is None:
+            entries = self.phonebook
+        # this is the head line of the table
+        headline = (_('Index'), _('First name'), _('Last name'),
+                    _('Street'), _('Postal code'), _('Town'), _('Mobile'),
+                    _('Phone'), _('EMail'), _('Date of birth'))
+        table_body = []
+        # widths for each column
+        column_widths = map(len, headline)
+        for entry in entries:
+            # create and add a row for each entry
+            row = [str(entry.index), entry.firstname, entry.lastname,
+                   entry.street, entry.postcode, entry.town, entry.mobile,
+                   entry.phone, entry.email, entry.birthdate]
+            table_body.append(row)
+            # correct the column width, if an entry is too width
+            column_widths = map(max, map(len, row), column_widths)
+        # print the headline
+        headline = map(str.center, headline, column_widths)
+        headline = ' | '.join(headline)
+        separator = map(lambda width: '-' * (width+2), column_widths)
+        separator = '|'.join(separator)
+        # this adds two spaces add begin and and of the row
+        print '', headline, ''
+        print separator
+        for row in table_body:
+            # format and print every row
+            row[0] = row[0].rjust(column_widths[0])
+            row[1:] = map(str.ljust, row[1:], column_widths[1:])
+            row = ' | '.join(row)
+            print '', row, ''
+
     ## COMMANDS
 
     # All functions, that implement commands, start with the prefix '_cmd_'
@@ -326,21 +367,33 @@ class ConsoleIFace:
     #
     # Note: You should use gettext to support i18n for your documentation
 
+    def _cmd_table(self):
+        """Print a table"""
+        self.print_table()
+
     def _cmd_list(self):
+        """Print a short list"""
         self.print_short_list()
 
-    def _cmd_print(self):
+    def _cmd_list_detail(self):
+        """Show every single entry"""
         self.print_long_list()
 
     def _cmd_show(self, index):
-        print self.phonebook[int(index)]
+        """Show a single entry"""
+        try:
+            print self.phonebook[int(index)]
+        except KeyError:
+            sys.exit(_('There is no entry with the index %s') % index)
 
     def _cmd_search(self, pattern):
-        self.print_long_list(self.phonebook.search(pattern))
+        """Search the phone book for `pattern`"""
+        self.print_table(self.phonebook.search(pattern))
 
     def _cmd_create(self):
+        """Interactivly create a new entry"""
         entry = Entry()
-        print _('Please fill the following fields. To leave a field empty,'
+        print _('Please fill the following fields. To leave a field empty, '
                 'just press ENTER without entering something.')
         print
         entry.firstname = raw_input(_('First name: '))
@@ -356,19 +409,44 @@ class ConsoleIFace:
         self.phonebook.add(entry)
         self.phonebook.save()
 
+    def _cmd_remove(self, index):
+        del self.phonebook[int(index)]
+        self.phonebook.save()
+        
+    _cmd_remove.help = _('Removes the entry at INDEX')
     _cmd_list.help = _('Lists all entries in short format')
-    _cmd_print.help = _('Prints all entries in full detail')
+    _cmd_list_detail.help = _('Prints all entries in full detail')
     _cmd_show.help = _('Shows the entry at the specified INDEX. The index '
                        'is the same as printed by the list command')
     _cmd_search.help = _('Searches phone book for PATTERN and prints all '
                          'matching entries')
     _cmd_create.help = _('Creates a new entry')
+    _cmd_table.help = _('Show a nice table containing all entries of the '
+                        'phone book')
 
     ## COMMAND support functions
+
+    def _is_cmd_function(self, func):
+        name = None
+        if isinstance(func, basestring):
+            name = func
+        else:
+            name = func.__name__
+        return name.startswith('_cmd_')
+
+    def _get_cmd_name(self, func):
+        """Returns the command name for `func`"""
+        name = None
+        if isinstance(func, basestring):
+            name = func
+        else:
+            name = func.__name__
+        return name[5:].replace('_', '-')
 
     def _get_cmd_function(self, command):
         """Returns the function for `command`"""
         name = '_cmd_%s' % command
+        name = name.replace('-', '_')
         function = getattr(self, name)
         return function
 
@@ -390,15 +468,18 @@ class ConsoleIFace:
 
     def _get_cmd_help(self, command):
         """Returns the help for `command`"""
-        return self._get_cmd_function(command).help
+        try:
+            return self._get_cmd_function(command).help
+        except AttributeError:
+            return ''
 
     def _get_cmd_list(self):
         """Returns a list of all known commands"""
         # find all command functions
-        commands = filter(lambda element: element.startswith('_cmd_'),
+        commands = filter(self._is_cmd_function,
                           ConsoleIFace.__dict__.keys())
         # strip the prefix from command functions
-        return map(lambda element: element[5:], commands)
+        return map(self._get_cmd_name, commands)
 
     def _print_commands_help(self):
         """Prints a list of all available commands and their documentation"""
@@ -406,6 +487,8 @@ class ConsoleIFace:
         commands = self._get_cmd_list()
         commands = [(self._get_cmd_declaration(cmd),
                      self._get_cmd_help(cmd)) for cmd in commands]
+        # exclude commands, which don't have a help defined
+        commands = filter(lambda item: item[1], commands)
         maxlen = max([len(item[0]) for item in commands])
         for item in commands:
             print ' ', item[0].ljust(maxlen), ' ', item[1]
@@ -439,11 +522,13 @@ class ConsoleIFace:
             (options, command, args) = self._parse_args()
             self.phonebook = PhoneBook(options.file)
             try:
-                command = self._get_cmd_function(command)
+                function = self._get_cmd_function(command)
+                function(*args)
             except AttributeError:
                 sys.exit(_('Unknown command: %s') % command)
                 # run the command with all specified arguments
-            command(*args)
+            except TypeError:
+                sys.exit(_('Invalid arguments for command "%s"') % command)
         except KeyboardInterrupt:
             sys.exit(_('Dying peacefully ...'))
     
