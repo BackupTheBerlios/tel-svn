@@ -1,28 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2007 Sebastian Wiesner
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
+__license__ = """\
+Copyright (c) 2007 Sebastian Wiesner
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the \"Software\"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE."""
 
 # Tel version
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 import os
 import sys
@@ -42,6 +43,7 @@ except ImportError:
 from optparse import (Option, OptionError, OptionParser, OptionValueError)
 
 # some ideas
+# FIXME: add --force option to suppress warnings and confirmation requests
 # TODO: implement encryption
 # TODO: search command should accept an argument, which specifies the
 #       fields to search in
@@ -164,8 +166,7 @@ class PhoneBook:
     """
 
     def __init__(self, path):
-        """Creates a PhoneBook from the file denoted by `path`, which
-        defaults to ~/.tel/phonebook.csv."""
+        """Creates a PhoneBook from the file denoted by `path`"""
         self._entries = None
         self.path = path
         self.load()
@@ -301,9 +302,6 @@ class CommandOption(Option):
     commands"""
     ATTRS = Option.ATTRS + ['args', 'supported_cmds']
 
-    def __init__(self, *opts, **attrs):
-        Option.__init__(self, *opts, **attrs)
-
     def _check_attrs(self):
         if self.args is None:
             self.args = 'optional'
@@ -317,6 +315,16 @@ class CommandOption(Option):
 make_option = CommandOption
 
 
+def print_license(*args, **kwargs):
+    print __license__
+    sys.exit()
+        
+
+def print_copyright(*args, **kwargs):
+    print __license__.splitlines()[0]
+    sys.exit()
+
+
 def _cb_cmd_opt(option, opt_str, value, parser):
     """OptionParser callback, which handles command options"""
     if hasattr(parser.values, 'command'):
@@ -328,13 +336,138 @@ def _cb_cmd_opt(option, opt_str, value, parser):
     parser.values.args = option.args
 
 
-class ConsoleIFace:
-    """Provides a console interface to Tel"""
+class ConsoleEntryEditor:
+    """This class provides a simple console-based entry editor.
+
+    :ivar current_field: The name of the currently edited field"""
 
     # a simple pattern for phone numbers
     phone_number_pattern = re.compile(r'[-()/\d\s\W]+')
     # a simple pattern for mail addresses
     mail_pattern = re.compile(r'[^@\s]+@[^@\s]+\.[\w]+')
+
+    # this is a list of all editable fields
+    # each item is a tuple containing the following values:
+    #  'fieldname' as used by the Entry class
+    #  'prompt' the prompt string
+    #  'error_message' when verification failed
+    fields = [
+        ('firstname', _('First name: '), None),
+        ('lastname', _('Last name: '), None),
+        ('street', _('Street and street number: '), None),
+        ('postcode', _('Postal code: '), _('You entered an invalid postal '
+                                           'code...')),
+        ('town', _('Town: '), None),
+        ('mobile', _('Mobile: '), _('You entered an invalid mobile number'
+                                    '...')),
+        ('phone', _('Phone: '), _('You entered an invalid phone number'
+                                  '...')),
+        ('email', _('eMail: '), _('You entered an invalid eMail address'
+                                  '...')),
+        ('birthdate', _('Date of birth: '), None)]
+         
+    def verify_phone_number(self, number):
+        return bool(self.phone_number_pattern.match(number))
+
+    def verify_mail_address(self, address):
+        return bool(self.mail_pattern.match(address))
+
+    def verify_postal_code(self, code):
+        try:
+            int(code)
+            return True
+        except ValueError:
+            return False
+
+    def verify_field(self, field, value):
+        # don't check empty fields
+        if not value:
+            return True
+        if field == 'email':
+            return self.verify_mail_address(value)
+        elif field in ('mobile', 'phone'):
+            return self.verify_phone_number(value)
+        elif field == 'postcode':
+            return self.verify_postal_code(value)
+        else:
+            return True
+        
+    try:
+        # force raising a NameError if readline isn't present
+        readline
+        
+        def _input_hook(self):
+            """displays the current value in the input line"""
+            if self.edited_entry:
+                val = getattr(self.edited_entry, self.current_field)
+                readline.insert_text(val)
+                readline.redisplay()
+        
+        # an edit method with readline support
+        def edit(self, entry=None):
+            """Edits the specified `entry`. If `entry` is None, a new entry
+            is created. This method supports the readline module for editing
+
+            :returns: The entry with the new values as entered by the
+            user"""
+            if entry is None:
+                entry = Entry()
+                print _('Creating a new entry...\n'
+                        'Please fill the following fields. To leave a '
+                        'field empty, just press ENTER without entering '
+                        'something.')    
+            else:
+                self.edited_entry = entry
+                print _('Editing entry %s\n'
+                        'Please fill the following fields...') % repr(entry)
+                # set input hook to show the current value
+                readline.set_pre_input_hook(self._input_hook)
+            print
+            for field in self.fields:
+                self.current_field = field[0]
+                resp = raw_input(field[1]).strip()
+                while not self.verify_field(field[0], resp):
+                    print field[2]
+                    resp = raw_input(field[1]).strip()
+                setattr(entry, field[0], resp)
+            # remove input hook
+            readline.set_pre_input_hook(None)
+            return entry
+        
+    except NameError:
+        # the non-readline version
+        def edit(self, entry=None):
+            """Edits the specified `entry`. If `entry` is None, a new entry
+            is created.
+
+            :returns: The entry with the new values as entered by the
+            user"""
+            if entry is None:
+                entry = Entry()
+                print _('Creating a new entry...\n'
+                        'Please fill the following fields. To leave a '
+                        'field empty, just press ENTER without entering '
+                        'something.')    
+            else:
+                print _('Editing entry %s\n'
+                        'Please fill the following fields.\n'
+                        'The current value is shown in square brackets.'
+                        'NOTE: The current value is not preserved. You '
+                        'have to re-enter every value!') % repr(entry)
+            print
+            for field in self.fields:
+                self.current_field = field[0]
+                msg = '%s[%s] ' % (field[1], getattr(entry, field[0]))
+                resp = raw_input(msg).strip()
+                while not self.verify_field(field[0], resp):
+                    print field[2]
+                    resp = raw_input(msg).strip()
+                setattr(entry, field[0], resp)
+            return entry
+            
+
+class ConsoleIFace:
+    """Provides a console interface to Tel"""
 
     def __init__(self):
         self.phonebook = None
@@ -393,80 +526,8 @@ class ConsoleIFace:
         """Allows interactive editing of entries. If `entry` is None, a new
         entry is created."""
         print
-        if entry is None:
-            new = True
-            entry = Entry()
-            print _('Creating a new entry...\n'
-                    'Please fill the following fields. To leave a field '
-                    'empty, just press ENTER without entering something.')
-        else:
-            new = False
-            print _('Editing entry %s...\n'
-                    'Please fill the following fields. To leave a field '
-                    'unchanged, just press ENTER without entering '
-                    'something.') % repr(entry)
-        resp = raw_input(_('First name: ')).strip()
-        if not new and not resp:
-            # preserve old value, if entry is not new and we got no response
-            resp = entry.firstname
-        entry.firstname = resp
-        resp = raw_input(_('Last name: ')).strip()
-        if not new and not resp:
-            resp = entry.lastname
-        entry.lastname = resp
-        resp = raw_input(_('Street and street number: ')).strip()
-        if not new and not resp:
-            resp = entry.street
-        entry.street = resp
-        while True:
-            resp = raw_input(_('Postal code: ')).strip()
-            try:
-                # only verify, if something was entered
-                if resp:
-                    int(resp)
-                elif not (resp and new):
-                    resp = entry.postcode
-                entry.postcode = resp
-                break
-            except ValueError:
-                print _('You entered an invalid postal code. '
-                        'Please retry ...')
-        resp = raw_input(_('Town: ')).strip()
-        if not new and not resp:
-            resp = entry.town
-        entry.town = resp
-        while True:
-            resp = raw_input(_('Mobile: ')).strip()
-            if resp and not self.phone_number_pattern.match(resp):
-                print _('You entered an invalid phone number')
-                continue
-            if not new and not resp:
-                resp = entry.mobile
-            entry.mobile = resp
-            break
-        while True:
-            resp = raw_input(_('Phone: ')).strip()
-            if resp and not self.phone_number_pattern.match(resp):
-                print _('You entered an invalid mobile number')
-                continue
-            if not new and not resp:
-                resp = entry.phone
-            entry.phone = resp
-            break              
-        while True:
-            resp = raw_input(_('eMail: ')).strip()
-            if resp and not self.mail_pattern.match(resp):
-                print _('You entered an invalid mail address')
-                continue
-            if not new and not resp:
-                resp = entry.email
-            entry.email = resp
-            break
-        resp = raw_input(_('Date of birth: ')).strip()
-        if not new and not resp:
-            resp = entry.birthdate
-        entry.birthdate = resp
-        print _('Thanks. The entry is now saved ...')
+        editor = ConsoleEntryEditor()
+        entry = editor.edit(entry)
         self.phonebook.add(entry)
         self.phonebook.save()    
 
@@ -535,6 +596,13 @@ class ConsoleIFace:
         for path in args:
             # import all specified phone books
             if os.path.exists(path):
+                if (os.path.abspath(path) ==
+                    os.path.abspath(self.phonebook.path)):
+                    resp = raw_input(_('Do you really want to import the '
+                                       'phone book you\'re just using? '))
+                    if resp.lower() != 'y':
+                        print _('Not importing %s...') % path
+                        continue
                 import_book = PhoneBook(path)
                 for entry in import_book:
                     # enable auto-generation of index
@@ -588,7 +656,7 @@ class ConsoleIFace:
                 sys._exit(_('--create needs a number'))
         if len(args) > 1:
             sys.exit(_('--create accepts only one argument'))
-        for func in itertools.repeat(self.edit_entry, 2):
+        for func in itertools.repeat(self.edit_entry, number):
             func()
 
     def _cmd_edit(self, options, *args):
@@ -627,6 +695,14 @@ class ConsoleIFace:
         'file': DEF_FILENAME
         }
 
+    parser_options = [
+        make_option('--license', action='callback',
+                    callback=print_license,
+                    help=_('Show license information')),
+        make_option('--copyright', action='callback',
+                    callback=print_copyright,
+                    help=_('Show copyright information'))]
+
     global_options = [
         make_option('-f', '--file', action='store', dest='file',
                     metavar=_('file'), help=_('Use FILE as phone book'))]
@@ -664,11 +740,12 @@ class ConsoleIFace:
 
     def _parse_args(self):
         """Parses command line arguments"""
-        parser = OptionParser(usage=self.usage,
+        parser = OptionParser(prog='tel',
+                              usage=self.usage,
                               description=self.description,
                               version=__version__,
                               option_class=CommandOption,
-                              conflict_handler='resolve')
+                              option_list=self.parser_options)
         # command options
         desc = _('Commands to modify the phone book and to search or print '
                  'entries. Only one of these options may be specified. '
@@ -681,9 +758,11 @@ class ConsoleIFace:
         group = parser.add_option_group(_('Global options'), desc)
         group.add_options(self.global_options)
 
-
         parser.set_defaults(**self.defaults)
         (options, args) = parser.parse_args()
+
+        if not hasattr(options, 'command'):
+            parser.error(_('Please specify a command'))
         
         if options.args == 'required' and not args:
             msg = _('The command %s need arguments')
