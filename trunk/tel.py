@@ -42,6 +42,7 @@ try:
 except ImportError:
     pass
 
+from copy import copy
 from optparse import (Option, OptionError, OptionParser, OptionValueError,
                       IndentedHelpFormatter)
 
@@ -49,8 +50,6 @@ from optparse import (Option, OptionError, OptionParser, OptionValueError,
 # FIXME: add --force option to suppress warnings and confirmation requests
 # TODO: implement encryption
 # TODO: search could support case-insensitive searching
-# TODO: show and table should accept an argument, which specifies the
-#       fields to show
 # TODO: search command should accept an argument, which specifies the
 #       fields to search in
 # TODO: if a search was only run over specific fields, only these
@@ -92,7 +91,7 @@ class Entry(object):
         'index': _('Index'),
         'firstname': _('First name'),
         'lastname': _('Last name'),
-        'street': _('Street'),
+        'street': _('Street and number'),
         'postcode': _('Postal code'),
         'town': _('Town'),
         'mobile': _('Mobile'),
@@ -376,6 +375,8 @@ class CommandOption(Option):
     :command: whether this option is a command. Important for help
     formatting"""
     ATTRS = Option.ATTRS + ['args', 'options']
+    TYPES = Option.TYPES + ('field_list',)
+    TYPE_CHECKER = copy(Option.TYPE_CHECKER)
 
     def _check_command(self):
         # command options can be identified by checking the callback
@@ -392,9 +393,35 @@ class CommandOption(Option):
     def _check_options(self):
         if self.options and not isinstance(self.options, (tuple, list)):
             raise OptionError('options must be a tuple or a list', self)
+
+    def _check_field_list(self, opt, value):
+        """Parse field_list options into a list of fields"""
+        warning_msg = _('WARNING: There is no field %s')
+        items = map(str.strip, value.split(','))
+        # filter empty fields
+        # (which came from something like "index,,firstname")
+        items = filter(None, items)
+        fields_to_show = []
+        fields_to_hide = []
+        for item in items:
+            name = item.lstrip('-')
+            if name not in Entry.default_order:
+                print >> sys.stderr, warning_msg % name
+                continue
+            if item.startswith('-'):
+                fields_to_hide.append(name)
+            else:
+                fields_to_show.append(name)
+        if not fields_to_show:
+            fields_to_show = Entry.default_order[:]
+        for field in fields_to_hide:
+            if field in fields_to_show:
+                fields_to_show.remove(field)
+        return fields_to_show
             
     CHECK_METHODS = Option.CHECK_METHODS + [_check_attrs, _check_command,
                                             _check_options]
+    TYPE_CHECKER['field_list'] = _check_field_list
     
 
 make_option = CommandOption
@@ -405,7 +432,6 @@ def cb_print_license(*args, **kwargs):
     """Print license information"""
     print __license__
     sys.exit()
-        
 
 def cb_print_copyright(*args, **kwargs):
     """Print copyright information"""
@@ -433,28 +459,6 @@ def cb_print_fields(*args, **kwargs):
         item = ' - '.join(map(str.ljust, item, column_widths))
         print ' ', item
     sys.exit()
-
-def cb_output(option, opt_str, value, parser):
-    """Parses the --output option into a list of fields"""
-    warning_msg = _('WARNING: There is no field %s')
-    items = map(str.strip, value.split(','))
-    fields_to_show = []
-    fields_to_hide = []
-    for item in items:
-        name = item.lstrip('-')
-        if name not in Entry.default_order:
-            print >> sys.stderr, warning_msg % name
-            continue
-        if item.startswith('-'):
-            fields_to_hide.append(name)
-        else:
-            fields_to_show.append(name)
-    if not fields_to_show:
-        fields_to_show = Entry.default_order[:]
-    for field in fields_to_hide:
-        if field in fields_to_show:
-            fields_to_show.remove(field)
-    parser.values.output = fields_to_show
 
 def cb_cmd_opt(option, opt_str, value, parser):
     """OptionParser callback, which handles command options"""
@@ -790,7 +794,7 @@ class ConsoleIFace:
             # pattern
             new = filter(lambda entry: entry not in found, entries)
             found += new
-        self.print_table(found)
+        self.print_table(found, options.output)
 
     def _cmd_create(self, options, *args):
         """Interactivly create a new entry"""
@@ -875,7 +879,7 @@ class ConsoleIFace:
         make_option('--search', action='callback', args='required',
                     help=_('searches the phonebook for the specified '
                            'patterns'), callback=cb_cmd_opt,
-                    metavar='patterns', options=['--regexp']),
+                    metavar='patterns', options=['--regexp, --output']),
         make_option('--create', action='callback', callback=cb_cmd_opt,
                     help=_('creates the specified number of new entries'),
                     metavar='number'),
@@ -898,8 +902,8 @@ class ConsoleIFace:
                            'Python-syntax. You can find an overview at the '
                            'following URL: '
                            'http://docs.python.org/lib/re-syntax.html')),
-        make_option('-o', '--output', action='callback', callback=cb_output,
-                    type='string', metavar='fields',
+        make_option('-o', '--output', action='store', dest='output',
+                    type='field_list', metavar='fields', 
                     help=_('specifies the fields to show. Takes a '
                            'comma-separated list of internal names as '
                            'printed by --help-fields. Fields prefixed '
