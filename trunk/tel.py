@@ -22,14 +22,15 @@
 # DEALINGS IN THE SOFTWARE.
 
 # Tel version
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 import os
 import sys
 import csv
-import inspect
 import gettext
 import itertools
+import shutil
+import re
 _ = gettext.gettext
 
 try:
@@ -38,11 +39,24 @@ try:
 except ImportError:
     pass
 
-from optparse import OptionParser
+from optparse import (Option, OptionError, OptionParser, OptionValueError)
 
+# some ideas
+# TODO: implement encryption
+# TODO: search command should accept an argument, which specifies the
+#       fields to search in
+# TODO: search could support regular expressions
+# TODO: show and print should accept an argument, which specifies the
+#       fields to show
+# TODO: if a search was only run over specific fields, only these
+#       fields should be printed
+# TODO: Mark fields, which where matched by the search pattern
+# TODO: support sorting for list, list-detail and search commands
 
 # The directory, where tel stores its config
 CONFIG_DIR = os.path.expanduser(os.path.join('~', '.tel'))
+if not os.path.exists(CONFIG_DIR):
+    os.mkdir(CONFIG_DIR)
 # the default phonebook
 DEF_FILENAME = os.path.join(CONFIG_DIR, 'phonebook.csv')
 
@@ -77,14 +91,14 @@ class Entry(object):
 
     def __str__(self):
         # return a pretty representation
-        msg = _('Index: %(index)s\n'
-                'Name: %(firstname)s %(lastname)s\n'
-                'Street: %(street)s\n'
-                'Town: %(postcode)s %(town)s\n'
-                'Phone: %(phone)s\n'
-                'Mobile: %(mobile)s\n'
-                'EMail: %(email)s\n'
-                'Date of birth: %(birthdate)s') % self.__dict__
+        msg = _('Index:          %(index)s\n'
+                'Name:           %(firstname)s %(lastname)s\n'
+                'Street:         %(street)s\n'
+                'Town:           %(postcode)s %(town)s\n'
+                'Phone:          %(phone)s\n'
+                'Mobile:         %(mobile)s\n'
+                'eMail:          %(email)s\n'
+                'Date of birth:  %(birthdate)s') % self.__dict__
         return msg
 
     def __lt__(self, other):
@@ -100,7 +114,7 @@ class Entry(object):
         return NotImplemented
 
     def __ne__(self, other):
-        for field in self._fields(self):
+        for field in self._fields():
             if getattr(self, field) != getattr(other, field):
                 return True
         return False
@@ -110,7 +124,7 @@ class Entry(object):
 
     def __hash__(self):
         hash_ = 0
-        for field in self._fields(self):
+        for field in self._fields():
             hash_ ^= hash(getattr(self, field))
         return hash_
 
@@ -276,51 +290,79 @@ class PhoneBook:
         raise NotImplementedError('Encryption is not yet supported')
 
 
+class CommandOption(Option):
+    """This class supported two additional option attributes
+
+    :ivar args: Whether this option need arguments. Must be one of
+    'optional', 'required', 'no'. Defaults to 'optional'
+    :ivar supported_cmds: For non-command options this should contain a
+    tuple of all comman options, for which this option has a meaning. If
+    this attribute is not set, the option is assumed to be valid for all
+    commands"""
+    ATTRS = Option.ATTRS + ['args', 'supported_cmds']
+
+    def __init__(self, *opts, **attrs):
+        Option.__init__(self, *opts, **attrs)
+
+    def _check_attrs(self):
+        if self.args is None:
+            self.args = 'optional'
+        if not self.args in ('optional', 'required', 'no'):
+            raise OptionError("args must be on of: 'optional', 'required', "
+                              "'no'", self)
+
+    CHECK_METHODS = Option.CHECK_METHODS + [_check_attrs]
+
+
+make_option = CommandOption
+
+
+def _cb_cmd_opt(option, opt_str, value, parser):
+    """OptionParser callback, which handles command options"""
+    if hasattr(parser.values, 'command'):
+        # raise error if two exlusive commands appeared
+        msg = _('Please specify only one command option')
+        raise OptionValueError(msg)
+    parser.values.command = opt_str
+    parser.values.command_values = value
+    parser.values.args = option.args
+
+
 class ConsoleIFace:
     """Provides a console interface to Tel"""
 
-    # some ideas
-    # TODO: search command should accept an argument, which specifies the fields to search in
-    # TODO: search could support regular expressions
-    # TODO: show and print should accept an argument, which specifies the fields to show
-    # TODO: if a search was only run over specific fields, only these fields should be printed
-    # TODO: Mark fields, which where matched by the search pattern
-    # TODO: implement encryption
-    # TODO: support sorting for list, print and search commands
-
-    usage = '%prog -f|--file FILE command'
-    description = _('With Tel you can create little phonebooks in csv '
-                    'format.')
+    # a simple pattern for phone numbers
+    phone_number_pattern = re.compile(r'[-()/\d\s\W]+')
+    # a simple pattern for mail addresses
+    mail_pattern = re.compile(r'[^@\s]+@[^@\s]+\.[\w]+')
 
     def __init__(self):
         self.phonebook = None
 
-    def print_short_list(self, entries=None):
+    # INTERACTION FUNCTIONS
+
+    def print_short_list(self, entries):
         """Prints all `entries` in a short format:
         If `entries` is None, all entries are printed"""
-        if entries is None:
-            entries = self.phonebook
+        print
         for entry in entries:
             print repr(entry)
 
-    def print_long_list(self, entries=None):
+    def print_long_list(self, entries):
         """Prints every single entry in `entries` in full detail.
         If `entries` is None, all entries are printed"""
-        if entries is None:
-            entries = self.phonebook
         for entry in entries:
-            print str(entry)
             print '-'*20
+            print entry
 
-    def print_table(self, entries=None):
+    def print_table(self, entries):
         """Prints `entries` as a table. If `entries` is None, all entries
         are printed"""
-        if entries is None:
-            entries = self.phonebook
+        print
         # this is the head line of the table
         headline = (_('Index'), _('First name'), _('Last name'),
                     _('Street'), _('Postal code'), _('Town'), _('Mobile'),
-                    _('Phone'), _('EMail'), _('Date of birth'))
+                    _('Phone'), _('eMail'), _('Date of birth'))
         table_body = []
         # widths for each column
         column_widths = map(len, headline)
@@ -347,188 +389,320 @@ class ConsoleIFace:
             row = ' | '.join(row)
             print '', row, ''
 
-    ## COMMANDS
-
-    # All functions, that implement commands, start with the prefix '_cmd_'
-    # The content of the property "help" of these functions is used as help
-    # for --help-commands. Commands, which specifiy arguments, need to
-    # perform type conversion for themselves. Arguments are always passed as
-    # string
-
-    # to add a new command 'test' with the parameter 'foo', just add a new
-    # function here:
-    #
-    #   def _cmd_test(self, foo)
-    #
-    # To add a help string for the new command, just add a help property to
-    # the function:
-    #
-    #  _cmd_test.help = _('Does nothing')
-    #
-    # Note: You should use gettext to support i18n for your documentation
-
-    def _cmd_table(self):
-        """Print a table"""
-        self.print_table()
-
-    def _cmd_list(self):
-        """Print a short list"""
-        self.print_short_list()
-
-    def _cmd_list_detail(self):
-        """Show every single entry"""
-        self.print_long_list()
-
-    def _cmd_show(self, index):
-        """Show a single entry"""
-        try:
-            print self.phonebook[int(index)]
-        except KeyError:
-            sys.exit(_('There is no entry with the index %s') % index)
-
-    def _cmd_search(self, pattern):
-        """Search the phone book for `pattern`"""
-        self.print_table(self.phonebook.search(pattern))
-
-    def _cmd_create(self):
-        """Interactivly create a new entry"""
-        entry = Entry()
-        print _('Please fill the following fields. To leave a field empty, '
-                'just press ENTER without entering something.')
+    def edit_entry(self, entry=None):
+        """Allows interactive editing of entries. If `entry` is None, a new
+        entry is created."""
         print
-        entry.firstname = raw_input(_('First name: '))
-        entry.lastname = raw_input(_('Last name: '))
-        entry.street = raw_input(_('Street and street number: '))
-        entry.postcode = raw_input(_('Postal code: '))
-        entry.town = raw_input(_('Town: '))
-        entry.mobile = raw_input(_('Mobile: '))
-        entry.phone = raw_input(_('Phone: '))
-        entry.email = raw_input(_('EMail: '))
-        entry.birthdate = raw_input(_('Date of birth: '))
+        if entry is None:
+            new = True
+            entry = Entry()
+            print _('Creating a new entry...\n'
+                    'Please fill the following fields. To leave a field '
+                    'empty, just press ENTER without entering something.')
+        else:
+            new = False
+            print _('Editing entry %s...\n'
+                    'Please fill the following fields. To leave a field '
+                    'unchanged, just press ENTER without entering '
+                    'something.') % repr(entry)
+        resp = raw_input(_('First name: ')).strip()
+        if not new and not resp:
+            # preserve old value, if entry is not new and we got no response
+            resp = entry.firstname
+        entry.firstname = resp
+        resp = raw_input(_('Last name: ')).strip()
+        if not new and not resp:
+            resp = entry.lastname
+        entry.lastname = resp
+        resp = raw_input(_('Street and street number: ')).strip()
+        if not new and not resp:
+            resp = entry.street
+        entry.street = resp
+        while True:
+            resp = raw_input(_('Postal code: ')).strip()
+            try:
+                # only verify, if something was entered
+                if resp:
+                    int(resp)
+                elif not (resp and new):
+                    resp = entry.postcode
+                entry.postcode = resp
+                break
+            except ValueError:
+                print _('You entered an invalid postal code. '
+                        'Please retry ...')
+        resp = raw_input(_('Town: ')).strip()
+        if not new and not resp:
+            resp = entry.town
+        entry.town = resp
+        while True:
+            resp = raw_input(_('Mobile: ')).strip()
+            if resp and not self.phone_number_pattern.match(resp):
+                print _('You entered an invalid phone number')
+                continue
+            if not new and not resp:
+                resp = entry.mobile
+            entry.mobile = resp
+            break
+        while True:
+            resp = raw_input(_('Phone: ')).strip()
+            if resp and not self.phone_number_pattern.match(resp):
+                print _('You entered an invalid mobile number')
+                continue
+            if not new and not resp:
+                resp = entry.phone
+            entry.phone = resp
+            break              
+        while True:
+            resp = raw_input(_('eMail: ')).strip()
+            if resp and not self.mail_pattern.match(resp):
+                print _('You entered an invalid mail address')
+                continue
+            if not new and not resp:
+                resp = entry.email
+            entry.email = resp
+            break
+        resp = raw_input(_('Date of birth: ')).strip()
+        if not new and not resp:
+            resp = entry.birthdate
+        entry.birthdate = resp
         print _('Thanks. The entry is now saved ...')
         self.phonebook.add(entry)
+        self.phonebook.save()    
+
+    # UTILITIES
+
+    def parse_indices(self, *args):
+        """Takes strings arguments, interprets them as numeric indices an
+        returns a list of all entries denoted by these indices.
+
+        The syntax looks like the following: 4-5 4 6 7
+
+        Eachentry is only returned once, even if the index appears more than
+        once
+        :raises ValueError: If some string could not be interpreted"""
+        entries = []
+        try:
+            for arg in args:
+                if '-' in arg:
+                    parts = arg.split('-')
+                    for i in xrange(int(parts[0]), int(parts[1]) + 1):
+                        try:
+                            if self.phonebook[i] not in entries:
+                                entries.append(self.phonebook[i])
+                        except KeyError:
+                            pass  # silently drop non exisiting keys
+                else:
+                    try:
+                        entry = self.phonebook[int(arg)]
+                        if entry not in entries:
+                            entries.append(entry)
+                    except KeyError:
+                        pass  # silently drop non exisiting keys
+            return entries
+        except ValueError:
+            sys.exit(_('Error: An invalid index was specified'))
+
+    ## COMMAND FUNCTIONS
+
+    # To add new commands to the interface, you need to do a few things.
+    # This is the way you add the command --foo to the interface
+    #
+    # - Create a new method for the command. This method has the prefix
+    #   _cmd_ and takes two arguments: options, which holds all options,
+    #   that where given on the command line, and *args, which are all
+    #   arguments specified on the command line:
+    #
+    #       def _cmd_foo(self, options, *args)
+    #
+    # - Add the option --foo to the command_options list.
+    #   If --foo requires arguments, set the keyword argument 'args' to
+    #   'required'. If it must not have any arguments, set it to 'no'.
+    #   The default is 'optional'
+
+    def _cmd_export(self, options, *args):
+        """Exports phone book"""
+        for path in args:
+            if os.path.isfile(path):
+                msg = _('%s already exists. Overwrite it? ')
+                resp = raw_input(msg % path)
+                if resp.lower() != 'y':
+                    continue
+            shutil.copyfile(self.phonebook.path, path)
+
+    def _cmd_import(self, options, *args):
+        """Import phone books"""
+        for path in args:
+            # import all specified phone books
+            if os.path.exists(path):
+                import_book = PhoneBook(path)
+                for entry in import_book:
+                    # enable auto-generation of index
+                    entry.index = None
+                    self.phonebook.add(entry)
         self.phonebook.save()
 
-    def _cmd_remove(self, index):
-        del self.phonebook[int(index)]
+    def _cmd_table(self, options, *args):
+        """Print a table"""
+        if args:
+            entries = self.parse_indices(*args)
+        else:
+            entries = self.phonebook
+        self.print_table(entries)
+
+    def _cmd_list(self, options, *args):
+        """Print a list"""
+        if args:
+            entries = self.parse_indices(*args)
+        else:
+            entries = self.phonebook
+        self.print_short_list(entries)
+
+    def _cmd_show(self, options, *args):
+        """Show a single entry"""
+        if args:
+            entries = self.parse_indices(*args)            
+        else:
+            entries = self.phonebook
+        self.print_long_list(entries)
+
+    def _cmd_search(self, options, *args):
+        """Search the phone book for `pattern`"""
+        found = []
+        for pattern in args:
+            entries = self.phonebook.search(pattern)
+            # add all entries which aren't already in found. This avoids
+            # printing entries twice, which are matched by more than one
+            # pattern
+            new = filter(lambda entry: entry not in found, entries)
+            found += new
+        self.print_table(found)
+
+    def _cmd_create(self, options, *args):
+        """Interactivly create a new entry"""
+        number = 1
+        if len(args) == 1:
+            try:
+                number = int(args[0])
+            except ValueError:
+                sys._exit(_('--create needs a number'))
+        if len(args) > 1:
+            sys.exit(_('--create accepts only one argument'))
+        for func in itertools.repeat(self.edit_entry, 2):
+            func()
+
+    def _cmd_edit(self, options, *args):
+        """Interactivly edit entries"""
+        entries = self.parse_indices(*args)
+        for entry in entries:
+            self.edit_entry(entry)
+
+    def _cmd_remove(self, options, *args):
+        for entry in self.parse_indices(*args):
+            resp = raw_input(_('Really delete entry %s? ') % repr(entry))
+            if resp.lower() == 'y':
+                self.phonebook.remove(entry)
         self.phonebook.save()
         
-    _cmd_remove.help = _('Removes the entry at INDEX')
-    _cmd_list.help = _('Lists all entries in short format')
-    _cmd_list_detail.help = _('Prints all entries in full detail')
-    _cmd_show.help = _('Shows the entry at the specified INDEX. The index '
-                       'is the same as printed by the list command')
-    _cmd_search.help = _('Searches phone book for PATTERN and prints all '
-                         'matching entries')
-    _cmd_create.help = _('Creates a new entry')
-    _cmd_table.help = _('Show a nice table containing all entries of the '
-                        'phone book')
+    ## COMMAND SUPPORT FUNCTIONS
 
-    ## COMMAND support functions
-
-    def _is_cmd_function(self, func):
-        name = None
-        if isinstance(func, basestring):
-            name = func
-        else:
-            name = func.__name__
-        return name.startswith('_cmd_')
-
-    def _get_cmd_name(self, func):
-        """Returns the command name for `func`"""
-        name = None
-        if isinstance(func, basestring):
-            name = func
-        else:
-            name = func.__name__
-        return name[5:].replace('_', '-')
-
-    def _get_cmd_function(self, command):
-        """Returns the function for `command`"""
-        name = '_cmd_%s' % command
+    def _get_cmd_function(self, arg):
+        """Returns the function for `arg`"""
+        if arg.startswith('--'):
+            # strip of the first to shlashes
+            name = '_cmd_%s' % arg[2:]
+        # and replace remaining slashes with underscores
         name = name.replace('-', '_')
         function = getattr(self, name)
         return function
 
-    def _get_cmd_declaration(self, command):
-        """Returns the command declaration for `command`.
-        The command foo with the argument bar would result in:
-        foo BAR"""
-        declaration = [command]
-        function = self._get_cmd_function(command)
-        # only the first list element is important, since we are currently
-        # not interested in *args, **args and default values
-        # NOTE: this may change in the future!
-        argspec = inspect.getargspec(function)[0]
-        for arg in argspec:
-            # ignore the "self" argument of method declarations
-            if arg != 'self':
-                declaration.append(arg.upper())
-        return ' '.join(declaration)
+    # OPTION PARSING
 
-    def _get_cmd_help(self, command):
-        """Returns the help for `command`"""
-        try:
-            return self._get_cmd_function(command).help
-        except AttributeError:
-            return ''
+    usage = '%prog [--help|--version] [global options] command [arguments]'
+             
+    description = _('Tel is a little address book program for your '
+                    'terminal')
 
-    def _get_cmd_list(self):
-        """Returns a list of all known commands"""
-        # find all command functions
-        commands = filter(self._is_cmd_function,
-                          ConsoleIFace.__dict__.keys())
-        # strip the prefix from command functions
-        return map(self._get_cmd_name, commands)
+    defaults = {
+        'file': DEF_FILENAME
+        }
 
-    def _print_commands_help(self):
-        """Prints a list of all available commands and their documentation"""
-        print _('Available commands:')
-        commands = self._get_cmd_list()
-        commands = [(self._get_cmd_declaration(cmd),
-                     self._get_cmd_help(cmd)) for cmd in commands]
-        # exclude commands, which don't have a help defined
-        commands = filter(lambda item: item[1], commands)
-        maxlen = max([len(item[0]) for item in commands])
-        for item in commands:
-            print ' ', item[0].ljust(maxlen), ' ', item[1]
+    global_options = [
+        make_option('-f', '--file', action='store', dest='file',
+                    metavar=_('file'), help=_('Use FILE as phone book'))]
+
+    command_options = [
+        # command options
+        make_option('--list', action='callback', callback=_cb_cmd_opt,
+                    help=_('Print a short list of entries. Accepts a list '
+                           'of indices')),
+        make_option('--table', action='callback', callback=_cb_cmd_opt,
+                    help=_('Prints a tables with entries. Accepts a list '
+                           'of indices')),
+        make_option('--show', action='callback', callback=_cb_cmd_opt,
+                    help=_('Shows the specified entries.')),
+        make_option('--search', action='callback', args='required',
+                    help=_('Searches the phonebook for the specified '
+                           'patterns'), callback=_cb_cmd_opt),
+        make_option('--create', action='callback', callback=_cb_cmd_opt,
+                    help=_('Creates the specified number of new entries')),
+        make_option('--edit', action='callback', callback=_cb_cmd_opt,
+                    help=_('Edits the entries at the specified indices'),
+                    args='required'),
+        make_option('--remove', action='callback', args='required',
+                    help=_('Remove the entries at the specified indices'),
+                    callback=_cb_cmd_opt),
+        make_option('--export', action='callback', args='required',
+                    help=_('Export phone book to all specified locations'),
+                    callback=_cb_cmd_opt),
+        make_option('--import', action='callback', args='required',
+                    help=_('Import all specified phone books'),
+                    callback=_cb_cmd_opt)
+        ]
+
+    local_options = []
 
     def _parse_args(self):
         """Parses command line arguments"""
         parser = OptionParser(usage=self.usage,
                               description=self.description,
-                              version=__version__)
-        parser.set_defaults(file=DEF_FILENAME)
-        parser.add_option('-f', '--file', action='store', dest='file',
-                          help='Use FILE as phone book')
-        parser.add_option('--help-commands', action='store_true',
-                          dest='commands',
-                          help='Print information about available commands')
+                              version=__version__,
+                              option_class=CommandOption,
+                              conflict_handler='resolve')
+        # command options
+        desc = _('Commands to modify the phone book and to search or print '
+                 'entries. Only one of these options may be specified. '
+                 'Commands, which accept indices, recognize range '
+                 'specifications like 4-6.')
+        group = parser.add_option_group(_('Commands'), desc)
+        group.add_options(self.command_options)
+        # global options
+        desc = _('These options are valid for every command')
+        group = parser.add_option_group(_('Global options'), desc)
+        group.add_options(self.global_options)
+
+
+        parser.set_defaults(**self.defaults)
         (options, args) = parser.parse_args()
         
-        if options.commands:
-            self._print_commands_help()
-            sys.exit()
-            
-        if not args:
-            parser.error(_('Please specify a command'))
-        command = args[0]
-        args = args[1:]
-        return (options, command, args)
+        if options.args == 'required' and not args:
+            msg = _('The command %s need arguments')
+            parser.error(msg % options.command)
+        elif options.args == 'no' and args:
+            msg = _('The command %s doesn\'t take any arguments')
+            parser.error(msg % options.command)
+        
+        # get the command function
+        options.command_function = self._get_cmd_function(options.command)
+        
+        return (options, args)
 
     def start(self):
         """Starts the interface"""
         try:
-            (options, command, args) = self._parse_args()
+            (options, args) = self._parse_args()
             self.phonebook = PhoneBook(options.file)
-            try:
-                function = self._get_cmd_function(command)
-                function(*args)
-            except AttributeError:
-                sys.exit(_('Unknown command: %s') % command)
-                # run the command with all specified arguments
-            except TypeError:
-                sys.exit(_('Invalid arguments for command "%s"') % command)
+            options.command_function(options, *args)
         except KeyboardInterrupt:
             sys.exit(_('Dying peacefully ...'))
     
