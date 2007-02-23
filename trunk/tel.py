@@ -22,8 +22,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE."""
 
-# Tel version
-__version__ = '0.1.4'
+__version__ = '0.1.4.1'
+
+__authors__ = ['Sebastian Wiesner <basti.wiesner@gmx.net>']
 
 import os
 import sys
@@ -40,20 +41,22 @@ try:
 except ImportError:
     pass
 
-from optparse import (Option, OptionError, OptionParser, OptionValueError)
+from optparse import (Option, OptionError, OptionParser, OptionValueError,
+                      IndentedHelpFormatter)
 
 # some ideas
 # FIXME: add --force option to suppress warnings and confirmation requests
 # TODO: implement encryption
+# TODO: search could support regular expressions
+# TODO: show and table should accept an argument, which specifies the
+#       fields to show
 # TODO: search command should accept an argument, which specifies the
 #       fields to search in
-# TODO: search could support regular expressions
-# TODO: show and print should accept an argument, which specifies the
-#       fields to show
 # TODO: if a search was only run over specific fields, only these
 #       fields should be printed
-# TODO: Mark fields, which where matched by the search pattern
-# TODO: support sorting for list, list-detail and search commands
+# TODO: mark fields, which matched the search pattern
+# TODO: support sorting for list, show and table commands
+# TODO: import more file formats
 
 # The directory, where tel stores its config
 CONFIG_DIR = os.path.expanduser(os.path.join('~', '.tel'))
@@ -132,7 +135,7 @@ class Entry(object):
 
     def __repr__(self):
         # return a short representation
-        return '[%(index)s] -- %(lastname)s, %(firstname)s' % self.__dict__
+        return '[%(index)s] %(firstname)s %(lastname)s' % self.__dict__
 
     def _fields(self):
         """:returns: A list of all fields"""
@@ -291,16 +294,35 @@ class PhoneBook:
         raise NotImplementedError('Encryption is not yet supported')
 
 
+class CommandHelpFormatter(IndentedHelpFormatter):
+    """A Formatter, which respects certain command properties
+    like args"""
+    
+    def format_option_strings(self, option):
+        if option.command and not option.args == 'no':
+            arg_name = option.metavar or 'indices'
+            if option.args == 'optional':
+                arg_name = ''.join(['[', arg_name, ']'])
+            lopts = [' '.join([lopt, arg_name]) for lopt in
+                     option._long_opts]
+            return ', '.join(lopts)
+        else:
+            return IndentedHelpFormatter.format_option_strings(self, option)
+    
+
 class CommandOption(Option):
     """This class supported two additional option attributes
 
     :ivar args: Whether this option need arguments. Must be one of
     'optional', 'required', 'no'. Defaults to 'optional'
-    :ivar supported_cmds: For non-command options this should contain a
-    tuple of all comman options, for which this option has a meaning. If
-    this attribute is not set, the option is assumed to be valid for all
-    commands"""
-    ATTRS = Option.ATTRS + ['args', 'supported_cmds']
+    :command: whether this option is a command. Important for help
+    formatting"""
+    ATTRS = Option.ATTRS + ['args']
+
+    def _check_command(self):
+        # command options can be identified by checking the callback
+        # keyword
+        self.command = self.callback == _cb_cmd_opt
 
     def _check_attrs(self):
         if self.args is None:
@@ -309,8 +331,8 @@ class CommandOption(Option):
             raise OptionError("args must be on of: 'optional', 'required', "
                               "'no'", self)
 
-    CHECK_METHODS = Option.CHECK_METHODS + [_check_attrs]
-
+    CHECK_METHODS = Option.CHECK_METHODS + [_check_attrs, _check_command]
+    
 
 make_option = CommandOption
 
@@ -322,6 +344,11 @@ def print_license(*args, **kwargs):
 
 def print_copyright(*args, **kwargs):
     print __license__.splitlines()[0]
+    sys.exit()
+
+
+def print_authors(*args, **kwargs):
+    print '\n'.join(__authors__)
     sys.exit()
 
 
@@ -380,6 +407,7 @@ class ConsoleEntryEditor:
             return False
 
     def verify_field(self, field, value):
+        """Verifies input"""
         # don't check empty fields
         if not value:
             return True
@@ -418,8 +446,8 @@ class ConsoleEntryEditor:
                         'something.')    
             else:
                 self.edited_entry = entry
-                print _('Editing entry %s\n'
-                        'Please fill the following fields...') % repr(entry)
+                print _('Editing entry %r\n'
+                        'Please fill the following fields...') % entry
                 # set input hook to show the current value
                 readline.set_pre_input_hook(self._input_hook)
             print
@@ -449,11 +477,11 @@ class ConsoleEntryEditor:
                         'field empty, just press ENTER without entering '
                         'something.')    
             else:
-                print _('Editing entry %s\n'
+                print _('Editing entry %r\n'
                         'Please fill the following fields.\n'
                         'The current value is shown in square brackets.'
                         'NOTE: The current value is not preserved. You '
-                        'have to re-enter every value!') % repr(entry)
+                        'have to re-enter every value!') % entry
             print
             for field in self.fields:
                 self.current_field = field[0]
@@ -584,12 +612,34 @@ class ConsoleIFace:
     def _cmd_export(self, options, *args):
         """Exports phone book"""
         for path in args:
+            if not os.path.exists(path) and not os.path.basename(path):
+                # create non-existing directories here, if the user wants it
+                msg = _('Directory %s does not exist. Create it? ')
+                resp = raw_input(msg % path)
+                if resp.lower() == 'y':
+                    os.makedirs(path)
+                else:
+                    # do not export
+                    continue
+            if os.path.isdir(path):
+                # if path is a directory, create the export target by
+                # joining the filename of the phone book with the path
+                filename = os.path.basename(self.phonebook.path)
+                path = os.path.join(path, filename)
             if os.path.isfile(path):
+                # now check, if the file denoted by path already exists
                 msg = _('%s already exists. Overwrite it? ')
                 resp = raw_input(msg % path)
                 if resp.lower() != 'y':
                     continue
-            shutil.copyfile(self.phonebook.path, path)
+            try:
+                shutil.copyfile(self.phonebook.path, path)
+            except IOError, e:
+                if e.errno == 13:
+                    msg = _('ERROR: Permission denied for %s') % path
+                else:
+                    msg = e
+                print >> sys.stderr, msg
 
     def _cmd_import(self, options, *args):
         """Import phone books"""
@@ -667,7 +717,7 @@ class ConsoleIFace:
 
     def _cmd_remove(self, options, *args):
         for entry in self.parse_indices(*args):
-            resp = raw_input(_('Really delete entry %s? ') % repr(entry))
+            resp = raw_input(_('Really delete entry "%s"? ') % repr(entry))
             if resp.lower() == 'y':
                 self.phonebook.remove(entry)
         self.phonebook.save()
@@ -686,10 +736,10 @@ class ConsoleIFace:
 
     # OPTION PARSING
 
-    usage = '%prog [--help|--version] [global options] command [arguments]'
+    usage = '%prog [global options] command [arguments]'
              
     description = _('Tel is a little address book program for your '
-                    'terminal')
+                    'terminal.')
 
     defaults = {
         'file': DEF_FILENAME
@@ -698,42 +748,45 @@ class ConsoleIFace:
     parser_options = [
         make_option('--license', action='callback',
                     callback=print_license,
-                    help=_('Show license information')),
+                    help=_('show license information and exit')),
         make_option('--copyright', action='callback',
                     callback=print_copyright,
-                    help=_('Show copyright information'))]
+                    help=_('show copyright information and exit')),
+        make_option('--authors', action='callback',
+                    callback=print_authors,
+                    help=_('show author information and exit'))]
 
     global_options = [
         make_option('-f', '--file', action='store', dest='file',
-                    metavar=_('file'), help=_('Use FILE as phone book'))]
+                    metavar=_('file'), help=_('use FILE as phone book'))]
 
     command_options = [
         # command options
         make_option('--list', action='callback', callback=_cb_cmd_opt,
-                    help=_('Print a short list of entries. Accepts a list '
-                           'of indices')),
+                    help=_('print a short list of the specified entries')),
         make_option('--table', action='callback', callback=_cb_cmd_opt,
-                    help=_('Prints a tables with entries. Accepts a list '
-                           'of indices')),
+                    help=_('prints a tables with the specified entries.')),
         make_option('--show', action='callback', callback=_cb_cmd_opt,
-                    help=_('Shows the specified entries.')),
+                    help=_('shows the specified entries.')),
         make_option('--search', action='callback', args='required',
-                    help=_('Searches the phonebook for the specified '
-                           'patterns'), callback=_cb_cmd_opt),
+                    help=_('searches the phonebook for the specified '
+                           'patterns'), callback=_cb_cmd_opt,
+                    metavar='patterns'),
         make_option('--create', action='callback', callback=_cb_cmd_opt,
-                    help=_('Creates the specified number of new entries')),
+                    help=_('creates the specified number of new entries'),
+                    metavar='number'),
         make_option('--edit', action='callback', callback=_cb_cmd_opt,
-                    help=_('Edits the entries at the specified indices'),
+                    help=_('edits the entries at the specified indices'),
                     args='required'),
         make_option('--remove', action='callback', args='required',
-                    help=_('Remove the entries at the specified indices'),
+                    help=_('remove the entries at the specified indices'),
                     callback=_cb_cmd_opt),
         make_option('--export', action='callback', args='required',
-                    help=_('Export phone book to all specified locations'),
-                    callback=_cb_cmd_opt),
+                    help=_('export phone book to all specified locations'),
+                    callback=_cb_cmd_opt, metavar='targets'),
         make_option('--import', action='callback', args='required',
-                    help=_('Import all specified phone books'),
-                    callback=_cb_cmd_opt)
+                    help=_('import all specified phone books'),
+                    callback=_cb_cmd_opt, metavar='files')
         ]
 
     local_options = []
@@ -745,7 +798,8 @@ class ConsoleIFace:
                               description=self.description,
                               version=__version__,
                               option_class=CommandOption,
-                              option_list=self.parser_options)
+                              option_list=self.parser_options,
+                              formatter=CommandHelpFormatter())
         # command options
         desc = _('Commands to modify the phone book and to search or print '
                  'entries. Only one of these options may be specified. '
@@ -754,7 +808,7 @@ class ConsoleIFace:
         group = parser.add_option_group(_('Commands'), desc)
         group.add_options(self.command_options)
         # global options
-        desc = _('These options are valid for every command')
+        desc = _('These options are valid with every command')
         group = parser.add_option_group(_('Global options'), desc)
         group.add_options(self.global_options)
 
@@ -773,7 +827,6 @@ class ConsoleIFace:
         
         # get the command function
         options.command_function = self._get_cmd_function(options.command)
-        
         return (options, args)
 
     def start(self):
