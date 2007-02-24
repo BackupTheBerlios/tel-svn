@@ -882,10 +882,10 @@ class ConsoleIFace:
         make_option('--list', action='callback', callback=cb_cmd_opt,
                     help=_('print a short list of the specified entries')),
         make_option('--table', action='callback', callback=cb_cmd_opt,
-                    help=_('prints a table with the specified entries.')),
-        make_option('--show', action='callback', callback=cb_cmd_opt,
-                    help=_('shows the specified entries.'),
+                    help=_('prints a table with the specified entries.'),
                     options=['--output']),
+        make_option('--show', action='callback', callback=cb_cmd_opt,
+                    help=_('shows the specified entries.')),
         make_option('--search', action='callback', args='required',
                     help=_('searches the phonebook for the specified '
                            'patterns'), callback=cb_cmd_opt,
@@ -922,7 +922,7 @@ class ConsoleIFace:
                            'with "-" are hidden.')),
         make_option('-i', '--ignore-case', action='store_true',
                     dest='ignore_case',
-                    help=_('ignore case, when searching. The default is, '
+                    help=_('ignore case, when searching. The default is '
                            'not to ignore case.')),
         # FIXME: someone knows a good short options for --fields?
         make_option('--fields', action='store', dest='fields',
