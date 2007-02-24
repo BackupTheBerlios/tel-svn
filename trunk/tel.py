@@ -335,10 +335,10 @@ class CommandHelpFormatter(IndentedHelpFormatter):
             # build the complete options string and wrap it to width of the
             # help
             opt_str = ''.join([msg, options])
-            lines = textwrap.wrap(opt_str, self.help_width)
+            lines = textwrap.wrap(opt_str, self.help_width - 4)
             # this is the first line, which includes the message
             first_line = lines[0]
-            first_indent = self.help_position
+            first_indent = self.help_position + 4
             # reindent and wrap the remaining option lines
             opt_str = ' '.join(lines[1:])
             options_indent = first_indent + len(msg)
@@ -788,7 +788,8 @@ class ConsoleIFace:
         """Search the phone book for `pattern`"""
         found = []
         for pattern in args:
-            entries = self.phonebook.search(pattern, options.regexp)
+            entries = self.phonebook.search(pattern, options.regexp,
+                                            options.fields)
             # add all entries which aren't already in found. This avoids
             # printing entries twice, which are matched by more than one
             # pattern
@@ -879,7 +880,8 @@ class ConsoleIFace:
         make_option('--search', action='callback', args='required',
                     help=_('searches the phonebook for the specified '
                            'patterns'), callback=cb_cmd_opt,
-                    metavar='patterns', options=['--regexp, --output']),
+                    metavar='patterns',
+                    options=['--regexp, --output', '--fields']),
         make_option('--create', action='callback', callback=cb_cmd_opt,
                     help=_('creates the specified number of new entries'),
                     metavar='number'),
@@ -903,11 +905,16 @@ class ConsoleIFace:
                            'following URL: '
                            'http://docs.python.org/lib/re-syntax.html')),
         make_option('-o', '--output', action='store', dest='output',
-                    type='field_list', metavar='fields', 
+                    type='field_list', metavar='FIELDS', 
                     help=_('specifies the fields to show. Takes a '
                            'comma-separated list of internal names as '
                            'printed by --help-fields. Fields prefixed '
-                           'with "-" are hidden.'))]
+                           'with "-" are hidden.')),
+        # FIXME: someone knows a good short options for --fields?
+        make_option('--fields', action='store', dest='fields',
+                    type='field_list',
+                    help=_('Specifies a list of fields to search in. '
+                    'Accepts the same syntax as the --output option'))]
 
     def _parse_args(self):
         """Parses command line arguments"""
