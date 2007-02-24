@@ -46,13 +46,6 @@ from copy import copy
 from optparse import (Option, OptionError, OptionParser, OptionValueError,
                       IndentedHelpFormatter)
 
-# some ideas
-# FIXME: add --force option to suppress warnings and confirmation requests
-# TODO: implement encryption
-# TODO: mark fields, which matched the search pattern
-# TODO: support sorting for list, show and table commands
-# TODO: import more file formats (mainly vcard)
-# TODO: export to mutt?
 
 # The directory, where tel stores its config
 CONFIG_DIR = os.path.expanduser(os.path.join('~', '.tel'))
@@ -101,6 +94,7 @@ class Entry(object):
                      'town', 'mobile', 'phone', 'email', 'birthdate', 'tags']
 
     # FIXME: convert attributes into properties to support type checking
+    # FIXME: we could use new style classes here
                   
     def __init__(self):
         # init all fields
@@ -669,7 +663,6 @@ class ConsoleIFace:
         editor = ConsoleEntryEditor()
         entry = editor.edit(entry)
         # check if the user wants to add an empty entry
-        print bool(entry)
         if not entry:
             msg = _('Do you really want to save an emtpy entry? ')
             resp = raw_input(msg)
