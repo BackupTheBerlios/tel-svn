@@ -145,7 +145,7 @@ class Entry(object):
         return NotImplemented
 
     def __ne__(self, other):
-        for field in self._fields():
+        for field in self.default_order:
             if getattr(self, field) != getattr(other, field):
                 return True
         return False
@@ -155,7 +155,7 @@ class Entry(object):
 
     def __hash__(self):
         hash_ = 0
-        for field in self._fields():
+        for field in self.default_order:
             hash_ ^= hash(getattr(self, field))
         return hash_
 
@@ -163,9 +163,14 @@ class Entry(object):
         # return a short representation
         return _('[%(index)s] %(firstname)s %(lastname)s') % self.__dict__
 
-    def _fields(self):
-        """:returns: A list of all fields"""
-        return self.default_order
+    def __nonzero__(self):
+        # whether the entry is empty. an empty entry is an entry whose
+        # fields (except index) are empty.  Since index is auto-created on
+        # most cases, an empty entry can have an index.
+        for field in self.default_order:
+            if field != 'index' and getattr(self, field):
+                return True
+        return False
 
     def matches(self, pattern, ignore_case=False, regexp=False,
                 fields=None):
@@ -176,7 +181,7 @@ class Entry(object):
         :returns: True, if any field in this entry matches `pattern`,
         False otherwise"""
         if fields is None:
-            fields = self._fields()
+            fields = self.default_order
         for field in fields:
             if regexp:
                 flags = re.UNICODE | re.LOCALE
@@ -663,8 +668,18 @@ class ConsoleIFace:
         print
         editor = ConsoleEntryEditor()
         entry = editor.edit(entry)
+        # check if the user wants to add an empty entry
+        print bool(entry)
+        if not entry:
+            msg = _('Do you really want to save an emtpy entry? ')
+            resp = raw_input(msg)
+            if resp != 'y':
+                # abort without saving
+                print _('The entry is not saved')
+                return
         self.phonebook.add(entry)
-        self.phonebook.save()    
+        self.phonebook.save()
+        print 'The entry was saved'
 
     # UTILITIES
 
