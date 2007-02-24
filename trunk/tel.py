@@ -49,11 +49,6 @@ from optparse import (Option, OptionError, OptionParser, OptionValueError,
 # some ideas
 # FIXME: add --force option to suppress warnings and confirmation requests
 # TODO: implement encryption
-# TODO: search could support case-insensitive searching
-# TODO: search command should accept an argument, which specifies the
-#       fields to search in
-# TODO: if a search was only run over specific fields, only these
-#       fields should be printed
 # TODO: mark fields, which matched the search pattern
 # TODO: support sorting for list, show and table commands
 # TODO: import more file formats (mainly vcard)
@@ -167,7 +162,8 @@ class Entry(object):
         """:returns: A list of all fields"""
         return self.default_order
 
-    def matches(self, pattern, regexp=False, fields=None):
+    def matches(self, pattern, ignore_case=False, regexp=False,
+                fields=None):
         """Note, that this method does *not* support regular expressions.
         :param pattern: A string pattern, which is searched in this entry
         :param regexp: Whether pattern is a regular expression or not
@@ -178,11 +174,19 @@ class Entry(object):
             fields = self._fields()
         for field in fields:
             if regexp:
-                if bool(re.search(pattern, str(getattr(self, field)))):
+                flags = re.UNICODE | re.LOCALE
+                if ignore_case:
+                    flags = flags | re.IGNORECASE
+                if bool(re.search(pattern, str(getattr(self, field)),
+                                  flags)):
                     return True
             else:
+                value = str(getattr(self, field))
+                if ignore_case:
+                    pattern = pattern.lower()
+                    value = value.lower()
                 # very simple searching algo ;)
-                if pattern in str(getattr(self, field)):
+                if pattern in value:
                     return True
         return False
 
@@ -299,12 +303,12 @@ class PhoneBook:
             index = entry
         del self[index]
 
-    def search(self, *args):
+    def search(self, *args, **kwargs):
         """Searchs the phone book.
-        `*args` are the same as for Entry.matches"""
+        `*args` and `**kwargs` are the same as for Entry.matches"""
         found_entries = []
         for entry in self:
-            if entry.matches(*args):
+            if entry.matches(*args, **kwargs):
                 found_entries.append(entry)
         return found_entries
 
@@ -608,22 +612,19 @@ class ConsoleIFace:
     # INTERACTION FUNCTIONS
 
     def print_short_list(self, entries):
-        """Prints all `entries` in a short format:
-        If `entries` is None, all entries are printed"""
+        """Prints all `entries` in a short format:"""
         print
         for entry in entries:
             print repr(entry)
 
     def print_long_list(self, entries):
-        """Prints every single entry in `entries` in full detail.
-        If `entries` is None, all entries are printed"""
+        """Prints every single entry in `entries` in full detail."""
         for entry in entries:
             print '-'*20
             print entry
 
     def print_table(self, entries, fields):
-        """Prints `entries` as a table. If `entries` is None, all entries
-        are printed"""
+        """Prints `entries` as a table."""
         print
         # this is the head line of the table
         headline = map(Entry.translations.get, fields)
@@ -707,7 +708,14 @@ class ConsoleIFace:
     # - Add the option --foo to the command_options list.
     #   If --foo requires arguments, set the keyword argument 'args' to
     #   'required'. If it must not have any arguments, set it to 'no'.
-    #   The default is 'optional'
+    #   The default is 'optional'. Command options *must* always invoke the
+    #   callback cb_cmd_opt! 
+    # - If --foo should support options, add the options to the
+    #   local_options list. To make these options appear along with the
+    #   command help, add the keyword argument "options" to the command
+    #   option and provide it with a list or tuple of supported options.
+    #   These options can be queried trough the options argument of the
+    #   command function
 
     def _cmd_export(self, options, *args):
         """Exports phone book"""
@@ -788,8 +796,8 @@ class ConsoleIFace:
         """Search the phone book for `pattern`"""
         found = []
         for pattern in args:
-            entries = self.phonebook.search(pattern, options.regexp,
-                                            options.fields)
+            entries = self.phonebook.search(pattern, options.ignore_case,
+                                            options.regexp, options.fields)
             # add all entries which aren't already in found. This avoids
             # printing entries twice, which are matched by more than one
             # pattern
@@ -844,7 +852,8 @@ class ConsoleIFace:
 
     defaults = {
         'file': DEF_FILENAME,
-        'output': Entry.default_order
+        'output': Entry.default_order,
+        'ignore_case': False
         }
 
     parser_options = [
@@ -881,7 +890,8 @@ class ConsoleIFace:
                     help=_('searches the phonebook for the specified '
                            'patterns'), callback=cb_cmd_opt,
                     metavar='patterns',
-                    options=['--regexp, --output', '--fields']),
+                    options=['--regexp, --output', '--fields',
+                             '--ignore-case']),
         make_option('--create', action='callback', callback=cb_cmd_opt,
                     help=_('creates the specified number of new entries'),
                     metavar='number'),
@@ -910,6 +920,10 @@ class ConsoleIFace:
                            'comma-separated list of internal names as '
                            'printed by --help-fields. Fields prefixed '
                            'with "-" are hidden.')),
+        make_option('-i', '--ignore-case', action='store_true',
+                    dest='ignore_case',
+                    help=_('ignore case, when searching. The default is, '
+                           'not to ignore case.')),
         # FIXME: someone knows a good short options for --fields?
         make_option('--fields', action='store', dest='fields',
                     type='field_list',
