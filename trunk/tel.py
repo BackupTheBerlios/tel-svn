@@ -503,7 +503,8 @@ class ConsoleEntryEditor:
         ('mobile', _('You entered an invalid mobile number!')),
         ('phone', _('You entered an invalid phone number!')),
         ('email', _('You entered an invalid eMail address!')),
-        ('birthdate', None)]
+        ('birthdate', None),
+        ('tags', None)]
          
     def verify_phone_number(self, number):
         return bool(self.phone_number_pattern.match(number))
