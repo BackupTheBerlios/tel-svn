@@ -79,6 +79,7 @@ class Entry(object):
     :ivar phone:
     :ivar email:
     :ivar birthdate:
+    :ivar tags: The famous web 2.0 thingy
     """
 
     # mainly important for table printing and field specifications
@@ -92,31 +93,34 @@ class Entry(object):
         'mobile': _('Mobile'),
         'phone': _('Phone'),
         'email': _('eMail'),
-        'birthdate': _('Date of birth')
+        'birthdate': _('Date of birth'),
+        'tags': _('Tags')
         }
 
     default_order = ['index', 'firstname', 'lastname', 'street', 'postcode',
-                     'town', 'mobile', 'phone', 'email', 'birthdate']
+                     'town', 'mobile', 'phone', 'email', 'birthdate', 'tags']
 
     # FIXME: convert attributes into properties to support type checking
                   
     def __init__(self):
         # init all fields
         self.index = None
-        self.firstname = None
-        self.lastname = None
-        self.street = None
-        self.postcode = None
-        self.town = None
-        self.mobile = None
-        self.phone = None
-        self.email = None
-        self.birthdate = None
+        self.firstname = ''
+        self.lastname = ''
+        self.street = ''
+        self.postcode = ''
+        self.town = ''
+        self.mobile = ''
+        self.phone = ''
+        self.email = ''
+        self.birthdate = ''
+        self.tags = ''
 
     def __str__(self):
         # return a pretty representation
         # NOTE: this doesn't respect field translations to allow pretty
         # printing without being bound to field limits
+        # TODO: use textwrap here to prevent overlong lines
         msg = _('Index:          %(index)s\n'
                 'Name:           %(firstname)s %(lastname)s\n'
                 'Street:         %(street)s\n'
@@ -124,7 +128,8 @@ class Entry(object):
                 'Phone:          %(phone)s\n'
                 'Mobile:         %(mobile)s\n'
                 'eMail:          %(email)s\n'
-                'Date of birth:  %(birthdate)s') % self.__dict__
+                'Date of birth:  %(birthdate)s\n'
+                'Tags:           %(tags)\n') % self.__dict__
         return msg
 
     def __lt__(self, other):
