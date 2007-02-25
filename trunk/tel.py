@@ -690,26 +690,42 @@ class ConsoleIFace:
         The syntax looks like the following: 4-5 4 6 7
 
         Eachentry is only returned once, even if the index appears more than
-        once
-        :raises ValueError: If some string could not be interpreted"""
+        once"""
         entries = []
         try:
             for arg in args:
                 if '-' in arg:
                     parts = arg.split('-')
-                    for i in xrange(int(parts[0]), int(parts[1]) + 1):
+                    start = int(parts[0])
+                    end = int(parts[1])
+                    if not start in self.phonebook:
+                        msg = _('WARNING: start index %s out of range')
+                        print >> sys.stderr, msg % start
+                    if not end in self.phonebook:
+                        msg = _('WARNING: end index %s out of range')
+                        print >> sys.stderr, msg % end
+                    # verify start and end
+                    # FIXME: use slicing here, if phone supports it
+                    for i in xrange(start, end+1):
                         try:
+                            # check if we have already added the index
                             if self.phonebook[i] not in entries:
                                 entries.append(self.phonebook[i])
                         except KeyError:
-                            pass  # silently drop non exisiting keys
+                            # silenty ignore non-existing keys here
+                            # this avoids page-long listings for typing
+                            # mistakes like 5-100 instead of 5-10
+                            pass 
                 else:
+                    index = int(arg)
                     try:
-                        entry = self.phonebook[int(arg)]
+                        entry = self.phonebook[index]
+                        # check if we have already added the index
                         if entry not in entries:
                             entries.append(entry)
                     except KeyError:
-                        pass  # silently drop non exisiting keys
+                        msg = _('WARNING: There is no entry with index %s')
+                        print >> sys.stderr, msg % index
             return entries
         except ValueError:
             sys.exit(_('Error: An invalid index was specified'))
