@@ -1,5 +1,5 @@
 <?php
-	// include language functions
+	// include language function
 	include "httpsprache.php";
 
 	// defines allowed content, which can be included through a GET request
