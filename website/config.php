@@ -5,4 +5,5 @@
 	// defines allowed content, which can be included through a GET request
 	$content["home"] = "home.php";
 	$content["download"] = "download.php";
+	$content["news"] = "news.php";
 ?>
