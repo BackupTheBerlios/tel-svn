@@ -504,6 +504,9 @@ class ConsoleEntryEditor:
         ('email', _('You entered an invalid eMail address!')),
         ('birthdate', None),
         ('tags', None)]
+
+    edit_msg = _('Editing entry %r...')
+    new_msg = _('Creating a new entry...')
          
     def verify_phone_number(self, number):
         return bool(self.phone_number_pattern.match(number))
@@ -552,14 +555,16 @@ class ConsoleEntryEditor:
             user"""
             if entry is None:
                 entry = Entry()
-                print _('Creating a new entry...\n'
-                        'Please fill the following fields. To leave a '
-                        'field empty, just press ENTER without entering '
-                        'something.')    
+                print self.new_msg
+                help = _('Please fill the following fields. To leave a '
+                         'field empty, just press ENTER without entering '
+                         'something.')
+                print textwrap.fill(help)
             else:
                 self.edited_entry = entry
-                print _('Editing entry %r\n'
-                        'Please fill the following fields...') % entry
+                print self.edit_msg % entry
+                help = _('Please fill the following fields.')
+                print textwrap.fill(help)
                 # set input hook to show the current value
                 readline.set_pre_input_hook(self._input_hook)
             print
@@ -585,16 +590,18 @@ class ConsoleEntryEditor:
             user"""
             if entry is None:
                 entry = Entry()
-                print _('Creating a new entry...\n'
-                        'Please fill the following fields. To leave a '
-                        'field empty, just press ENTER without entering '
-                        'something.')    
+                print self.new_msg
+                help = _('Please fill the following fields. To leave a '
+                         'field empty, just press ENTER without entering '
+                         'something.')
+                print textwrap.fill(help, 79)
             else:
-                print _('Editing entry %r\n'
-                        'Please fill the following fields.\n'
-                        'The current value is shown in square brackets.'
-                        'NOTE: The current value is not preserved. You '
-                        'have to re-enter every value!') % entry
+                print self.edit_msg % entry
+                help = _('Please fill the following fields. The current '
+                         'value is shown in square brackets. NOTE: The '
+                         'current value is not preserved. You have to '
+                         're-enter every value!')
+                print textwrap.fill(help, 79)
             print
             for field in self.fields:
                 self.current_field = field[0]
