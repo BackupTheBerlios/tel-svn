@@ -1,5 +1,7 @@
 <?php
+	// view all (!) PHP-errors
 	error_reporting(E_ALL);
+
 	// include configuration
 	include "config.php";
 
