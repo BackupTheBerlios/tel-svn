@@ -1,0 +1,33 @@
+<!DOCTYPE webproject>
+<webproject>
+  <project type="Local" name="tel" encoding="utf8" >
+    <upload/>
+    <author/>
+    <email/>
+    <defaultDTD>-//W3C//DTD XHTML 1.1//EN</defaultDTD>
+    <item url="images/" uploadstatus="1" />
+    <item url="images/logo.png" uploadstatus="1" />
+    <item url="lang/" uploadstatus="1" />
+    <item url="lang/de/" uploadstatus="1" />
+    <item url="lang/de/error.php" uploadstatus="1" />
+    <item url="lang/de/home.php" uploadstatus="1" />
+    <item modified_time="1172330785" url="lang/de/ihv.php" uploadstatus="1" />
+    <item url="lang/en/" uploadstatus="1" />
+    <item url="lang/en/error.php" uploadstatus="1" />
+    <item url="lang/en/home.php" uploadstatus="1" />
+    <item url="lang/en/ihv.php" uploadstatus="1" />
+    <item url="config.php" uploadstatus="1" />
+    <item url="footer.php" uploadstatus="1" />
+    <item url="header.php" uploadstatus="1" />
+    <item url="httpsprache.php" uploadstatus="1" />
+    <item url="index.php" uploadstatus="1" />
+    <item url="phpinfo.php" uploadstatus="1" />
+    <item modified_time="1172332863" url="stylesheet.css" uploadstatus="1" />
+    <item url="" uploadstatus="1" />
+    <templates>templates/</templates>
+    <toolbars>toolbars/</toolbars>
+    <annotations/>
+    <item url="lang/de/download.php" uploadstatus="1" />
+    <item url="lang/en/download.php" uploadstatus="1" />
+  </project>
+</webproject>

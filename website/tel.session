@@ -1,0 +1,16 @@
+<!DOCTYPE webprojectsession>
+<webprojectsession>
+  <session usePreviewPrefix="0" previewPrefix="" >
+    <itemcursorpositions>
+      <item line="0" column="0" url="lang/de/home.php" />
+      <item line="0" column="0" url="lang/en/error.php" />
+      <item line="0" column="0" url="lang/en/ihv.php" />
+    </itemcursorpositions>
+    <uploadprofiles defaultProfile="berlios" >
+      <profile remote_host="shell.berlios.de" remote_port="" remote_path="/home/groups/tel/htdocs" remote_protocol="fish" user="lunar" name="berlios" >
+        <uploadeditem upload_time="0" url="lang/" />
+        <uploadeditem upload_time="0" url="lang/de/" />
+      </profile>
+    </uploadprofiles>
+  </session>
+</webprojectsession>
