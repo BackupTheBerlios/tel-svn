@@ -1,5 +1,5 @@
-<h1>Kontaktiere uns</h1>
-<p>In the following table are the official tel developers. The GPG key you will find on one of the key server.</p>
+<h1>Contact us</h1>
+<p>These are the developers of tel. GPG keys can be found on the keyservers.</p>
 
 <p>
 <table>
