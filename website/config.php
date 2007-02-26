@@ -6,4 +6,5 @@
 	$content["home"] = "home.php";
 	$content["download"] = "download.php";
 	$content["news"] = "news.php";
+	$content["dev"] = "developer.php";
 ?>
