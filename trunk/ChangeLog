@@ -1,3 +1,15 @@
+0.1.5
+	added a new field for custom tags
+	--search supports regular expressions with the -r/--regexp switch
+	--search supports case-insensitive searching with the  
+	-i/--ignore-case switch
+	--fields option for --search to specify the fields to search in
+	-o/--output option to define the fields to be printed by --search
+	and --table
+	Fixed: Creating entries without readline support doesn't show 
+	empty brackets anymore
+	Fixed: Saving empty entries requires confirmation now
+	Fixed: Specifing non-existing indices prints warnings now
 0.1.4.2
 	Fixed: Index 0 was not handled correctly when editing entries
 	
