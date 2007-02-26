@@ -589,6 +589,7 @@ class ConsoleEntryEditor:
             :returns: The entry with the new values as entered by the
             user"""
             if entry is None:
+                new = True
                 entry = Entry()
                 print self.new_msg
                 help = _('Please fill the following fields. To leave a '
@@ -596,6 +597,7 @@ class ConsoleEntryEditor:
                          'something.')
                 print textwrap.fill(help, 79)
             else:
+                new = False
                 print self.edit_msg % entry
                 help = _('Please fill the following fields. The current '
                          'value is shown in square brackets. NOTE: The '
@@ -605,8 +607,11 @@ class ConsoleEntryEditor:
             print
             for field in self.fields:
                 self.current_field = field[0]
-                prompt = '%s: [%s] ' % (Entry.translations[field[0]],
-                                        getattr(entry, field[0]))
+                if new:
+                    prompt = '%s: ' % Entry.translations[field[0]]
+                else:
+                    prompt = '%s [%s]: ' % (Entry.translations[field[0]],
+                                            getattr(entry, field[0]))
                 resp = raw_input(prompt).strip()
                 while not self.verify_field(field[0], resp):
                     print field[1]
