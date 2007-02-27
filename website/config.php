@@ -7,4 +7,5 @@
 	$content["download"] = "download.php";
 	$content["news"] = "news.php";
 	$content["contact"] = "contact.php";
+	$content["help"] = "help.php";
 ?>
