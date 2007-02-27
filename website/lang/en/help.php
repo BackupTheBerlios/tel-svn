@@ -1,18 +1,17 @@
-<h1>Die Unterstützung</h1>
+<h1>Support tel</h1>
 
-<p>Falls du daran interessiert bist, bei der Entwicklung von tel mitzuhelfen, gibt es viele Möglichkeiten, auf denen sowohl erfahrene als auch unerfahrene Benutzer helfen können:</p>
+<p>If you are interested in supporting tel, there are a lot of ways to help for both unexperienced and experienced people:</p>
+
+<li>
+<li>You can test tel and report all bugs and failures you find!</li>
+<li>If you are an experienced user, you can help other on the <a href="http://lists.berlios.de/mailman/listinfo/tel-users">tel users mailing list</a>.</li>
+<li>You could help on documenting tel.</li>
+<li>You could test tel on other operating systems (Microsoft Windows, Apple MacOS, ..). The developers are mainly working with linux, so testers are always welcome here.</li>
+<li>You could dig into our work by reading the <a href="http://lists.berlios.de/mailman/listinfo/tel-dev">developer mailing list</a> or <a href="index.php?to=download">grapping the latest revision from Subversion</a>.</li>
+<li>Support tel by showing it to your friends and making it known to the world!</li>
+<li>You can look at open feature requests in the <a href="http://developer.berlios.de/feature/?group_id=8132">tel feature manager</a> and help implementing them.
+</ol>
 
 <p>
-<ol>
-<li>Du kannst einfach tel und die bald mitgelieferten Skripte testen und alle noch unbekannten Fehler, die du findest, uns zu berichten</li>
-<li>Wenn du ein erfahrener Benutzer bist, kannst du anderen durch die <a href="https://lists.berlios.de/mailman/listinfo/tel-users">Mailinglisten</a> helfen</li>
-<li>Du kannst helfen tel, und die Website in andere Sprachen zu übersetzen. Momentan werden Deutsch und Englisch von uns unterstützt. Gerne kannst du dies auch übernehmen oder sogar eine neue Sprache beantragen, die du beherrschst</li>
-<li>Du könntest beim Schreiben einer Dokumentation helfen</li>
-<li>Du könntest tel auf anderen Betriebsystemen testen (Microsofts Windows, Apples MacOS, ..)</li>
-<li>Du könntest in unsere aktuellen Arbeiten reinschauen, indem du unsere <a href="https://lists.berlios.de/mailman/listinfo/tel-dev">Developer-Mailingliste</a> liest oder <a href="index.php?to=download">die aktuellste Revision von tel runterlädst</a> und dort ein bisschen reinschnupperst</li>
-<li>Helfe tel, indem du es (international) bekannt machst und anderen vorführst</li>
-</p>
-
-<p>
-Es gibt viele Arten, sich bei einem Projekt zu beteiligen und nur wenige erfordern gute Programmierkenntnisse. Wenn du Fragen oder Probleme hast, <a href="index.php?to=contact">kontaktiere uns</a> ungeniert oder schreibe in unsere <a href="https://lists.berlios.de/mailman/listinfo/tel-users">Mailingliste</a>.
+There are lots of ways to to help and only few require programming knowledge. If you have questions or problems or want to participate, just <a href="index.php?to=contact">contact us</a> or write on our <a href="http://lists.berlios.de/mailman/listinfo/tel-users">mailing list.</a>.
 </p>
