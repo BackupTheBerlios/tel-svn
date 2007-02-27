@@ -11,6 +11,7 @@
 <li>Du könntest tel auf anderen Betriebsystemen testen (Microsofts Windows, Apples MacOS, ..)</li>
 <li>Du könntest in unsere aktuellen Arbeiten reinschauen, indem du unsere <a href="https://lists.berlios.de/mailman/listinfo/tel-dev">Developer-Mailingliste</a> liest oder <a href="index.php?to=download">die aktuellste Revision von tel runterlädst</a> und dort ein bisschen reinschnupperst</li>
 <li>Helfe tel, indem du es (international) bekannt machst und anderen vorführst</li>
+</ol>
 </p>
 
 <p>
