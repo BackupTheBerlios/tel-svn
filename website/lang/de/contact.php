@@ -5,7 +5,7 @@
 Sebastian "lunar" Wiesner<br />
 tel-Entwickler, Webmaster<br />
 basti DOT wiesner AT gmx DOT net<br />
-GPG key: 0x82DE71BE auf hkp://wwwkeys.eu.gpg.net<br />
+GPG Schlüssel: 0x82DE71BE auf hkp://wwwkeys.eu.gpg.net<br />
 </p>
 
 <p>
