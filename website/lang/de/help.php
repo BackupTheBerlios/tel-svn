@@ -1,3 +1,5 @@
+<h1>Die Unterstützung</h1>
+
 <p>Falls du daran interessiert bist, bei der Entwicklung von tel mitzuhelfen, gibt es viele Möglichkeiten, auf denen sowohl erfahrene als auch unerfahrene Benutzer helfen können:</p>
 
 <p>
