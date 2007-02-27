@@ -9,7 +9,7 @@
 <li>Du könntest tel auf anderen Betriebsystemen testen (Microsoft Windows, Apple MacOS, ..). Die Entwickler arbeiten hauptsächlich mit Linux, weswegen Tester hier immer willkommen sind</li>
 <li>Du könntest in unsere Arbeit reinschauen, indem du die <a href="http://lists.berlios.de/mailman/listinfo/tel-dev">Entwickler-Mailingliste</a> liest oder <a href="index.php?to=download">die aktuellste Revision von tel runterlädst</a> und dort ein bisschen reinschnupperst</li>
 <li>Helfe tel, indem du es (international) bekannt machst und anderen vorführst</li>
-<li>Du kannst dir die ausstehenden Aufgaben im <a href="http://developer.berlios.de/feature/?group_id=8132">tel Feature Manager</a> ansehen und dabei helfen, diese zu implementieren
+<li>Du kannst dir die ausstehenden Aufgaben im <a href="http://developer.berlios.de/feature/?group_id=8132">tel Feature Manager</a> ansehen und dabei helfen, diese zu implementieren</li>
 </ul>
 
 <p>
