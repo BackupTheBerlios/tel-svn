@@ -11,6 +11,11 @@ h1
 	font-weight: bold;
 }
 
+hr
+{
+	border: solid #CFCFCF 1px
+}
+
 a:link
 {
 	color: #55FFFF;
