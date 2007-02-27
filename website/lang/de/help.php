@@ -10,6 +10,7 @@
 <li>Du könntest tel auf anderen Betriebsystemen testen (Microsofts Windows, Apples MacOS, ..)</li>
 <li>Du könntest in unsere aktuellen Arbeiten reinschauen, indem du unsere <a href="https://lists.berlios.de/mailman/listinfo/tel-dev">Developer-Mailingliste</a> liest oder <a href="index.php?to=download">die aktuellste Revision von tel runterlädst</a> und dort ein bisschen reinschnupperst</li>
 <li>Helfe tel, indem du es (international) bekannt machst und anderen vorführst</li>
+<li>Du könntest die <a href="todo">ToDo-Datei</a> der Website lesen und vielleicht kannst du etwas davon erfüllen und uns zuschicken. Oder du kannst die ToDos im python Skript lesen und ein Patch hochladen. Wenn wir daran interessiert sind, werden wir deine Änderungen im Skript implementieren</li>
 </ol>
 
 <p>
