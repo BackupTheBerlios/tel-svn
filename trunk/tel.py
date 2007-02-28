@@ -115,6 +115,7 @@ class Entry(object):
         # NOTE: this doesn't respect field translations to allow pretty
         # printing without being bound to field limits
         # TODO: use textwrap here to prevent overlong lines
+        print self.index
         msg = _('Index:          %(index)s\n'
                 'Name:           %(firstname)s %(lastname)s\n'
                 'Street:         %(street)s\n'
@@ -123,7 +124,7 @@ class Entry(object):
                 'Mobile:         %(mobile)s\n'
                 'eMail:          %(email)s\n'
                 'Date of birth:  %(birthdate)s\n'
-                'Tags:           %(tags)\n') % self.__dict__
+                'Tags:           %(tags)s\n') % self.__dict__
         return msg
 
     def __lt__(self, other):
