@@ -631,18 +631,35 @@ class ConsoleIFace:
 
     def print_short_list(self, entries):
         """Prints all `entries` in a short format:"""
+        # FIXME: adding --sort
         print
         for entry in entries:
             print repr(entry)
 
-    def print_long_list(self, entries):
+    def print_long_list(self, entries, sort):
         """Prints every single entry in `entries` in full detail."""
+        # if --sort SORT is given then save up/down options in sort_up
+        # and the fieldname in sort
+        if sort:
+            sort_used = 1
+            sort_up = 1
+            if sort[0] == "-":
+                sort = sort.split('-')[1]
+                sort_up = 0
+            elif sort[0] == "+":
+                sort = sort.split('+')[1]
+        else:
+            sort_used = 0
+        # FIXME: finishing --sort
+
         for entry in entries:
             print '-'*20
             print entry
 
     def print_table(self, entries, fields):
         """Prints `entries` as a table."""
+        # FIXME: adding --sort
+
         print
         # this is the head line of the table
         headline = map(Entry.translations.get, fields)
@@ -833,7 +850,7 @@ class ConsoleIFace:
             entries = self.parse_indices(*args)            
         else:
             entries = self.phonebook
-        self.print_long_list(entries)
+        self.print_long_list(entries, options.sort)
 
     def _cmd_search(self, options, *args):
         """Search the phone book for `pattern`"""
@@ -971,7 +988,10 @@ class ConsoleIFace:
         make_option('--fields', action='store', dest='fields',
                     type='field_list',
                     help=_('Specifies a list of fields to search in. '
-                    'Accepts the same syntax as the --output option'))]
+                    'Accepts the same syntax as the --output option')),
+        make_option('-s', '--sort', action='store',
+                    dest='sort',
+                    help=_('supports sorting of output'))]
 
     def _parse_args(self):
         """Parses command line arguments"""
