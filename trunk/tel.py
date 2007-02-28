@@ -115,7 +115,6 @@ class Entry(object):
         # NOTE: this doesn't respect field translations to allow pretty
         # printing without being bound to field limits
         # TODO: use textwrap here to prevent overlong lines
-        print self.index
         msg = _('Index:          %(index)s\n'
                 'Name:           %(firstname)s %(lastname)s\n'
                 'Street:         %(street)s\n'
@@ -895,9 +894,7 @@ class ConsoleIFace:
 
     def _get_cmd_function(self, arg):
         """Returns the function for `arg`"""
-        if arg.startswith('--'):
-            # strip of the first to shlashes
-            name = '_cmd_%s' % arg[2:]
+        name = '_cmd_%s' % arg.lstrip('-')
         # and replace remaining slashes with underscores
         name = name.replace('-', '_')
         function = getattr(self, name)
