@@ -260,6 +260,12 @@ class PhoneBook:
         elif isinstance(item, basestring):
             return len(self.search(item)) > 0
 
+    def sorted(self, key='index', reverse=False):
+        """Returns a sorted representation of the phonebook"""
+        def key_func(entry):
+            return getattr(entry, key)
+        return sorted(self._entries.values(), key=key_func, reverse=reverse)
+
     def load(self):
         """Loads the phone book from the file.
         **WARNING:** This resets the `entries` list. All changes made after
@@ -478,6 +484,18 @@ def cb_cmd_opt(option, opt_str, value, parser):
     parser.values.command_values = value
     parser.values.args = option.args
 
+def cb_sort(option, opt_str, value, parser):
+    """Callback for --sort. Preparses the given field..."""
+    fieldname = value.lstrip('+-')
+    if not fieldname in Entry.default_order:
+        msg = _('WARNING: There is no field %s, using index for sorting.')
+        print >> sys.stderr, msg % fieldname
+    else:
+        # get the fieldname by striping of prefixes
+        parser.values.sortby = value.lstrip('+-')
+    # if sort starts with -, enable descending searching
+    parser.values.descending = value.startswith('-')
+    
 
 class ConsoleEntryEditor:
     """This class provides a simple console-based entry editor.
@@ -628,37 +646,29 @@ class ConsoleIFace:
 
     # INTERACTION FUNCTIONS
 
-    def print_short_list(self, entries):
-        """Prints all `entries` in a short format:"""
-        # FIXME: adding --sort
+    def print_short_list(self, entries, sortby='index', desc=False):
+        """Prints all `entries` in a short format.
+        :param sortby: The field to sort by
+        :param asc: True, if sorting order is descending"""
+        entries = entries.sorted(key=sortby, reverse=desc)
         print
         for entry in entries:
             print repr(entry)
 
-    def print_long_list(self, entries, sort):
-        """Prints every single entry in `entries` in full detail."""
-        # if --sort SORT is given then save up/down options in sort_up
-        # and the fieldname in sort
-        if sort:
-            sort_used = 1
-            sort_up = 1
-            if sort[0] == "-":
-                sort = sort.split('-')[1]
-                sort_up = 0
-            elif sort[0] == "+":
-                sort = sort.split('+')[1]
-        else:
-            sort_used = 0
-        # FIXME: finishing --sort
-
+    def print_long_list(self, entries, sortby='index', desc=False):
+        """Prints every single entry in `entries` in full detail.
+        :param sortby: The field to sort by
+        :param asc: True, if sorting order is descending"""
+        entries = entries.sorted(key=sortby, reverse=desc)
         for entry in entries:
             print '-'*20
             print entry
 
-    def print_table(self, entries, fields):
-        """Prints `entries` as a table."""
-        # FIXME: adding --sort
-
+    def print_table(self, entries, fields, sortby='index', desc=False):
+        """Prints `entries` as a table.
+        :param sortby: The field to sort by
+        :param asc: True, if sorting order is descending"""
+        entries = entries.sorted(key=sortby, reverse=desc)
         print
         # this is the head line of the table
         headline = map(Entry.translations.get, fields)
@@ -833,7 +843,8 @@ class ConsoleIFace:
             entries = self.parse_indices(*args)
         else:
             entries = self.phonebook
-        self.print_table(entries, options.output)
+        self.print_table(entries, options.output, options.sortby,
+                         options.descending)
 
     def _cmd_list(self, options, *args):
         """Print a list"""
@@ -841,7 +852,7 @@ class ConsoleIFace:
             entries = self.parse_indices(*args)
         else:
             entries = self.phonebook
-        self.print_short_list(entries)
+        self.print_short_list(entries, options.sortby, options.descending)
 
     def _cmd_show(self, options, *args):
         """Show a single entry"""
@@ -849,7 +860,7 @@ class ConsoleIFace:
             entries = self.parse_indices(*args)            
         else:
             entries = self.phonebook
-        self.print_long_list(entries, options.sort)
+        self.print_long_list(entries, options.sortby, options.descending)
 
     def _cmd_search(self, options, *args):
         """Search the phone book for `pattern`"""
@@ -862,7 +873,8 @@ class ConsoleIFace:
             # pattern
             new = filter(lambda entry: entry not in found, entries)
             found += new
-        self.print_table(found, options.output)
+        self.print_table(found, options.output, options.sortby,
+                         options.descending)
 
     def _cmd_create(self, options, *args):
         """Interactivly create a new entry"""
@@ -910,7 +922,9 @@ class ConsoleIFace:
     defaults = {
         'file': DEF_FILENAME,
         'output': Entry.default_order,
-        'ignore_case': False
+        'ignore_case': False,
+        'sortby': 'index',
+        'descending': False
         }
 
     parser_options = [
@@ -937,18 +951,20 @@ class ConsoleIFace:
     command_options = [
         # command options
         make_option('--list', action='callback', callback=cb_cmd_opt,
-                    help=_('print a short list of the specified entries')),
+                    help=_('print a short list of the specified entries'),
+                    options=['--sort-by']),
         make_option('--table', action='callback', callback=cb_cmd_opt,
-                    help=_('prints a table with the specified entries.'),
-                    options=['--output']),
+                    help=_('print a table with the specified entries.'),
+                    options=['--output', '--sort-by']),
         make_option('--show', action='callback', callback=cb_cmd_opt,
-                    help=_('shows the specified entries.')),
+                    help=_('shows the specified entries.'),
+                    options=['--sort-by']),
         make_option('--search', action='callback', args='required',
                     help=_('searches the phonebook for the specified '
                            'patterns'), callback=cb_cmd_opt,
                     metavar='patterns',
                     options=['--regexp, --output', '--fields',
-                             '--ignore-case']),
+                             '--ignore-case', '--sort-by']),
         make_option('--create', action='callback', callback=cb_cmd_opt,
                     help=_('creates the specified number of new entries'),
                     metavar='number'),
@@ -986,9 +1002,13 @@ class ConsoleIFace:
                     type='field_list',
                     help=_('Specifies a list of fields to search in. '
                     'Accepts the same syntax as the --output option')),
-        make_option('-s', '--sort', action='store',
-                    dest='sort',
-                    help=_('supports sorting of output'))]
+        make_option('-s', '--sort-by', action='callback', type='string',
+                    callback=cb_sort, metavar='field',
+                    help=_('Sort output. Specify a field name as printed '
+                           'by --help-fields. If prefixed with +, sorting '
+                           'order is ascending, if prefixed with a -, '
+                           'sorting order is descending. The default is '
+                           'ascending, if no prefix is used.'))]
 
     def _parse_args(self):
         """Parses command line arguments"""
