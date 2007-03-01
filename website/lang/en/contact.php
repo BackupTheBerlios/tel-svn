@@ -16,3 +16,10 @@ project leader, webmaster<br />
 potrmwn AT gmail DOT com<br />
 GPG key: 0xB6D4FFA0 on hkp://wwwkeys.eu.gpg.net<br />
 </p>
+
+<hr />
+
+<p>
+Claas-Thido "sabsirro" Pfaff<br />
+Organisator<br />
+</p>

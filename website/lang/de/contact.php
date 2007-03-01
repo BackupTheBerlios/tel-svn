@@ -16,3 +16,10 @@ Projekt Leiter, Webmaster<br />
 potrmwn AT gmail DOT com<br />
 GPG Schlüssel: 0xB6D4FFA0 auf hkp://wwwkeys.eu.gpg.net<br />
 </p>
+
+<hr />
+
+<p>
+Claas-Thido "sabsirro" Pfaff<br />
+Organisator<br />
+</p>
