@@ -8,4 +8,5 @@
 	$content["news"] = "news.php";
 	$content["contact"] = "contact.php";
 	$content["help"] = "help.php";
+    $content["screenshots"] = "screenshots.php";
 ?>
