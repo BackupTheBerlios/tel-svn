@@ -11,6 +11,12 @@ h1
 	font-weight: bold;
 }
 
+h2
+{
+	font-size: 1.0em;
+	font-weight: bold;
+}
+
 hr
 {
 	border: solid #CFCFCF 1px
