@@ -260,12 +260,6 @@ class PhoneBook:
         elif isinstance(item, basestring):
             return len(self.search(item)) > 0
 
-    def sorted(self, key='index', reverse=False):
-        """Returns a sorted representation of the phonebook"""
-        def key_func(entry):
-            return getattr(entry, key)
-        return sorted(self._entries.values(), key=key_func, reverse=reverse)
-
     def load(self):
         """Loads the phone book from the file.
         **WARNING:** This resets the `entries` list. All changes made after
@@ -331,6 +325,18 @@ class PhoneBook:
         """Encrypts phonebook"""
         # TODO implement
         raise NotImplementedError('Encryption is not yet supported')
+
+
+# UTILITIES
+
+def sort_entries_by_field(iterable, field, descending):
+    """This sorts `iterable`, which may only contain Entry objects, by
+    `field`, which may be be any of Entry.default_order. If `descending is
+    True, the list is reversed."""
+    def key_func(entry):
+        return getattr(entry, field)
+    return sorted(iterable, key=key_func, reverse=descending)
+
 
 # EXTENDING OptionParser
 
@@ -484,7 +490,7 @@ def cb_cmd_opt(option, opt_str, value, parser):
     parser.values.command_values = value
     parser.values.args = option.args
 
-def cb_sort(option, opt_str, value, parser):
+def cb_sortby(option, opt_str, value, parser):
     """Callback for --sort. Preparses the given field..."""
     fieldname = value.lstrip('+-')
     if not fieldname in Entry.default_order:
@@ -492,7 +498,7 @@ def cb_sort(option, opt_str, value, parser):
         print >> sys.stderr, msg % fieldname
     else:
         # get the fieldname by striping of prefixes
-        parser.values.sortby = value.lstrip('+-')
+        parser.values.sortby = fieldname
     # if sort starts with -, enable descending searching
     parser.values.descending = value.startswith('-')
     
@@ -650,7 +656,7 @@ class ConsoleIFace:
         """Prints all `entries` in a short format.
         :param sortby: The field to sort by
         :param asc: True, if sorting order is descending"""
-        entries = entries.sorted(key=sortby, reverse=desc)
+        entries = sort_entries_by_field(entries, sortby, desc)
         print
         for entry in entries:
             print repr(entry)
@@ -659,7 +665,7 @@ class ConsoleIFace:
         """Prints every single entry in `entries` in full detail.
         :param sortby: The field to sort by
         :param asc: True, if sorting order is descending"""
-        entries = entries.sorted(key=sortby, reverse=desc)
+        entries = sort_entries_by_field(entries, sortby, desc)
         for entry in entries:
             print '-'*20
             print entry
@@ -668,7 +674,7 @@ class ConsoleIFace:
         """Prints `entries` as a table.
         :param sortby: The field to sort by
         :param asc: True, if sorting order is descending"""
-        entries = entries.sorted(key=sortby, reverse=desc)
+        entries = sort_entries_by_field(entries, sortby, desc)
         print
         # this is the head line of the table
         headline = map(Entry.translations.get, fields)
@@ -727,9 +733,7 @@ class ConsoleIFace:
         try:
             for arg in args:
                 if '-' in arg:
-                    parts = arg.split('-')
-                    start = int(parts[0])
-                    end = int(parts[1])
+                    start, end = map(int, arg.split('-'))
                     if not start in self.phonebook:
                         msg = _('WARNING: start index %s out of range')
                         print >> sys.stderr, msg % start
@@ -1003,7 +1007,7 @@ class ConsoleIFace:
                     help=_('Specifies a list of fields to search in. '
                     'Accepts the same syntax as the --output option')),
         make_option('-s', '--sort-by', action='callback', type='string',
-                    callback=cb_sort, metavar='field',
+                    callback=cb_sortby, metavar='field',
                     help=_('Sort output. Specify a field name as printed '
                            'by --help-fields. If prefixed with +, sorting '
                            'order is ascending, if prefixed with a -, '
