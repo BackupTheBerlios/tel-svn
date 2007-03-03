@@ -41,8 +41,10 @@ from distutils.command.install_data import install_data
 
 PO_DIRECTORY = 'po'
 
+
 def has_messages(self):
     return bool(self.distribution.po)
+
 
 def has_app_data(self):
     return bool(self.distribution.appdata)
@@ -50,6 +52,7 @@ def has_app_data(self):
 
 def has_links(self):
     return bool(self.distribution.links)
+
 
 class TelDistribution(Distribution):
     """:ivar po: A list of all source files, which contains messages"""
@@ -270,10 +273,12 @@ class InstallLinks(Command):
 
         for link in self.distribution.links:
             dest = os.path.join(link_dir, link[0])
-            # FIXME: assert, that link_target is executable
-            # if not, do a chmod
             target = os.path.join(target_dir, link[1])
-            log.info('linking %s to %s', dest, target)
+            # make sure, target is executable (link would be vain otherwise)
+            mode = int('755', 8)
+            self.announce('Changing mode of %s to %o' % (target, mode))
+            os.chmod(target, mode)
+            self.announce('linking %s to %s' % (dest, target))
             if not self.dry_run:
                 if os.path.islink(dest):
                     os.remove(dest)
@@ -342,6 +347,7 @@ def get_version():
             return __version__
         elif line.startswith('import'):
             raise SystemExit('Couldn\'t extract version information')
+        
 
 long_description = """\
 tel is a little console-based phone book program. It allows adding,
@@ -350,6 +356,7 @@ terminal. Pretty printing capabilites are also provided.
 Entries are stored in simple csv file. This eases import and export with
 common spread sheet applications like Microsoft Excel or OpenOffice.org
 Calc."""
+
 
 setup(name='tel',
       version=get_version(),
