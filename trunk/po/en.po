@@ -1,0 +1,384 @@
+# translation of en.po to
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Sebastian Wiesner <basti.wiesner@gmx.net>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: en\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-03-03 12:20+0100\n"
+"PO-Revision-Date: 2007-03-03 12:08+0100\n"
+"Last-Translator: Sebastian Wiesner <basti.wiesner@gmx.net>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#: tel.py:80
+msgid "Index"
+msgstr "Index"
+
+#: tel.py:81
+msgid "First name"
+msgstr "First name"
+
+#: tel.py:82
+msgid "Last name"
+msgstr "Last name"
+
+#: tel.py:83
+msgid "Street and number"
+msgstr "Street and number"
+
+#: tel.py:84
+msgid "Postal code"
+msgstr "Postal code"
+
+#: tel.py:85
+msgid "Town"
+msgstr "Town"
+
+#: tel.py:86
+msgid "Mobile"
+msgstr "Mobile"
+
+#: tel.py:87
+msgid "Phone"
+msgstr "Phone"
+
+#: tel.py:88
+msgid "eMail"
+msgstr "eMail"
+
+#: tel.py:89
+msgid "Date of birth"
+msgstr "Date of birth"
+
+#: tel.py:90
+msgid "Tags"
+msgstr "Tags"
+
+#: tel.py:118
+#, python-format
+msgid ""
+"Index:          %(index)s\n"
+"Name:           %(firstname)s %(lastname)s\n"
+"Street:         %(street)s\n"
+"Town:           %(postcode)s %(town)s\n"
+"Phone:          %(phone)s\n"
+"Mobile:         %(mobile)s\n"
+"eMail:          %(email)s\n"
+"Date of birth:  %(birthdate)s\n"
+"Tags:           %(tags)s\n"
+msgstr ""
+"Index:          %(index)s\n"
+"Name:           %(firstname)s %(lastname)s\n"
+"Street:         %(street)s\n"
+"Town:           %(postcode)s %(town)s\n"
+"Phone:          %(phone)s\n"
+"Mobile:         %(mobile)s\n"
+"eMail:          %(email)s\n"
+"Date of birth:  %(birthdate)s\n"
+"Tags:           %(tags)s\n"
+
+#: tel.py:158
+#, python-format
+msgid "[%(index)s] %(firstname)s %(lastname)s"
+msgstr "[%(index)s] %(firstname)s %(lastname)s"
+
+#: tel.py:354
+msgid "Supported options: "
+msgstr "Supported options: "
+
+#: tel.py:419
+#, python-format
+msgid "WARNING: There is no field %s"
+msgstr "WARNING: There is no field %s"
+
+#: tel.py:470
+msgid "Field"
+msgstr "Field"
+
+#: tel.py:470
+msgid "Internal name"
+msgstr "Internal name"
+
+#: tel.py:487
+msgid "Please specify only one command option"
+msgstr "Please specify only one command option"
+
+#: tel.py:497
+#, python-format
+msgid "WARNING: There is no field %s, using index for sorting"
+msgstr "WARNING: There is no field %s, using index for sorting"
+
+#: tel.py:524
+msgid "You entered an invalid postal code!"
+msgstr "You entered an invalid postal code!"
+
+#: tel.py:526
+msgid "You entered an invalid mobile number!"
+msgstr "You entered an invalid mobile number!"
+
+#: tel.py:527
+msgid "You entered an invalid phone number!"
+msgstr "You entered an invalid phone number!"
+
+#: tel.py:528
+msgid "You entered an invalid eMail address!"
+msgstr "You entered an invalid eMail address!"
+
+#: tel.py:532
+#, python-format
+msgid "Editing entry %r..."
+msgstr "Editing entry %r..."
+
+#: tel.py:533
+msgid "Creating a new entry..."
+msgstr "Creating a new entry..."
+
+#: tel.py:583 tel.py:619
+msgid ""
+"Please fill the following fields. To leave a field empty, just press ENTER "
+"without entering something."
+msgstr ""
+"Please fill the following fields. To leave a field empty, just press ENTER "
+"without entering something."
+
+#: tel.py:590
+msgid "Please fill the following fields."
+msgstr "Please fill the following fields."
+
+#: tel.py:626
+msgid ""
+"Please fill the following fields. The current value is shown in square "
+"brackets. NOTE: The current value is not preserved. You have to re-enter "
+"every value!"
+msgstr ""
+"Please fill the following fields. The current value is shown in square "
+"brackets. NOTE: The current value is not preserved. You have to re-enter "
+"every value!"
+
+#: tel.py:712
+msgid "Do you really want to save an emtpy entry? "
+msgstr "Do you really want to save an emtpy entry? "
+
+#: tel.py:716
+msgid "The entry is not saved"
+msgstr "The entry is not saved"
+
+#: tel.py:738
+#, python-format
+msgid "WARNING: start index %s out of range"
+msgstr "WARNING: start index %s out of range"
+
+#: tel.py:741
+#, python-format
+msgid "WARNING: end index %s out of range"
+msgstr "WARNING: end index %s out of range"
+
+#: tel.py:763
+#, python-format
+msgid "WARNING: There is no entry with index %s"
+msgstr "WARNING: There is no entry with index %s"
+
+#: tel.py:767
+msgid "Error: An invalid index was specified"
+msgstr "Error: An invalid index was specified"
+
+#: tel.py:798
+#, python-format
+msgid "Directory %s does not exist. Create it? "
+msgstr "Directory %s does not exist. Create it? "
+
+#: tel.py:812
+#, python-format
+msgid "%s already exists. Overwrite it? "
+msgstr "%s already exists. Overwrite it? "
+
+#: tel.py:820
+#, python-format
+msgid "Error: Permission denied for %s"
+msgstr "Error: Permission denied for %s"
+
+#: tel.py:832
+msgid "Do you really want to import the phone book you're just using? "
+msgstr "Do you really want to import the phone book you're just using? "
+
+#: tel.py:835
+#, python-format
+msgid "Not importing %s..."
+msgstr "Not importing %s..."
+
+#: tel.py:890
+msgid "--create needs a number"
+msgstr "--create needs a number"
+
+#: tel.py:892
+msgid "--create accepts only one argument"
+msgstr "--create accepts only one argument"
+
+#: tel.py:904
+#, python-format
+msgid "Really delete entry \"%s\"? "
+msgstr "Really delete entry \"%s\"? "
+
+#: tel.py:923
+msgid "tel is a little address book program for your terminal."
+msgstr "tel is a little address book program for your terminal."
+
+#: tel.py:937
+msgid "show license information and exit"
+msgstr "show license information and exit"
+
+#: tel.py:940
+msgid "show copyright information and exit"
+msgstr "show copyright information and exit"
+
+#: tel.py:943
+msgid "show author information and exit"
+msgstr "show author information and exit"
+
+#: tel.py:946
+msgid ""
+"print a list of all fields and exit. The internal name as printed by this "
+"options must be used, when specifying fields on command line."
+msgstr ""
+"print a list of all fields and exit. The internal name as printed by this "
+"options must be used, when specifying fields on command line."
+
+#: tel.py:953
+msgid "file"
+msgstr "file"
+
+#: tel.py:953
+msgid "use FILE as phone book"
+msgstr "use FILE as phone book"
+
+#: tel.py:958
+msgid "print a short list of the specified entries"
+msgstr "print a short list of the specified entries"
+
+#: tel.py:961
+msgid "print a table with the specified entries."
+msgstr "print a table with the specified entries."
+
+#: tel.py:964
+msgid "show the specified entries."
+msgstr "show the specified entries."
+
+#: tel.py:967
+msgid "search the phonebook for the specified patterns"
+msgstr "search the phonebook for the specified patterns"
+
+#: tel.py:973
+msgid "create the specified number of new entries"
+msgstr "create the specified number of new entries"
+
+#: tel.py:976
+msgid "edit the entries at the specified indices"
+msgstr "edit the entries at the specified indices"
+
+#: tel.py:979
+msgid "remove the entries at the specified indices"
+msgstr "remove the entries at the specified indices"
+
+#: tel.py:982
+msgid "export phone book to all specified locations"
+msgstr "export phone book to all specified locations"
+
+#: tel.py:985
+msgid "import all specified phone books"
+msgstr "import all specified phone books"
+
+#: tel.py:990
+msgid ""
+"enable regular expressions. tel uses the Python-syntax. You can find an "
+"overview at the following URL: http://docs.python.org/lib/re-syntax.html"
+msgstr ""
+"enable regular expressions. tel uses the Python-syntax. You can find an "
+"overview at the following URL: http://docs.python.org/lib/re-syntax.html"
+
+#: tel.py:996
+msgid ""
+"specify the fields to show. Takes a comma-separated list of internal names "
+"as printed by --help-fields. Fields prefixed with \"-\" are hidden."
+msgstr ""
+"specify the fields to show. Takes a comma-separated list of internal names "
+"as printed by --help-fields. Fields prefixed with \"-\" are hidden."
+
+#: tel.py:1002
+msgid "ignore case, when searching. The default is not to ignore case."
+msgstr "ignore case, when searching. The default is not to ignore case."
+
+#: tel.py:1007
+msgid ""
+"specify a list of fields to search in. Accepts the same syntax as the --"
+"output option"
+msgstr ""
+"specify a list of fields to search in. Accepts the same syntax as the --"
+"output option"
+
+#: tel.py:1011
+msgid ""
+"sort output. Specify a field name as printed by --help-fields. If prefixed "
+"with +, sorting order is ascending, if prefixed with a -, sorting order is "
+"descending. The default is ascending, if no prefix is used."
+msgstr ""
+"sort output. Specify a field name as printed by --help-fields. If prefixed "
+"with +, sorting order is ascending, if prefixed with a -, sorting order is "
+"descending. The default is ascending, if no prefix is used."
+
+#: tel.py:1027
+msgid ""
+"Commands to modify the phone book and to search or print entries. Only one "
+"of these options may be specified. Commands, which accept indices, recognize "
+"range specifications like 4-6."
+msgstr ""
+"Commands to modify the phone book and to search or print entries. Only one "
+"of these options may be specified. Commands, which accept indices, recognize "
+"range specifications like 4-6."
+
+#: tel.py:1031
+msgid "Commands"
+msgstr "Commands"
+
+#: tel.py:1034
+msgid "These options are valid with every command"
+msgstr "These options are valid with every command"
+
+#: tel.py:1035
+msgid "Global options"
+msgstr "Global options"
+
+#: tel.py:1037
+msgid ""
+"These options are only supported by certain commands. If you use them with "
+"other commands, they are just ignored."
+msgstr ""
+"These options are only supported by certain commands. If you use them with "
+"other commands, they are just ignored."
+
+#: tel.py:1039
+msgid "Special options"
+msgstr "Special options"
+
+#: tel.py:1046
+msgid "Please specify a command"
+msgstr "Please specify a command"
+
+#: tel.py:1049
+#, python-format
+msgid "The command %s need arguments"
+msgstr "The command %s need arguments"
+
+#: tel.py:1052
+#, python-format
+msgid "The command %s doesn't take any arguments"
+msgstr "The command %s doesn't take any arguments"
+
+#: tel.py:1066
+msgid "Dying peacefully ..."
+msgstr "Dying peacefully ..."

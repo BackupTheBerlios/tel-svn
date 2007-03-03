@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE."""
 
-__version__ = '0.1.5'
+__version__ = '0.1.6-pre'
 
 __authors__ = ['Sebastian Wiesner <basti.wiesner@gmx.net>']
 
@@ -34,7 +34,7 @@ import shutil
 import re
 import textwrap
 import gettext
-_ = gettext.gettext
+gettext.install('tel')
 
 try:
     # more comfortable line editing
@@ -494,7 +494,7 @@ def cb_sortby(option, opt_str, value, parser):
     """Callback for --sort. Preparses the given field..."""
     fieldname = value.lstrip('+-')
     if not fieldname in Entry.default_order:
-        msg = _('WARNING: There is no field %s, using index for sorting.')
+        msg = _('WARNING: There is no field %s, using index for sorting')
         print >> sys.stderr, msg % fieldname
     else:
         # get the fieldname by striping of prefixes
@@ -817,7 +817,7 @@ class ConsoleIFace:
                 shutil.copyfile(self.phonebook.path, path)
             except IOError, e:
                 if e.errno == 13:
-                    msg = _('ERROR: Permission denied for %s') % path
+                    msg = _('Error: Permission denied for %s') % path
                 else:
                     msg = e
                 print >> sys.stderr, msg
@@ -920,7 +920,7 @@ class ConsoleIFace:
 
     usage = '%prog [global options] command [arguments]'
              
-    description = _('Tel is a little address book program for your '
+    description = _('tel is a little address book program for your '
                     'terminal.')
 
     defaults = {
@@ -961,19 +961,19 @@ class ConsoleIFace:
                     help=_('print a table with the specified entries.'),
                     options=['--output', '--sort-by']),
         make_option('--show', action='callback', callback=cb_cmd_opt,
-                    help=_('shows the specified entries.'),
+                    help=_('show the specified entries.'),
                     options=['--sort-by']),
         make_option('--search', action='callback', args='required',
-                    help=_('searches the phonebook for the specified '
+                    help=_('search the phonebook for the specified '
                            'patterns'), callback=cb_cmd_opt,
                     metavar='patterns',
                     options=['--regexp, --output', '--fields',
                              '--ignore-case', '--sort-by']),
         make_option('--create', action='callback', callback=cb_cmd_opt,
-                    help=_('creates the specified number of new entries'),
+                    help=_('create the specified number of new entries'),
                     metavar='number'),
         make_option('--edit', action='callback', callback=cb_cmd_opt,
-                    help=_('edits the entries at the specified indices'),
+                    help=_('edit the entries at the specified indices'),
                     args='required'),
         make_option('--remove', action='callback', args='required',
                     help=_('remove the entries at the specified indices'),
@@ -993,7 +993,7 @@ class ConsoleIFace:
                            'http://docs.python.org/lib/re-syntax.html')),
         make_option('-o', '--output', action='store', dest='output',
                     type='field_list', metavar='FIELDS', 
-                    help=_('specifies the fields to show. Takes a '
+                    help=_('specify the fields to show. Takes a '
                            'comma-separated list of internal names as '
                            'printed by --help-fields. Fields prefixed '
                            'with "-" are hidden.')),
@@ -1004,11 +1004,11 @@ class ConsoleIFace:
         # FIXME: someone knows a good short options for --fields?
         make_option('--fields', action='store', dest='fields',
                     type='field_list',
-                    help=_('Specifies a list of fields to search in. '
+                    help=_('specify a list of fields to search in. '
                     'Accepts the same syntax as the --output option')),
         make_option('-s', '--sort-by', action='callback', type='string',
                     callback=cb_sortby, metavar='field',
-                    help=_('Sort output. Specify a field name as printed '
+                    help=_('sort output. Specify a field name as printed '
                            'by --help-fields. If prefixed with +, sorting '
                            'order is ascending, if prefixed with a -, '
                            'sorting order is descending. The default is '
