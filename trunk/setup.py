@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # tel install script
 # Copyright (c) 2007 Sebastian Wiesner
 #
@@ -20,37 +22,41 @@
 # DEALINGS IN THE SOFTWARE."""
 
 
+import os
+from glob import glob
+
 from distutils.core import setup
 from distutils.core import Distribution
 from distutils import log
+from distutils import dir_util
+from distutils import spawn
+from distutils import util
+
 from distutils.cmd import Command
-from distutils.dir_util import remove_tree
 from distutils.command.build import build
 from distutils.command.install import install
-from distutils.command.clean import clean as _clean
+from distutils.command.clean import clean
 from distutils.command.install_data import install_data
-from distutils.spawn import find_executable
-
-import os
-from glob import glob
 
 
 PO_DIRECTORY = 'po'
 
-# TODO: add links command to create executable symlinks
-
 def has_messages(self):
     return bool(self.distribution.po)
 
-def has_application_data(self):
+def has_app_data(self):
     return bool(self.distribution.appdata)
 
+
+def has_links(self):
+    return bool(self.distribution.links)
 
 class TelDistribution(Distribution):
     """:ivar po: A list of all source files, which contains messages"""
     def __init__(self, attrs):
         self.po = None
         self.appdata = None
+        self.links = None
         Distribution.__init__(self, attrs)
 
 
@@ -62,9 +68,6 @@ class Messages(Command):
                     ('msgmerge-exe=', None,
                      'Full path to the msgmerge executable')]
 
-    def get_command_name(self):
-        return 'messages'
-
     def initialize_options(self):
         self.xgettext_exe = None
         self.msgmerge_exe = None
@@ -72,14 +75,14 @@ class Messages(Command):
     def finalize_options(self):
         if self.xgettext_exe is None:
             self.announce('Searching xgettext...')
-            self.xgettext_exe = find_executable('xgettext')
+            self.xgettext_exe = spawn.find_executable('xgettext')
             if self.xgettext_exe is None:
                 raise SystemExit('Couldn\'t find "xgettext".')
             self.announce('  ...xgettext found at %s' % self.xgettext_exe)
 
         if self.msgmerge_exe is None:
             self.announce('Searching msgmerge...')
-            self.msgmerge_exe = find_executable('msgmerge')
+            self.msgmerge_exe = spawn.find_executable('msgmerge')
             if self.msgmerge_exe is None:
                 raise SystemExit('Couldn\'t find "msgmerge".')
             self.announce('  ...msgmerge found at %s' % self.msgmerge_exe)
@@ -94,7 +97,7 @@ class Messages(Command):
         self.spawn(cmd) 
 
         for po_file in glob(os.path.join(PO_DIRECTORY, '*.po')):
-            cmd = [self.msgmerge_exe, '-q', '-o', po_file, po_file]
+            cmd = [self.msgmerge_exe, '-q', '-o', po_file, po_file, target]
             self.spawn(cmd)            
         
 
@@ -104,9 +107,6 @@ class BuildMessages(Command):
     user_options = [('build-dir=', 'd',
                      'directory to build message catalogs in'),
                     ('msgfmt-exe=', None, 'Path to the msgfmt executable')]
-
-    def get_command_name(self):
-        return 'build_messages'
 
     def initialize_options(self):
         self.build_dir = None
@@ -155,7 +155,7 @@ class ExtendedBuild(build):
                                                'po')
         if self.msgfmt_exe is None:
             self.announce('Searching msgfmt...')
-            self.msgfmt_exe = find_executable('msgfmt')
+            self.msgfmt_exe = spawn.find_executable('msgfmt')
             if self.msgfmt_exe is None:
                 raise SystemExit('Couldn\'t find "msgfmt".')
             self.announce('  ...msgfmt found at %s' % self.msgfmt_exe)
@@ -172,9 +172,6 @@ class InstallMessages(Command):
         ('skip-build', None, "skip the build steps")]
 
     boolean_options = ['skip-build']
-
-    def get_command_name(self):
-        return 'install_messages'
 
     def initialize_options(self):
         self.install_dir = None
@@ -197,55 +194,107 @@ class InstallMessages(Command):
             language = os.path.splitext(os.path.basename(po_file))[0]
             target_dir = os.path.join(self.install_dir, language,
                                       'LC_MESSAGES')
-            self.mkpath(target_dir, dry_run=self.dry_run)
+            self.mkpath(target_dir)
             target = os.path.join(target_dir,
                                   self.distribution.get_name() + '.mo')
             self.copy_file(po_file, target)
 
 
 class InstallAppData(install_data):
-    def get_command_name(self):
-        return 'install_app_data'
-
     def initialize_options(self):
         install_data.initialize_options(self)
 
     def finalize_options(self):
         self.set_undefined_options('install',
-                                   ('install_app_data', 'install_dir',
-                                    'root', 'root',
-                                    'force', 'force'))
+                                   ('install_app_data', 'install_dir'))
+        install_data.finalize_options(self)
         self.appdata = self.distribution.appdata
 
     def run(self):
         self.mkpath(self.install_dir)
+        # used for byte compiling
+        created_files = []
+
         for item in self.appdata:
             if isinstance(item, basestring):
                 # put it right into the installation directory
                 if os.path.isfile(item):
-                    self.copy_file(item, self.install_dir)
+                    (f, copied) = self.copy_file(item, self.install_dir)
+                    created_files.append(f)
                 elif os.path.isdir(item):
-                    self.copy_tree(item, os.path.join(self.install_dir,
-                                                      item))
+                    target =  os.path.join(self.install_dir, item)
+                    files = self.copy_tree(item, target)
+                    created_files.extend(files)
                 else:
                     self.warn('Unable to find %s...' % item)
             else:
                 # assume we have a tupel-like thing here. target directory
                 # relative to install_dir is in first element
-                target_directory = item[0]
-    # FIXME: continue implementation here
+                target_dir = item[0]
+                if self.root:
+                    target_dir = util.change_root(self.root, target_dir)
+                else:
+                    target_dir = os.path.join(self.install_dir, target_dir)
+            
+                for fso in item[1]:
+                    if os.path.isdir(fso):
+                        files = self.copy_tree(fso, target_dir)
+                        created_files.extend(files)
+                    elif os.path.isfile(fso):
+                        (f, copied) = self.copy_file(fso, target_dir)
+                        created_files.append(f)
+                    else:
+                        self.warn('Unable to find %s...' % fso)
+                        
+        # byte compilation
+        util.byte_compile(created_files, optimize=0, force=True,
+                          dry_run=self.dry_run)
 
+
+class InstallLinks(Command):
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+    
+    def run(self):
+        scripts = self.get_finalized_command('install_scripts')
+        appdata = self.get_finalized_command('install_app_data')
+
+        target_dir = appdata.install_dir
+        link_dir = scripts.install_dir
+
+        if not os.path.exists(link_dir):
+            self.mkpath(link_dir)
+
+        for link in self.distribution.links:
+            dest = os.path.join(link_dir, link[0])
+            # FIXME: assert, that link_target is executable
+            # if not, do a chmod
+            target = os.path.join(target_dir, link[1])
+            log.info('linking %s to %s', dest, target)
+            if not self.dry_run:
+                if os.path.islink(dest):
+                    os.remove(dest)
+                os.symlink(target, dest)
+                    
 
 class ExtendedInstall(install):
     user_options = install.user_options[:]
     user_options.append(('install-messages=', None,
                          'Installation directory of message catalogs'))
+    user_options.append(('install-app-data=', None,
+                         'Installation directory for application data'))
 
     sub_commands = install.sub_commands[:]
     sub_commands.append(('install_messages', has_messages))
+    sub_commands.append(('install_app_data', has_app_data))
+    sub_commands.append(('install_links', has_links))
 
     def initialize_options(self):
         self.install_messages = None
+        self.install_app_data = None
         install.initialize_options(self)
 
     def finalize_options(self):
@@ -253,65 +302,64 @@ class ExtendedInstall(install):
         if self.install_messages is None:
             self.install_messages = os.path.join(self.install_data, 'share',
                                                  'locale')
+        if self.install_app_data is None:
+            name = self.distribution.get_name()
+            self.install_app_data = os.path.join(self.install_data, 'share',
+                                                 name)
 
 
-class clean(_clean):
-    # FIXME: clean up code
-    _clean.user_options.append(('build-messages=', None,
-                                "build directory for messages (default: 'build.build-messages')"))
+class ExtendedClean(clean):
+    user_options = clean.user_options[:]
+    user_options.append(('build-messages=', None,
+                         'build directory for messages'))
 
     def initialize_options(self):
-        _clean.initialize_options(self)
         self.build_messages = None
+        clean.initialize_options(self)
 
     def finalize_options(self):
         self.set_undefined_options('build',
-                                   ('build_base', 'build_base'),
-                                   ('build_lib', 'build_lib'),
-                                   ('build_scripts', 'build_scripts'),
-                                   ('build_temp', 'build_temp'),
                                    ('build_messages', 'build_messages'))
-        self.set_undefined_options('bdist', ('bdist_base', 'bdist_base'))
+        clean.finalize_options(self)
+
     def run(self):
-        # remove the build/temp.<plat> directory (unless it's already
-        # gone)
-        if os.path.exists(self.build_temp):
-            remove_tree(self.build_temp, dry_run=self.dry_run)
-        else:
-            log.debug("'%s' does not exist -- can't clean it",
-                      self.build_temp)
-
         if self.all:
-            # remove build directories
-            for directory in (self.build_lib,
-                              self.bdist_base,
-                              self.build_scripts,
-                              self.build_messages):
-                if os.path.exists(directory):
-                    remove_tree(directory, dry_run=self.dry_run)
-                else:
-                    log.warn("'%s' does not exist -- can't clean it",
-                             directory)
+            if os.path.exists(self.build_messages):
+                dir_util.remove_tree(self.build_messages)
+            else:
+                self.warn("'%s' does not exist -- can't clean it",
+                          self.build_messages)
+        clean.run(self)
+        
 
-        # just for the heck of it, try to remove the base build directory:
-        # we might have emptied it right now, but if not we don't care
-        if not self.dry_run:
-            try:
-                os.rmdir(self.build_base)
-                log.info("removing '%s'", self.build_base)
-            except OSError:
-                pass
+def get_version():
+    filename = 'tel.py'
+    stream = open(filename)
+    for line in stream:
+        if line.startswith('__version__'):
+            stream.close()
+            exec line
+            return __version__
+        elif line.startswith('import'):
+            raise SystemExit('Couldn\'t extract version information')
 
-# FIXME: of course the right things should be here
+long_description = """\
+tel is a little console-based phone book program. It allows adding,
+modifing, editing and searching of phone book entries right on your
+terminal. Pretty printing capabilites are also provided.
+Entries are stored in simple csv file. This eases import and export with
+common spread sheet applications like Microsoft Excel or OpenOffice.org
+Calc."""
+
 setup(name='tel',
-      version='0.0.0.0',
-      description='not really relevant',
-      long_description='not really relevant',
-      author='Zaphod',
-      author_email='zaphod@example.com',
-      license='GPL',
-      platforms='what',
-      scripts=['foo'],
+      version=get_version(),
+      description='A little terminal phone book',
+      long_description=long_description,
+      author='Sebastian \'lunar\' Wiesner',
+      author_email='basti.wiesner@gmx.net',
+      url='http://tel.berlios.de',
+      license='MIT/X11',
+      links=[('tel', 'tel.py')],
       po=['tel.py'],
       appdata=['tel.py'],
       distclass=TelDistribution,
@@ -319,6 +367,8 @@ setup(name='tel',
                 'build_messages': BuildMessages,
                 'build': ExtendedBuild,
                 'install_messages': InstallMessages,
+                'install_links': InstallLinks,
+                'install_app_data': InstallAppData,
                 'install': ExtendedInstall,
-                'clean': clean}
+                'clean': ExtendedClean}
       )
