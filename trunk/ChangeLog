@@ -1,3 +1,9 @@
+0.1.6-pre1
+	added installation script
+	added --sort option to sort output
+	added german translation
+	Fixed 010514: --show formatting error
+	
 0.1.5
 	added a new field for custom tags
 	--search supports regular expressions with the -r/--regexp switch
@@ -10,6 +16,7 @@
 	empty brackets anymore
 	Fixed: Saving empty entries requires confirmation now
 	Fixed: Specifing non-existing indices prints warnings now
+	
 0.1.4.2
 	Fixed: Index 0 was not handled correctly when editing entries
 	

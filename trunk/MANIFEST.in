@@ -3,6 +3,7 @@ include *.py
 include INSTALL
 include COPYING
 include AUTHORS
+include ChangeLog
 include MANIFEST.in
 exclude *~ *.bak 
 exclude *.pyc
