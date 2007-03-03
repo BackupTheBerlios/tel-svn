@@ -1,0 +1,8 @@
+recursive-include po *.po
+include *.py
+include INSTALL
+include COPYING
+include AUTHORS
+include MANIFEST.in
+exclude *~ *.bak 
+exclude *.pyc
