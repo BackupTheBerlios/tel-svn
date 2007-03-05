@@ -1,0 +1,60 @@
+README for tel, a little terminal phone book
+
+
+Introduction
+============
+
+tel is a little console-based phone book program. It allows adding,
+modifing, editing and searching of phone book entries right on your
+terminal. Pretty printing capabilites are also provided.
+
+Entries are stored in simple csv file. This eases import and export with
+common spread sheet applications like Microsoft Excel or OpenOffice.org
+Calc.
+
+
+Installing tel
+=================================
+
+See the INSTALL file for this.
+
+
+Running tel
+================
+
+tel --help gives you an overview of the options and commands tel supports.
+
+
+Troubleshooting
+===============
+
+A mailing-list has been set up for support and discussion about
+tel. Its address is :
+
+    <tel-users@lists.berlios.de>
+
+You can subscribe to it by visiting the following url:
+
+    https://lists.berlios.de/mailman/listinfo/tel-users
+
+To report bugs, you can also register at http://developer.berlios.de and use
+the tel Bug Manager:
+
+    http://developer.berlios.de/bugs/?group_id=8132
+
+Please be as precise as possible when reporting bugs. You should include at
+least the following information:
+
+    * The operation system you are running
+    * The version of Python you are running
+    * The version of tel
+    * A detailled description of the bug
+    * Any input data you were using when the bug appeared
+    * The exact command line invocation
+    * The output of tel, if available
+
+
+Resources
+=========
+
+Have a look at http://tel.berlios.de for more information.
