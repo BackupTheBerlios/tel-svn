@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-03 12:20+0100\n"
-"PO-Revision-Date: 2007-03-03 12:19+0100\n"
+"POT-Creation-Date: 2007-03-05 16:19+0100\n"
+"PO-Revision-Date: 2007-03-05 16:18+0100\n"
 "Last-Translator: Sebastian Wiesner <basti.wiesner@gmx.net>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -50,7 +50,7 @@ msgstr "Festnetz"
 
 #: tel.py:88
 msgid "eMail"
-msgstr "eMail"
+msgstr "E-Mail"
 
 #: tel.py:89
 msgid "Date of birth"
@@ -79,7 +79,7 @@ msgstr ""
 "Stadt:          %(postcode)s %(town)s\n"
 "Festnetz:       %(phone)s\n"
 "Mobil:          %(mobile)s\n"
-"eMail:          %(email)s\n"
+"E-Mail:          %(email)s\n"
 "Geburtsdatum:   %(birthdate)s\n"
 "Tags:           %(tags)s\n"
 
@@ -90,7 +90,11 @@ msgstr "[%(index)s] %(firstname)s %(lastname)s"
 
 #: tel.py:354
 msgid "Supported options: "
-msgstr "Unterstützte Optionen"
+msgstr "Unterstützte Optionen: "
+
+#: tel.py:378
+msgid "indices"
+msgstr "Indizes"
 
 #: tel.py:419
 #, python-format
@@ -128,7 +132,7 @@ msgstr "Sie haben eine ungültige Festnetznummer angegeben!"
 
 #: tel.py:528
 msgid "You entered an invalid eMail address!"
-msgstr "Sie haben eine ungültige eMail Adresse angegeben!"
+msgstr "Sie haben eine ungültige E-Mail Adresse angegeben!"
 
 #: tel.py:532
 #, python-format
@@ -227,24 +231,27 @@ msgstr "--create akzeptiert nur ein Argument"
 msgid "Really delete entry \"%s\"? "
 msgstr "Möchten Sie den Eintrag \"%s\" wirklich löschen? "
 
-#: tel.py:923
-#, fuzzy
-msgid "tel is a little address book program for your terminal."
-msgstr "tel ist kleines Adressbuch für Ihr Terminal."
+#: tel.py:921
+msgid "%prog [options] command [arguments]"
+msgstr "%prog [Optionen] Kommando [Argumente]"
 
-#: tel.py:937
+#: tel.py:923
+msgid "tel is a little address book program for your terminal."
+msgstr "tel ist ein kleines Adressbuch für Ihr Terminal."
+
+#: tel.py:939
 msgid "show license information and exit"
 msgstr "Lizenz-Informationen anzeigen und beenden"
 
-#: tel.py:940
+#: tel.py:942
 msgid "show copyright information and exit"
 msgstr "Copyright-Informationen anzeigen und beenden"
 
-#: tel.py:943
+#: tel.py:945
 msgid "show author information and exit"
 msgstr "Autor-Informationen anzeigen und beenden"
 
-#: tel.py:946
+#: tel.py:948
 msgid ""
 "print a list of all fields and exit. The internal name as printed by this "
 "options must be used, when specifying fields on command line."
@@ -252,53 +259,67 @@ msgstr ""
 "Eine Liste aller Felder ausgeben und beenden. Der interne Name muss "
 "verwendet werden, wenn Felder auf der Kommanozeile angegeben werden."
 
-#: tel.py:953
+#: tel.py:955
 msgid "file"
-msgstr "datei"
+msgstr "Datei"
 
-#: tel.py:953
+#: tel.py:955
 msgid "use FILE as phone book"
 msgstr "DATEI als Telefonbuch verwenden"
 
-#: tel.py:958
+#: tel.py:960
 msgid "print a short list of the specified entries"
 msgstr "eine kurze Liste aller angegebenen Einträge ausgeben"
 
-#: tel.py:961
+#: tel.py:963
 msgid "print a table with the specified entries."
 msgstr "eine Tabelle mit den angegebenen Einträgen ausgeben"
 
-#: tel.py:964
-#, fuzzy
-msgid "show the specified entries."
-msgstr "die angegebenen Einträge zeigen"
+#: tel.py:966
+msgid "show the specified entries"
+msgstr "die angegebenen Einträge anzeigen"
 
-#: tel.py:967
-#, fuzzy
+#: tel.py:969
 msgid "search the phonebook for the specified patterns"
 msgstr "das Telefonbuch nach den angegebenen Mustern durchsuchen"
 
-#: tel.py:973
+#: tel.py:971
+msgid "patterns"
+msgstr "Muster"
+
+#: tel.py:975
 msgid "create the specified number of new entries"
-msgstr "die angegebene Anzahl an Einträgen erzeugen"
+msgstr "die angegebene Anzahl an Einträge erzeugen"
 
 #: tel.py:976
+msgid "number"
+msgstr "Anzahl"
+
+#: tel.py:978
 msgid "edit the entries at the specified indices"
 msgstr "die angegebenen Einträge bearbeiten"
 
-#: tel.py:979
+#: tel.py:981
 msgid "remove the entries at the specified indices"
 msgstr "die angegebenen Einträge entfernen"
 
-#: tel.py:982
+#: tel.py:984
 msgid "export phone book to all specified locations"
 msgstr "das Telefonbuch an die angegebenen Pfade exportieren"
 
 #: tel.py:985
+msgid "targets"
+msgstr "Ziele "
+
+#: tel.py:987
 msgid "import all specified phone books"
 msgstr "die angegebenen Telefonbücher importieren"
 
-#: tel.py:990
+#: tel.py:988
+msgid "files"
+msgstr "Dateien"
+
+#: tel.py:992
 msgid ""
 "enable regular expressions. tel uses the Python-syntax. You can find an "
 "overview at the following URL: http://docs.python.org/lib/re-syntax.html"
@@ -307,7 +328,11 @@ msgstr ""
 "Ausdrücke. Ein Überblick steht an folgender Adresse zur Verfügung: http://"
 "docs.python.org/lib/re-syntax.html"
 
-#: tel.py:996
+#: tel.py:997 tel.py:1008
+msgid "fields"
+msgstr "Felder"
+
+#: tel.py:998
 msgid ""
 "specify the fields to show. Takes a comma-separated list of internal names "
 "as printed by --help-fields. Fields prefixed with \"-\" are hidden."
@@ -316,13 +341,13 @@ msgstr ""
 "interner Feldnamen, wie sie von --print-fields ausgegeben werden. Felder mit "
 "dem Prefix \"-\" werden nicht angezeigt."
 
-#: tel.py:1002
+#: tel.py:1004
 msgid "ignore case, when searching. The default is not to ignore case."
 msgstr ""
 "Groß- und Kleinschreibung beim Suchen ignorieren. Standardmäßig wird Groß- "
 "und Kleinschreibung beachtet."
 
-#: tel.py:1007
+#: tel.py:1009
 msgid ""
 "specify a list of fields to search in. Accepts the same syntax as the --"
 "output option"
@@ -330,7 +355,12 @@ msgstr ""
 "die zu durchsuchenden Felder angegeben. Akzeptiert die selbe Syntax wie die "
 "--output Option."
 
-#: tel.py:1011
+#: tel.py:1012
+#, fuzzy
+msgid "field"
+msgstr "Feld"
+
+#: tel.py:1013
 msgid ""
 "sort output. Specify a field name as printed by --help-fields. If prefixed "
 "with +, sorting order is ascending, if prefixed with a -, sorting order is "
@@ -341,29 +371,29 @@ msgstr ""
 "absteigend sortiert. Fehlt das Prefix oder lautet es +, wird aufsteigend "
 "sortiert."
 
-#: tel.py:1027
+#: tel.py:1029
 msgid ""
 "Commands to modify the phone book and to search or print entries. Only one "
 "of these options may be specified. Commands, which accept indices, recognize "
 "range specifications like 4-6."
 msgstr ""
-"Kommandos, um das Telefonbuch zu verändern, oder Einträge zu suchen oder "
+"Kommandos, um das Telefonbuch zu verändern, Einträge zu suchen oder "
 "auszugeben. Es darf nur ein Kommando zur gleichen Zeit angegeben werden. "
 "Kommandos, die Indizes akzeptieren, erkennen Bereichsangaben wie 4-6."
 
-#: tel.py:1031
+#: tel.py:1033
 msgid "Commands"
 msgstr "Kommandos"
 
-#: tel.py:1034
+#: tel.py:1036
 msgid "These options are valid with every command"
 msgstr "Diese Optionen sind mit jedem Kommando gültig."
 
-#: tel.py:1035
+#: tel.py:1037
 msgid "Global options"
 msgstr "Globale Optionen"
 
-#: tel.py:1037
+#: tel.py:1039
 msgid ""
 "These options are only supported by certain commands. If you use them with "
 "other commands, they are just ignored."
@@ -371,24 +401,24 @@ msgstr ""
 "Diese Optionen werden nur von bestimmten Kommandos unterstützt. Bei anderen "
 "Kommandos werden sie einfach ignoriert."
 
-#: tel.py:1039
+#: tel.py:1041
 msgid "Special options"
 msgstr "Spezielle Optionen"
 
-#: tel.py:1046
+#: tel.py:1048
 msgid "Please specify a command"
-msgstr "Bitte geben Sie ein Kommando an."
+msgstr "Bitte geben Sie ein Kommando an"
 
-#: tel.py:1049
+#: tel.py:1051
 #, python-format
 msgid "The command %s need arguments"
 msgstr "Das Kommando %s benötigt Argumente"
 
-#: tel.py:1052
+#: tel.py:1054
 #, python-format
 msgid "The command %s doesn't take any arguments"
 msgstr "Das Kommando %s akzeptiert keine Argumente"
 
-#: tel.py:1066
+#: tel.py:1068
 msgid "Dying peacefully ..."
 msgstr "Sterbe glücklich ..."

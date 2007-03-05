@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE."""
 
-__version__ = '0.1.6-pre'
+__version__ = '0.1.6'
 
 __authors__ = ['Sebastian Wiesner <basti.wiesner@gmx.net>']
 
@@ -375,7 +375,7 @@ class CommandHelpFormatter(IndentedHelpFormatter):
         """Extend option string formatting to support arguments for
         commands"""
         if option.command and not option.args == 'no':
-            arg_name = option.metavar or 'indices'
+            arg_name = option.metavar or _('indices')
             if option.args == 'optional':
                 arg_name = ''.join(['[', arg_name, ']'])
             lopts = [' '.join([lopt, arg_name]) for lopt in
@@ -918,8 +918,8 @@ class ConsoleIFace:
 
     # OPTION PARSING
 
-    usage = '%prog [global options] command [arguments]'
-             
+    usage = _('%prog [options] command [arguments]')
+
     description = _('tel is a little address book program for your '
                     'terminal.')
 
@@ -931,7 +931,9 @@ class ConsoleIFace:
         'descending': False
         }
 
+
     parser_options = [
+        # FIXME translate help for --help and --version
         make_option('--license', action='callback',
                     callback=cb_print_license,
                     help=_('show license information and exit')),
@@ -961,17 +963,17 @@ class ConsoleIFace:
                     help=_('print a table with the specified entries.'),
                     options=['--output', '--sort-by']),
         make_option('--show', action='callback', callback=cb_cmd_opt,
-                    help=_('show the specified entries.'),
+                    help=_('show the specified entries'),
                     options=['--sort-by']),
         make_option('--search', action='callback', args='required',
                     help=_('search the phonebook for the specified '
                            'patterns'), callback=cb_cmd_opt,
-                    metavar='patterns',
+                    metavar=_('patterns'),
                     options=['--regexp, --output', '--fields',
                              '--ignore-case', '--sort-by']),
         make_option('--create', action='callback', callback=cb_cmd_opt,
                     help=_('create the specified number of new entries'),
-                    metavar='number'),
+                    metavar=_('number')),
         make_option('--edit', action='callback', callback=cb_cmd_opt,
                     help=_('edit the entries at the specified indices'),
                     args='required'),
@@ -980,10 +982,10 @@ class ConsoleIFace:
                     callback=cb_cmd_opt),
         make_option('--export', action='callback', args='required',
                     help=_('export phone book to all specified locations'),
-                    callback=cb_cmd_opt, metavar='targets'),
+                    callback=cb_cmd_opt, metavar=_('targets')),
         make_option('--import', action='callback', args='required',
                     help=_('import all specified phone books'),
-                    callback=cb_cmd_opt, metavar='files')]
+                    callback=cb_cmd_opt, metavar=_('files'))]
 
     local_options = [
         make_option('-r', '--regexp', action='store_true', dest='regexp',
@@ -992,7 +994,7 @@ class ConsoleIFace:
                            'following URL: '
                            'http://docs.python.org/lib/re-syntax.html')),
         make_option('-o', '--output', action='store', dest='output',
-                    type='field_list', metavar='FIELDS', 
+                    type='field_list', metavar=_('fields'), 
                     help=_('specify the fields to show. Takes a '
                            'comma-separated list of internal names as '
                            'printed by --help-fields. Fields prefixed '
@@ -1003,11 +1005,11 @@ class ConsoleIFace:
                            'not to ignore case.')),
         # FIXME: someone knows a good short options for --fields?
         make_option('--fields', action='store', dest='fields',
-                    type='field_list',
+                    type='field_list', metavar=_('fields'),
                     help=_('specify a list of fields to search in. '
                     'Accepts the same syntax as the --output option')),
         make_option('-s', '--sort-by', action='callback', type='string',
-                    callback=cb_sortby, metavar='field',
+                    callback=cb_sortby, metavar=_('field'),
                     help=_('sort output. Specify a field name as printed '
                            'by --help-fields. If prefixed with +, sorting '
                            'order is ascending, if prefixed with a -, '
