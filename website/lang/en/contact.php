@@ -23,3 +23,11 @@ GPG key: 0xB6D4FFA0 on hkp://wwwkeys.eu.gpg.net<br />
 Claas-Thido "sabsirro" Pfaff<br />
 Organisator<br />
 </p>
+
+<hr />
+
+<p>
+Christian "cen" Jung<br />
+translator<br />
+Jabber ID: cen AT jabber DOT ccc DOT de<br />
+</p>
