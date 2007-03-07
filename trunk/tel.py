@@ -34,7 +34,10 @@ import shutil
 import re
 import textwrap
 import gettext
+import optparse
 gettext.install('tel')
+# little hack to make optparse aware of our message catalogs
+optparse._ = gettext.translation('tel').lgettext
 
 try:
     # more comfortable line editing

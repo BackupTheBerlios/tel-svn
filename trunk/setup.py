@@ -247,12 +247,12 @@ class InstallAppData(install_data):
                         self.outfiles.append(f)
                     else:
                         self.warn('Unable to find %s...' % fso)
-                        
+
+        # FIXME: respect --no-compile here
         # byte compilation
-        print self.outfiles
         util.byte_compile(self.outfiles, optimize=0, force=True,
                           dry_run=self.dry_run)
-        # extend outfiles
+        # extend outfiles with compiled files
         python_sources = filter(lambda f: f.endswith('.py'), self.outfiles)
         compiled = map(lambda f: f+'c', python_sources)
         self.outfiles.extend(compiled)
@@ -421,6 +421,11 @@ common spread sheet applications like Microsoft Excel or OpenOffice.org
 Calc."""
 
 
+import optparse
+# get the real source file, not the compiled one
+optparse_source = optparse.__file__.rstrip('c')
+
+
 setup(name='tel',
       version=get_version(),
       description='A little terminal phone book',
@@ -430,7 +435,7 @@ setup(name='tel',
       url='http://tel.berlios.de',
       license='MIT/X11',
       links=[('tel', 'tel.py')],
-      po=['tel.py'],
+      po=['tel.py', optparse_source],
       appdata=['tel.py'],
       distclass=TelDistribution,
       cmdclass={'messages': Messages,
