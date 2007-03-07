@@ -32,7 +32,7 @@ from distutils import dir_util
 from distutils import spawn
 from distutils import util
 
-from distutils.cmd import Command
+from distutils.cmd import Command, install_misc
 from distutils.command.build import build
 from distutils.command.install import install
 from distutils.command.clean import clean
@@ -40,6 +40,7 @@ from distutils.command.install_data import install_data
 
 
 PO_DIRECTORY = 'po'
+INSTALL_LOG = 'installed_files'
 
 
 def has_messages(self):
@@ -101,8 +102,8 @@ class Messages(Command):
 
         for po_file in glob(os.path.join(PO_DIRECTORY, '*.po')):
             cmd = [self.msgmerge_exe, '-q', '-o', po_file, po_file, target]
-            self.spawn(cmd)            
-        
+            self.spawn(cmd)
+
 
 class BuildMessages(Command):
     description = 'Compile message catalogs'
@@ -165,14 +166,13 @@ class ExtendedBuild(build):
         build.finalize_options(self)
             
 
-class InstallMessages(Command):
+class InstallMessages(install_misc):
     description = 'Installs message catalogs'
 
-    user_options = [
-        ('install-dir=', 'd', "directory to install messages to"),
-        ('root=', None, 'alternative root directory'),
-        ('build-dir=','b', "build directory (where to install from)"),
-        ('skip-build', None, "skip the build steps")]
+    user_options = install_misc.user_options[:]
+    user_options.append(('build-dir=','b',
+                         'build directory (where to install from)'))
+    user_options.append(('skip-build', None, "skip the build steps"))
 
     boolean_options = ['skip-build']
 
@@ -180,13 +180,12 @@ class InstallMessages(Command):
         self.install_dir = None
         self.build_dir = None
         self.skip_build = None
+        install_misc.initialize_options(self)
 
     def finalize_options(self):
+        self._install_dir_from('install_messages')
         self.set_undefined_options('build', ('build_messages', 'build_dir'))
-        self.set_undefined_options('install',
-                                   ('install_messages', 'install_dir'),
-                                   ('force', 'force'),
-                                   ('skip_build', 'skip_build'))
+        self.set_undefined_options('install', ('skip_build', 'skip_build'))
 
     def run(self):
         if not self.skip_build:
@@ -201,6 +200,7 @@ class InstallMessages(Command):
             target = os.path.join(target_dir,
                                   self.distribution.get_name() + '.mo')
             self.copy_file(po_file, target)
+            self.outfiles.append(target)
 
 
 class InstallAppData(install_data):
@@ -214,20 +214,19 @@ class InstallAppData(install_data):
         self.appdata = self.distribution.appdata
 
     def run(self):
-        self.mkpath(self.install_dir)
-        # used for byte compiling
-        created_files = []
+        if not os.path.exists(self.install_dir):
+            self.outfiles.extend(self.mkpath(self.install_dir))
 
         for item in self.appdata:
             if isinstance(item, basestring):
                 # put it right into the installation directory
                 if os.path.isfile(item):
                     (f, copied) = self.copy_file(item, self.install_dir)
-                    created_files.append(f)
+                    self.outfiles.append(f)
                 elif os.path.isdir(item):
                     target =  os.path.join(self.install_dir, item)
                     files = self.copy_tree(item, target)
-                    created_files.extend(files)
+                    self.outfiles.extend(files)
                 else:
                     self.warn('Unable to find %s...' % item)
             else:
@@ -242,38 +241,46 @@ class InstallAppData(install_data):
                 for fso in item[1]:
                     if os.path.isdir(fso):
                         files = self.copy_tree(fso, target_dir)
-                        created_files.extend(files)
+                        self.outfiles.extend(files)
                     elif os.path.isfile(fso):
                         (f, copied) = self.copy_file(fso, target_dir)
-                        created_files.append(f)
+                        self.outfiles.append(f)
                     else:
                         self.warn('Unable to find %s...' % fso)
                         
         # byte compilation
-        util.byte_compile(created_files, optimize=0, force=True,
+        print self.outfiles
+        util.byte_compile(self.outfiles, optimize=0, force=True,
                           dry_run=self.dry_run)
+        # extend outfiles
+        python_sources = filter(lambda f: f.endswith('.py'), self.outfiles)
+        compiled = map(lambda f: f+'c', python_sources)
+        self.outfiles.extend(compiled)
+
+    def mkpath (self, name, mode=0777):
+        return dir_util.mkpath(name, mode, dry_run=self.dry_run)
 
 
-class InstallLinks(Command):
-    def initialize_options(self):
-        pass
+class InstallLinks(install_misc):
+    description = ('Installs executable links to scripts in application '
+                   'data directory')
+
+    user_options = install_misc.user_options[:]
 
     def finalize_options(self):
-        pass
+        self._install_dir_from('install_links')
     
     def run(self):
-        scripts = self.get_finalized_command('install_scripts')
         appdata = self.get_finalized_command('install_app_data')
 
-        target_dir = appdata.install_dir
-        link_dir = scripts.install_dir
+        target_directory = appdata.install_dir
 
-        if not os.path.exists(link_dir):
-            self.mkpath(link_dir)
+        if not os.path.exists(self.install_dir):
+            self.outfiles.extend(self.mkpath(self.install_dir))
 
         for link in self.distribution.links:
-            dest = os.path.join(link_dir, link[0])
-            target = os.path.join(target_dir, link[1])
+            dest = os.path.join(self.install_dir, link[0])
+            target = os.path.join(target_directory, link[1])
             # make sure, target is executable (link would be vain otherwise)
             mode = int('755', 8)
             self.announce('Changing mode of %s to %o' % (target, mode))
@@ -283,6 +290,10 @@ class InstallLinks(Command):
                 if os.path.islink(dest):
                     os.remove(dest)
                 os.symlink(target, dest)
+                self.outfiles.append(dest)
+
+    def mkpath (self, name, mode=0777):
+        return dir_util.mkpath(name, mode, dry_run=self.dry_run)
                     
 
 class ExtendedInstall(install):
@@ -291,6 +302,8 @@ class ExtendedInstall(install):
                          'Installation directory of message catalogs'))
     user_options.append(('install-app-data=', None,
                          'Installation directory for application data'))
+    user_options.append(('install-links=', None,
+                         'Installation directory for executable links'))
 
     sub_commands = install.sub_commands[:]
     sub_commands.append(('install_messages', has_messages))
@@ -300,6 +313,7 @@ class ExtendedInstall(install):
     def initialize_options(self):
         self.install_messages = None
         self.install_app_data = None
+        self.install_links = None
         install.initialize_options(self)
 
     def finalize_options(self):
@@ -311,6 +325,55 @@ class ExtendedInstall(install):
             name = self.distribution.get_name()
             self.install_app_data = os.path.join(self.install_data, 'share',
                                                  name)
+
+        if self.install_links is None:
+            self.install_links = self.install_scripts
+
+    def run(self):
+        install.run(self)
+        stream = open(INSTALL_LOG, 'w')
+        outputs = self.get_outputs()
+        stream.write('\n'.join(outputs))
+        stream.write('\n')
+        stream.close()
+
+
+class Uninstall(Command):
+    description = 'Whipes tel from this computer'
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        if not os.path.isfile(INSTALL_LOG):
+            msg = 'Cannot find the list file "%s".' % INSTALL_LOG
+            raise SystemExit(msg)
+
+        stream = open(INSTALL_LOG)
+        files = stream.readlines()
+        stream.close()
+
+        # sort and reverse the file list. This puts the directories after
+        # the files
+        files.sort()
+        files.reverse()
+        
+        for fso in files:
+            fso = fso.strip()
+            self.announce('Removing %s...')
+            try:
+                if not self.dry_run:
+                    if os.path.isfile(fso) or os.path.islink(fso):
+                        os.remove(fso)
+                    elif os.path.isdir(fso):
+                        os.rmdir(fso)
+            except OSError, e:
+                self.warn('Could not remove %s: %s' % (fso, e))
 
 
 class ExtendedClean(clean):
@@ -377,5 +440,6 @@ setup(name='tel',
                 'install_links': InstallLinks,
                 'install_app_data': InstallAppData,
                 'install': ExtendedInstall,
-                'clean': ExtendedClean}
+                'clean': ExtendedClean,
+                'uninstall': Uninstall}
       )

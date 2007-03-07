@@ -1,6 +1,6 @@
 0.1.6
 	added installation script
-	added --sort option to sort output
+	added --sort-by option to sort output
 	added german translation
 	Fixed 010514: --show formatting error
 	
