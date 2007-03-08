@@ -401,7 +401,7 @@ class ExtendedClean(clean):
         
 
 def get_version():
-    filename = 'tel.py'
+    filename = 'src/tel.py'
     stream = open(filename)
     for line in stream:
         if line.startswith('__version__'):
@@ -435,8 +435,8 @@ setup(name='tel',
       url='http://tel.berlios.de',
       license='MIT/X11',
       links=[('tel', 'tel.py')],
-      po=['tel.py', optparse_source],
-      appdata=['tel.py'],
+      po=['src/tel.py', optparse_source],
+      appdata=['src/tel.py'],
       distclass=TelDistribution,
       cmdclass={'messages': Messages,
                 'build_messages': BuildMessages,
