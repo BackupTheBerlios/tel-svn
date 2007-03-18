@@ -37,10 +37,11 @@ from copy import copy
 from optparse import (Option, OptionError, OptionParser, OptionValueError,
                       IndentedHelpFormatter, OptionGroup)
 
+import tel
 import phonebook
 
 
-_ = gettext.translation('tel').ugettext
+_ = gettext.translation('tel', tel.CONFIG.MESSAGES).ugettext
 
 
 class CommandHelpFormatter(IndentedHelpFormatter):
@@ -242,7 +243,7 @@ class CommandOptionParser(OptionParser):
         """Print a usage message incorporating 'msg' to stderr and exit."""
         # from OptionParser, 'cause i18n is missing for message
         self.print_usage(sys.stderr)
-        msg = _('%(prog)s: error: %(messages)s\n')
+        msg = _('%(prog)s: error: %(message)s\n')
         self.exit(2, msg % {'prog': self.get_prog_name(), 'message': msg})
 
     def get_license(self):

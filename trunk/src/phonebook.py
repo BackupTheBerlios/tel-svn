@@ -38,7 +38,9 @@ import csv
 import itertools
 import gettext
 
-_ = gettext.translation('tel').ugettext
+import tel
+
+_ = gettext.translation('tel', tel.CONFIG.MESSAGES).ugettext
 
 
 # mainly important for table printing and field specifications

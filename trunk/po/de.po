@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-18 15:47+0100\n"
-"PO-Revision-Date: 2007-03-18 15:47+0100\n"
+"POT-Creation-Date: 2007-03-18 18:57+0100\n"
+"PO-Revision-Date: 2007-03-18 18:58+0100\n"
 "Last-Translator: Sebastian Wiesner <basti.wiesner@gmx.net>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -16,51 +16,51 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
 
-#: src/phonebook.py:46
+#: src/phonebook.py:48
 msgid "Index"
 msgstr "Index"
 
-#: src/phonebook.py:47
+#: src/phonebook.py:49
 msgid "First name"
 msgstr "Vorname"
 
-#: src/phonebook.py:48
+#: src/phonebook.py:50
 msgid "Last name"
 msgstr "Nachname"
 
-#: src/phonebook.py:49
+#: src/phonebook.py:51
 msgid "Street and number"
 msgstr "Straße und Hausnummer"
 
-#: src/phonebook.py:50
+#: src/phonebook.py:52
 msgid "Postal code"
 msgstr "Postleitzahl"
 
-#: src/phonebook.py:51
+#: src/phonebook.py:53
 msgid "Town"
 msgstr "Stadt"
 
-#: src/phonebook.py:52
+#: src/phonebook.py:54
 msgid "Mobile"
 msgstr "Mobil"
 
-#: src/phonebook.py:53
+#: src/phonebook.py:55
 msgid "Phone"
 msgstr "Festnetz"
 
-#: src/phonebook.py:54
+#: src/phonebook.py:56
 msgid "eMail"
 msgstr "E-Mail"
 
-#: src/phonebook.py:55
+#: src/phonebook.py:57
 msgid "Date of birth"
 msgstr "Geburtsdatum"
 
-#: src/phonebook.py:56
+#: src/phonebook.py:58
 msgid "Tags"
 msgstr "Tags"
 
-#: src/phonebook.py:105
+#: src/phonebook.py:107
 #, python-format
 msgid ""
 "Index:          %(index)s\n"
@@ -83,54 +83,54 @@ msgstr ""
 "Geburtsdatum:   %(birthdate)s\n"
 "Tags:           %(tags)s\n"
 
-#: src/phonebook.py:145
+#: src/phonebook.py:147
 #, python-format
 msgid "[%(index)s] %(firstname)s %(lastname)s"
 msgstr "[%(index)s] %(firstname)s %(lastname)s"
 
-#: src/phonebook.py:332
+#: src/phonebook.py:334
 #, python-format
 msgid "There is no field %s"
 msgstr "Es gibt kein Feld %s"
 
-#: src/cmdoptparse.py:57
+#: src/cmdoptparse.py:58
 msgid "Supported options: "
 msgstr "Unterstützte Optionen: "
 
-#: src/cmdoptparse.py:81
+#: src/cmdoptparse.py:82
 msgid "indices"
 msgstr "Indizes"
 
-#: src/cmdoptparse.py:182
+#: src/cmdoptparse.py:183
 msgid "Please specify only one command option"
 msgstr "Bitte geben Sie nur eine Kommandooption an"
 
-#: src/cmdoptparse.py:223
+#: src/cmdoptparse.py:224
 msgid "show author information and exit"
 msgstr "Autor-Informationen anzeigen und beenden"
 
-#: src/cmdoptparse.py:226
+#: src/cmdoptparse.py:227
 msgid "show program's license and exit"
 msgstr "die Lizenz anzeigen und beenden"
 
-#: src/cmdoptparse.py:229
+#: src/cmdoptparse.py:230
 msgid "show copyright information and exit"
 msgstr "Copyright-Informationen anzeigen und beenden"
 
-#: src/cmdoptparse.py:231
+#: src/cmdoptparse.py:232
 msgid "print fields and exit"
 msgstr "die Felder ausgegeben und beenden"
 
-#: src/cmdoptparse.py:245
+#: src/cmdoptparse.py:246
 #, python-format
-msgid "%(prog)s: error: %(messages)s\n"
-msgstr "%(prog)s: Fehler: %(messages)s\n"
+msgid "%(prog)s: error: %(message)s\n"
+msgstr "%(prog)s: Fehler: %(message)s\n"
 
-#: src/cmdoptparse.py:273
+#: src/cmdoptparse.py:274
 msgid "Field"
 msgstr "Feld"
 
-#: src/cmdoptparse.py:273
+#: src/cmdoptparse.py:274
 msgid "Internal name"
 msgstr "Interner Name"
 

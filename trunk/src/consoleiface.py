@@ -42,7 +42,7 @@ import phonebook
 from cmdoptparse import CommandOptionParser, make_option
 
 
-_ = gettext.translation('tel').ugettext
+_ = gettext.translation('tel', tel.CONFIG.MESSAGES).ugettext
 
 
 # The directory, where tel stores its config

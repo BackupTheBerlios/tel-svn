@@ -29,10 +29,23 @@ __version__ = '0.1.6'
 __authors__ = ['Sebastian Wiesner <basti.wiesner@gmx.net>']
 
 import os
+import sys
 
-# The directory, where tel stores its config
+
 CONFIG_DIR = os.path.expanduser(os.path.join('~', '.tel'))
 DEF_FILENAME = os.path.join(CONFIG_DIR, 'phonebook.csv')   
+
+
+class _Config:
+    # these get replaced with proper paths on setup.py install
+    MESSAGES = '${install_messages}'
+    APPMODULES = '${install_app_modules}'
+    APPDATA = '${install_app_data}'
+
+
+CONFIG = _Config()
+sys.path.append(CONFIG.APPMODULES)
+
 
 if not os.path.exists(CONFIG_DIR):
     os.mkdir(CONFIG_DIR)
