@@ -128,7 +128,6 @@ class CommandOption(Option):
 
     def _check_field_list(self, opt, value):
         """Parse field_list options into a list of fields"""
-        warning_msg = _('')
         items = map(str.strip, value.split(','))
         # filter empty fields
         # (which came from something like "index,,firstname")
@@ -243,7 +242,8 @@ class CommandOptionParser(OptionParser):
         """Print a usage message incorporating 'msg' to stderr and exit."""
         # from OptionParser, 'cause i18n is missing for message
         self.print_usage(sys.stderr)
-        self.exit(2, _('%s: error: %s\n') % (self.get_prog_name(), msg))
+        msg = _('%(prog)s: error: %(messages)s\n')
+        self.exit(2, msg % {'prog': self.get_prog_name(), 'message': msg})
 
     def get_license(self):
         """Returns license information"""
