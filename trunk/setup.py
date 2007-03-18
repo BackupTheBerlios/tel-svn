@@ -27,7 +27,6 @@ from glob import glob
 
 from distutils.core import setup
 from distutils.core import Distribution
-from distutils import log
 from distutils import dir_util
 from distutils import spawn
 from distutils import util
@@ -170,7 +169,7 @@ class InstallMessages(install_misc):
     description = 'Installs message catalogs'
 
     user_options = install_misc.user_options[:]
-    user_options.append(('build-dir=','b',
+    user_options.append(('build-dir=', 'b',
                          'build directory (where to install from)'))
     user_options.append(('skip-build', None, "skip the build steps"))
 
@@ -426,6 +425,12 @@ import optparse
 optparse_source = optparse.__file__.rstrip('c')
 
 
+tel_sources = ['src/tel.py',
+               'src/phonebook.py',
+               'src/cmdoptparse.py',
+               'src/consoleiface.py']
+
+
 setup(name='tel',
       version=get_version(),
       description='A little terminal phone book',
@@ -435,8 +440,8 @@ setup(name='tel',
       url='http://tel.berlios.de',
       license='MIT/X11',
       links=[('tel', 'tel.py')],
-      po=['src/tel.py', optparse_source],
-      appdata=['src/tel.py'],
+      appdata=tel_sources,
+      po=tel_sources + [optparse_source],
       distclass=TelDistribution,
       cmdclass={'messages': Messages,
                 'build_messages': BuildMessages,
