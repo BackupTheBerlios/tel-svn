@@ -234,12 +234,13 @@ class ConsoleIFace:
         column_widths = map(len, headline)
         for entry in entries:
             # create and add a row for each entry
-            row = [str(getattr(entry, field)) for field in fields]
+            row = [unicode(getattr(entry, field)) for field in fields]
             table_body.append(row)
             # correct the column width, if an entry is too width
             column_widths = map(max, map(len, row), column_widths)
         # print the headline
-        headline = map(str.center, headline, column_widths)
+        headline = map(lambda item, width: item.center(width),
+                       headline, column_widths)
         headline = '| %s |' % ' | '.join(headline)
         separator = map(lambda width: '-' * (width+2), column_widths)
         separator = '|%s|' % '|'.join(separator)
@@ -248,7 +249,8 @@ class ConsoleIFace:
         print separator
         for row in table_body:
             # FIXME: index should be right-justified
-            row = map(str.ljust, row, column_widths)
+            row = map(lambda item, width: item.ljust(width),
+                      row, column_widths)
             row = '| %s |' % ' | '.join(row)
             print row
 
