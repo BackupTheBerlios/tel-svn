@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: de\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-18 18:57+0100\n"
+"POT-Creation-Date: 2007-03-22 15:51+0100\n"
 "PO-Revision-Date: 2007-03-18 18:58+0100\n"
 "Last-Translator: Sebastian Wiesner <basti.wiesner@gmx.net>\n"
 "Language-Team: \n"
@@ -93,73 +93,73 @@ msgstr "[%(index)s] %(firstname)s %(lastname)s"
 msgid "There is no field %s"
 msgstr "Es gibt kein Feld %s"
 
-#: src/cmdoptparse.py:58
+#: src/cmdoptparse.py:69
 msgid "Supported options: "
 msgstr "Unterstützte Optionen: "
 
-#: src/cmdoptparse.py:82
+#: src/cmdoptparse.py:93
 msgid "indices"
 msgstr "Indizes"
 
-#: src/cmdoptparse.py:183
+#: src/cmdoptparse.py:194
 msgid "Please specify only one command option"
 msgstr "Bitte geben Sie nur eine Kommandooption an"
 
-#: src/cmdoptparse.py:224
+#: src/cmdoptparse.py:235
 msgid "show author information and exit"
 msgstr "Autor-Informationen anzeigen und beenden"
 
-#: src/cmdoptparse.py:227
+#: src/cmdoptparse.py:238
 msgid "show program's license and exit"
 msgstr "die Lizenz anzeigen und beenden"
 
-#: src/cmdoptparse.py:230
+#: src/cmdoptparse.py:241
 msgid "show copyright information and exit"
 msgstr "Copyright-Informationen anzeigen und beenden"
 
-#: src/cmdoptparse.py:232
+#: src/cmdoptparse.py:243
 msgid "print fields and exit"
 msgstr "die Felder ausgegeben und beenden"
 
-#: src/cmdoptparse.py:246
+#: src/cmdoptparse.py:249
 #, python-format
 msgid "%(prog)s: error: %(message)s\n"
 msgstr "%(prog)s: Fehler: %(message)s\n"
 
-#: src/cmdoptparse.py:274
+#: src/cmdoptparse.py:278
 msgid "Field"
 msgstr "Feld"
 
-#: src/cmdoptparse.py:274
+#: src/cmdoptparse.py:278
 msgid "Internal name"
 msgstr "Interner Name"
 
-#: src/consoleiface.py:74
+#: src/consoleiface.py:77
 msgid "You entered an invalid postal code!"
 msgstr "Sie haben eine ungültige Postleitzahl angegeben!"
 
-#: src/consoleiface.py:76
+#: src/consoleiface.py:79
 msgid "You entered an invalid mobile number!"
 msgstr "Sie haben eine ungültige Mobilfunknummer angegeben!"
 
-#: src/consoleiface.py:77
+#: src/consoleiface.py:80
 msgid "You entered an invalid phone number!"
 msgstr "Sie haben eine ungültige Festnetznummer angegeben!"
 
-#: src/consoleiface.py:78
+#: src/consoleiface.py:81
 msgid "You entered an invalid eMail address!"
 msgstr "Sie haben eine ungültige E-Mail Adresse angegeben!"
 
-#: src/consoleiface.py:82
+#: src/consoleiface.py:85
 #, python-format
 msgid "Editing entry %r..."
 msgstr "Bearbeite Eintrag %r..."
 
-#: src/consoleiface.py:83
+#: src/consoleiface.py:86
 msgid "Creating a new entry..."
 msgstr "Erzeuge einen neuen Eintrag..."
 
-#: src/consoleiface.py:133 src/consoleiface.py:169
+#: src/consoleiface.py:136 src/consoleiface.py:172
 msgid ""
 "Please fill the following fields. To leave a field empty, just press ENTER "
 "without entering something."
@@ -167,11 +167,11 @@ msgstr ""
 "Bitte füllen Sie die folgenden Felder aus. Um ein Feld leer zu lassen, "
 "drücken Sie ENTER ohne etwas einzugeben."
 
-#: src/consoleiface.py:140
+#: src/consoleiface.py:143
 msgid "Please fill the following fields."
 msgstr "Bitte füllen Sie die folgenden Felder aus."
 
-#: src/consoleiface.py:176
+#: src/consoleiface.py:179
 msgid ""
 "Please fill the following fields. The current value is shown in square "
 "brackets. NOTE: The current value is not preserved. You have to re-enter "
@@ -181,141 +181,141 @@ msgstr ""
 "Klammern angezeigt. HINWEIS: Der aktuelle Wert wird nicht übernommen. Sie "
 "müssen ihn neu eingeben!"
 
-#: src/consoleiface.py:263
+#: src/consoleiface.py:266
 msgid "Do you really want to save an emtpy entry? "
 msgstr "Möchten Sie wirklich einen leeren Eintrag speichern? "
 
-#: src/consoleiface.py:267
+#: src/consoleiface.py:270
 msgid "The entry is not saved"
 msgstr "Der Eintrag wird nicht gespeichert"
 
-#: src/consoleiface.py:289
+#: src/consoleiface.py:292
 #, python-format
 msgid "WARNING: start index %s out of range"
 msgstr "WARNUNG: Startindex %s existiert nicht"
 
-#: src/consoleiface.py:292
+#: src/consoleiface.py:295
 #, python-format
 msgid "WARNING: end index %s out of range"
 msgstr "WARNUNG: Endindex %s existiert nicht"
 
-#: src/consoleiface.py:314
+#: src/consoleiface.py:317
 #, python-format
 msgid "WARNING: There is no entry with index %s"
 msgstr "WARNUNG: Es gibt keinen Eintrag mit dem Index %s"
 
-#: src/consoleiface.py:318
+#: src/consoleiface.py:321
 msgid "Error: An invalid index was specified"
 msgstr "Fehler: Ein ungültiger Index wurde angegeben"
 
-#: src/consoleiface.py:349
+#: src/consoleiface.py:352
 #, python-format
 msgid "Directory %s does not exist. Create it? "
 msgstr "Das Verzeichnis %s existiert nicht. Soll es angelegt werden? "
 
-#: src/consoleiface.py:363
+#: src/consoleiface.py:366
 #, python-format
 msgid "%s already exists. Overwrite it? "
 msgstr "%s existiert bereits. Überschrieben? "
 
-#: src/consoleiface.py:371
+#: src/consoleiface.py:374
 #, python-format
 msgid "Error: Permission denied for %s"
 msgstr "Fehler: Berechtigung verweigert für %s"
 
-#: src/consoleiface.py:383
+#: src/consoleiface.py:386
 msgid "Do you really want to import the phone book you're just using? "
 msgstr ""
 "Möchten Sie wirklich das Telefonbuch importieren, welches Sie gerade "
 "benutzen?"
 
-#: src/consoleiface.py:386
+#: src/consoleiface.py:389
 #, python-format
 msgid "Not importing %s..."
 msgstr "Importiere %s nicht..."
 
-#: src/consoleiface.py:441
+#: src/consoleiface.py:444
 msgid "--create needs a number"
 msgstr "--create benötigt eine Nummer"
 
-#: src/consoleiface.py:443
+#: src/consoleiface.py:446
 msgid "--create accepts only one argument"
 msgstr "--create akzeptiert nur ein Argument"
 
-#: src/consoleiface.py:455
+#: src/consoleiface.py:458
 #, python-format
 msgid "Really delete entry \"%s\"? "
 msgstr "Möchten Sie den Eintrag \"%s\" wirklich löschen? "
 
-#: src/consoleiface.py:468
+#: src/consoleiface.py:471
 msgid "%prog [options] command [arguments]"
 msgstr "%prog [Optionen] Kommando [Argumente]"
 
-#: src/consoleiface.py:470
+#: src/consoleiface.py:473
 msgid "tel is a little address book program for your terminal."
 msgstr "tel ist ein kleines Adressbuch für Ihr Terminal."
 
-#: src/consoleiface.py:482
+#: src/consoleiface.py:485
 msgid "file"
 msgstr "Datei"
 
-#: src/consoleiface.py:482
+#: src/consoleiface.py:485
 msgid "use FILE as phone book"
 msgstr "DATEI als Telefonbuch verwenden"
 
-#: src/consoleiface.py:487
+#: src/consoleiface.py:490
 msgid "print a short list of the specified entries"
 msgstr "eine kurze Liste aller angegebenen Einträge ausgeben"
 
-#: src/consoleiface.py:489
+#: src/consoleiface.py:492
 msgid "print a table with the specified entries."
 msgstr "eine Tabelle mit den angegebenen Einträgen ausgeben"
 
-#: src/consoleiface.py:492
+#: src/consoleiface.py:495
 msgid "show the specified entries"
 msgstr "die angegebenen Einträge anzeigen"
 
-#: src/consoleiface.py:494
+#: src/consoleiface.py:497
 msgid "search the phonebook for the specified patterns"
 msgstr "das Telefonbuch nach den angegebenen Mustern durchsuchen"
 
-#: src/consoleiface.py:495
+#: src/consoleiface.py:498
 msgid "patterns"
 msgstr "Muster"
 
-#: src/consoleiface.py:498
+#: src/consoleiface.py:501
 msgid "number"
 msgstr "Anzahl"
 
-#: src/consoleiface.py:499
+#: src/consoleiface.py:502
 msgid "create the specified number of new entries"
 msgstr "die angegebene Anzahl an Einträge erzeugen"
 
-#: src/consoleiface.py:501
+#: src/consoleiface.py:504
 msgid "edit the entries at the specified indices"
 msgstr "die angegebenen Einträge bearbeiten"
 
-#: src/consoleiface.py:503
+#: src/consoleiface.py:506
 msgid "remove the entries at the specified indices"
 msgstr "die angegebenen Einträge entfernen"
 
-#: src/consoleiface.py:505
+#: src/consoleiface.py:508
 msgid "export phone book to all specified locations"
 msgstr "das Telefonbuch an die angegebenen Pfade exportieren"
 
-#: src/consoleiface.py:506
+#: src/consoleiface.py:509
 msgid "targets"
 msgstr "Ziele "
 
-#: src/consoleiface.py:508
+#: src/consoleiface.py:511
 msgid "import all specified phone books"
 msgstr "die angegebenen Telefonbücher importieren"
 
-#: src/consoleiface.py:509
+#: src/consoleiface.py:512
 msgid "files"
 msgstr "Dateien"
 
-#: src/consoleiface.py:513
+#: src/consoleiface.py:516
 msgid ""
 "enable regular expressions. tel uses the Python-syntax. You can find an "
 "overview at the following URL: http://docs.python.org/lib/re-syntax.html"
@@ -324,11 +324,11 @@ msgstr ""
 "Ausdrücke. Ein Überblick steht an folgender Adresse zur Verfügung: http://"
 "docs.python.org/lib/re-syntax.html"
 
-#: src/consoleiface.py:518 src/consoleiface.py:529
+#: src/consoleiface.py:521 src/consoleiface.py:532
 msgid "fields"
 msgstr "Felder"
 
-#: src/consoleiface.py:519
+#: src/consoleiface.py:522
 msgid ""
 "specify the fields to show. Takes a comma-separated list of internal names "
 "as printed by --help-fields. Fields prefixed with \"-\" are hidden."
@@ -337,13 +337,13 @@ msgstr ""
 "interner Feldnamen, wie sie von --print-fields ausgegeben werden. Felder mit "
 "dem Prefix \"-\" werden nicht angezeigt."
 
-#: src/consoleiface.py:525
+#: src/consoleiface.py:528
 msgid "ignore case, when searching. The default is not to ignore case."
 msgstr ""
 "Groß- und Kleinschreibung beim Suchen ignorieren. Standardmäßig wird Groß- "
 "und Kleinschreibung beachtet."
 
-#: src/consoleiface.py:530
+#: src/consoleiface.py:533
 msgid ""
 "specify a list of fields to search in. Accepts the same syntax as the --"
 "output option"
@@ -351,11 +351,11 @@ msgstr ""
 "die zu durchsuchenden Felder angegeben. Akzeptiert die selbe Syntax wie die "
 "--output Option."
 
-#: src/consoleiface.py:533
+#: src/consoleiface.py:536
 msgid "field"
 msgstr "Feld"
 
-#: src/consoleiface.py:534
+#: src/consoleiface.py:537
 msgid ""
 "sort output. Specify a field name as printed by --help-fields. If prefixed "
 "with +, sorting order is ascending, if prefixed with a -, sorting order is "
@@ -366,7 +366,7 @@ msgstr ""
 "absteigend sortiert. Fehlt das Prefix oder lautet es +, wird aufsteigend "
 "sortiert."
 
-#: src/consoleiface.py:551
+#: src/consoleiface.py:554
 msgid ""
 "Commands to modify the phone book and to search or print entries. Only one "
 "of these options may be specified. Commands, which accept indices, recognize "
@@ -376,19 +376,19 @@ msgstr ""
 "auszugeben. Es darf nur ein Kommando zur gleichen Zeit angegeben werden. "
 "Kommandos, die Indizes akzeptieren, erkennen Bereichsangaben wie 4-6."
 
-#: src/consoleiface.py:555
+#: src/consoleiface.py:558
 msgid "Commands"
 msgstr "Kommandos"
 
-#: src/consoleiface.py:558
+#: src/consoleiface.py:561
 msgid "These options are valid with every command"
 msgstr "Diese Optionen sind mit jedem Kommando gültig."
 
-#: src/consoleiface.py:559
+#: src/consoleiface.py:562
 msgid "Global options"
 msgstr "Globale Optionen"
 
-#: src/consoleiface.py:561
+#: src/consoleiface.py:564
 msgid ""
 "These options are only supported by certain commands. If you use them with "
 "other commands, they are just ignored."
@@ -396,25 +396,25 @@ msgstr ""
 "Diese Optionen werden nur von bestimmten Kommandos unterstützt. Bei anderen "
 "Kommandos werden sie einfach ignoriert."
 
-#: src/consoleiface.py:563
+#: src/consoleiface.py:566
 msgid "Special options"
 msgstr "Spezielle Optionen"
 
-#: src/consoleiface.py:570
+#: src/consoleiface.py:573
 msgid "Please specify a command"
 msgstr "Bitte geben Sie ein Kommando an"
 
-#: src/consoleiface.py:573
+#: src/consoleiface.py:576
 #, python-format
 msgid "The command %s need arguments"
 msgstr "Das Kommando %s benötigt Argumente"
 
-#: src/consoleiface.py:576
+#: src/consoleiface.py:579
 #, python-format
 msgid "The command %s doesn't take any arguments"
 msgstr "Das Kommando %s akzeptiert keine Argumente"
 
-#: src/consoleiface.py:590
+#: src/consoleiface.py:595
 msgid "Dying peacefully ..."
 msgstr "Sterbe glücklich ..."
 

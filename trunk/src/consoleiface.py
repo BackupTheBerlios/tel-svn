@@ -42,13 +42,16 @@ import phonebook
 from cmdoptparse import CommandOptionParser, make_option
 
 
-_ = gettext.translation('tel', tel.CONFIG.MESSAGES).ugettext
+_translation = gettext.translation('tel', tel.CONFIG.MESSAGES)
+_stdout_encoding = sys.stdout.encoding or sys.getfilesystemencoding()
+
+
+def _(msg):
+    return _translation.ugettext(msg).encode(_stdout_encoding)
 
 
 # The directory, where tel stores its config
 CONFIG_DIR = os.path.expanduser(os.path.join('~', '.tel'))
-if not os.path.exists(CONFIG_DIR):
-    os.mkdir(CONFIG_DIR)
 # the default phonebook
 DEF_FILENAME = os.path.join(CONFIG_DIR, 'phonebook.csv')
 
@@ -210,7 +213,7 @@ class ConsoleIFace:
         entries = phonebook.sort_entries_by_field(entries, sortby, desc)
         print
         for entry in entries:
-            print repr(entry)
+            print repr(entry).encode(_stdout_encoding)
 
     def print_long_list(self, entries, sortby='index', desc=False):
         """Prints every single entry in `entries` in full detail.
@@ -219,7 +222,7 @@ class ConsoleIFace:
         entries = phonebook.sort_entries_by_field(entries, sortby, desc)
         for entry in entries:
             print '-'*20
-            print entry
+            print entry.encode(_stdout_encoding)
 
     def print_table(self, entries, fields, sortby='index', desc=False):
         """Prints `entries` as a table.
@@ -239,20 +242,18 @@ class ConsoleIFace:
             # correct the column width, if an entry is too width
             column_widths = map(max, map(len, row), column_widths)
         # print the headline
-        headline = map(lambda item, width: item.center(width),
-                       headline, column_widths)
+        headline = map(unicode.center, headline, column_widths)
         headline = '| %s |' % ' | '.join(headline)
         separator = map(lambda width: '-' * (width+2), column_widths)
         separator = '|%s|' % '|'.join(separator)
         # this adds two spaces add begin and and of the row
-        print headline
-        print separator
+        print headline.encode(_stdout_encoding)
+        print separator.encode(_stdout_encoding)
         for row in table_body:
             # FIXME: index should be right-justified
-            row = map(lambda item, width: item.ljust(width),
-                      row, column_widths)
+            row = map(unicode.ljust, row, column_widths)
             row = '| %s |' % ' | '.join(row)
-            print row
+            print row.encode(_stdout_encoding)
 
     def edit_entry(self, entry=None):
         """Allows interactive editing of entries. If `entry` is None, a new
@@ -585,6 +586,8 @@ class ConsoleIFace:
     def start(self):
         """Starts the interface"""
         try:
+            if not os.path.exists(CONFIG_DIR):
+                os.mkdir(CONFIG_DIR)
             (options, args) = self._parse_args()
             self.phonebook = phonebook.PhoneBook(options.file)
             options.command_function(options, *args)

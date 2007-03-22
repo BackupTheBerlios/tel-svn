@@ -25,8 +25,9 @@ DEALINGS IN THE SOFTWARE."""
 """executable script, which also contains global configuration"""
 
 __revision__ = '$Id$'
-__version__ = '0.1.6'
-__authors__ = ['Sebastian Wiesner <basti.wiesner@gmx.net>']
+__version__ = '0.1.7-pre1'
+__authors__ = ['Sebastian Wiesner <basti.wiesner@gmx.net>',
+               'Remo Wenger <potrmwn@gmail.com>']
 
 import os
 import sys

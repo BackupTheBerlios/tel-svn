@@ -34,6 +34,7 @@ import gettext
 import textwrap
 
 from copy import copy
+import optparse
 from optparse import (Option, OptionError, OptionParser, OptionValueError,
                       IndentedHelpFormatter, OptionGroup)
 
@@ -41,7 +42,17 @@ import tel
 import phonebook
 
 
-_ = gettext.translation('tel', tel.CONFIG.MESSAGES).ugettext
+_translation = gettext.translation('tel', tel.CONFIG.MESSAGES)
+_stdout_encoding = sys.stdout.encoding or sys.getfilesystemencoding()
+
+
+def _(msg):
+    return _translation.ugettext(msg).encode(_stdout_encoding)
+
+
+# make optparse use our improved gettext ;)
+optparse._ = _
+
 
 
 class CommandHelpFormatter(IndentedHelpFormatter):
@@ -231,20 +242,13 @@ class CommandOptionParser(OptionParser):
         self.add_option('--print-fields', action='print_fields',
                         help=_('print fields and exit'))
 
-    def add_option_group(self, *args, **kwargs):
-        """Adds a new option group"""
-        if isinstance(args[0], unicode):
-            group = OptionGroup(self, *args, **kwargs)
-            args = [group]
-            kwargs = {}
-        return OptionParser.add_option_group(self, *args, **kwargs)
-
     def error(self, msg):
         """Print a usage message incorporating 'msg' to stderr and exit."""
         # from OptionParser, 'cause i18n is missing for message
         self.print_usage(sys.stderr)
-        msg = _('%(prog)s: error: %(message)s\n')
-        self.exit(2, msg % {'prog': self.get_prog_name(), 'message': msg})
+        pattern = _('%(prog)s: error: %(message)s\n')
+        self.exit(2, pattern % {'prog': self.get_prog_name(),
+                                'message': msg})
 
     def get_license(self):
         """Returns license information"""
@@ -303,8 +307,4 @@ class CommandOptionParser(OptionParser):
     def print_fields(self, stream=None):
         """Print field information to `stream`"""
         print >> stream, self.get_fields()
-
-    def print_help(self, stream=None):
-        """Print help to`stream`"""
-        print >> stream, self.format_help()
                    
