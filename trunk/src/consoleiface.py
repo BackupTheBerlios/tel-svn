@@ -51,10 +51,11 @@ def _(msg):
     return _TRANSLATION.ugettext(msg).encode(_STDOUT_ENCODING)
 
 
-# The directory, where tel stores its config
-CONFIG_DIR = os.path.expanduser(os.path.join('~', '.tel'))
-# the default phonebook
-DEF_FILENAME = os.path.join(CONFIG_DIR, 'phonebook.csv')
+def entry_repr(entry):
+    """Returns a short representation of `entry` in appropriate encoding for
+    console output"""
+    msg = _('[%(index)s] %(firstname)s %(lastname)s') % entry
+    return msg.encode(_STDOUT_ENCODING)
 
 
 class ConsoleEntryEditor:
@@ -62,57 +63,9 @@ class ConsoleEntryEditor:
 
     :ivar current_field: The name of the currently edited field"""
 
-    # a simple pattern for phone numbers
-    PHONE_NUMBER_PATTERN = re.compile(r'[-()/\d\s\W]+')
-    # a simple pattern for mail addresses
-    MAIL_PATTERN = re.compile(r'[^@\s]+@[^@\s]+\.[\w]+')
-
-    # this is a list of all editable fields
-    # each item is a tuple containing the following values:
-    #  'fieldname' as used by the Entry class
-    #  'error_message' when verification failed
-    FIELDS = [
-        ('firstname', None),
-        ('lastname', None),
-        ('street', None),
-        ('postcode', _('You entered an invalid postal code!')),
-        ('town', None),
-        ('mobile', _('You entered an invalid mobile number!')),
-        ('phone', _('You entered an invalid phone number!')),
-        ('email', _('You entered an invalid eMail address!')),
-        ('birthdate', None),
-        ('tags', None)]
-
-    EDIT_MSG = _('Editing entry %r...')
+    EDIT_MSG = _('Editing entry "%s"...')
     NEW_MSG = _('Creating a new entry...')
          
-    def verify_phone_number(self, number):
-        return bool(self.PHONE_NUMBER_PATTERN.match(number))
-
-    def verify_mail_address(self, address):
-        return bool(self.MAIL_PATTERN.match(address))
-
-    def verify_postal_code(self, code):
-        try:
-            int(code)
-            return True
-        except ValueError:
-            return False
-
-    def verify_field(self, field, value):
-        """Verifies input"""
-        # don't check empty fields
-        if not value:
-            return True
-        if field == 'email':
-            return self.verify_mail_address(value)
-        elif field in ('mobile', 'phone'):
-            return self.verify_phone_number(value)
-        elif field == 'postcode':
-            return self.verify_postal_code(value)
-        else:
-            return True
-
     def edit(self, entry=None):
         """Edits `entry`. If `entry` is none, a new entry is created.
         This method supports readline, if available.
@@ -123,25 +76,22 @@ class ConsoleEntryEditor:
             print self.NEW_MSG
         else:
             new = False
-            print self.EDIT_MSG % entry
+            print self.EDIT_MSG % entry_repr(entry)
 
         self.initialize_editor(new)
         self.print_help(new)
-        for field in self.FIELDS:
-            current_field = field[0]
-            oldvalue = getattr(entry, current_field)
+        for field in phonebook.FIELDS[1:]:
+            oldvalue = entry[field]
             while True:
-                value = self.get_input(current_field, oldvalue, new)
+                value = self.get_input(field, oldvalue, new)
                 value = value.strip()
-                if self.verify_field(current_field, value): break
-                print field[1]
-            # doesn't work because cvs doesn't support unicode
-            # FIXME: this should be enabled, once we have a plugin
-            # archticture for file type plugins.
-            # dealing with unicode strings should then be moved to csv
-            # plugin
-            value = value.decode(_STDIN_ENCODING)
-            setattr(entry, current_field, value)
+                value = value.decode(_STDIN_ENCODING)
+                try:
+                    entry[field] = value
+                    break
+                except ValueError:
+                    msg = _('You entered an invalid value for the field %s')
+                    print msg % phonebook.translate_field(field)
         self.finalize_editor()
         return entry
 
@@ -233,29 +183,23 @@ class ConsoleIFace:
 
     # INTERACTION FUNCTIONS
 
-    def print_short_list(self, entries, sortby='index', desc=False):
-        """Prints all `entries` in a short format.
-        :param sortby: The field to sort by
-        :param asc: True, if sorting order is descending"""
-        entries = phonebook.sort_entries_by_field(entries, sortby, desc)
+    def print_short_list(self, entries):
+        """Prints all `entries` in a short format."""
         print
         for entry in entries:
-            print repr(entry).encode(_STDOUT_ENCODING)
+            print entry_repr(entry)
 
     def print_long_list(self, entries, sortby='index', desc=False):
         """Prints every single entry in `entries` in full detail.
         :param sortby: The field to sort by
         :param asc: True, if sorting order is descending"""
-        entries = phonebook.sort_entries_by_field(entries, sortby, desc)
         for entry in entries:
             print '-'*20
             print unicode(entry).encode(_STDOUT_ENCODING)
 
-    def print_table(self, entries, fields, sortby='index', desc=False):
+    def print_table(self, entries, fields):
         """Prints `entries` as a table.
-        :param sortby: The field to sort by
-        :param asc: True, if sorting order is descending"""
-        entries = phonebook.sort_entries_by_field(entries, sortby, desc)
+        :param fields: Fields to include in the table"""
         print
         # this is the head line of the table
         headline = map(phonebook.translate_field, fields)
@@ -264,7 +208,7 @@ class ConsoleIFace:
         column_widths = map(len, headline)
         for entry in entries:
             # create and add a row for each entry
-            row = [unicode(getattr(entry, field)) for field in fields]
+            row = [unicode(entry[field]) for field in fields]
             table_body.append(row)
             # correct the column width, if an entry is too width
             column_widths = map(max, map(len, row), column_widths)
@@ -428,8 +372,11 @@ class ConsoleIFace:
             entries = self.parse_indices(*args)
         else:
             entries = self.phonebook
-        self.print_table(entries, options.output, options.sortby[0],
-                         options.sortby[1])
+        entries = phonebook.sort_entries_by_field(entries,
+                                                  options.sortby[0],
+                                                  options.sortby[1],
+                                                  options.ignore_case)
+        self.print_table(entries, options.output)
 
     def _cmd_list(self, options, *args):
         """Print a list"""
@@ -437,7 +384,11 @@ class ConsoleIFace:
             entries = self.parse_indices(*args)
         else:
             entries = self.phonebook
-        self.print_short_list(entries, options.sortby[0], options.sortby[1])
+        entries = phonebook.sort_entries_by_field(entries,
+                                                  options.sortby[0],
+                                                  options.sortby[1],
+                                                  options.ignore_case)
+        self.print_short_list(entries)
 
     def _cmd_show(self, options, *args):
         """Show a single entry"""
@@ -445,7 +396,11 @@ class ConsoleIFace:
             entries = self.parse_indices(*args)            
         else:
             entries = self.phonebook
-        self.print_long_list(entries, options.sortby[0], options.sortby[1])
+        entries = phonebook.sort_entries_by_field(entries,
+                                                  options.sortby[0],
+                                                  options.sortby[1],
+                                                  options.ignore_case)
+        self.print_long_list(entries)
 
     def _cmd_search(self, options, *args):
         """Search the phone book for `pattern`"""
@@ -458,8 +413,11 @@ class ConsoleIFace:
             # pattern
             new = filter(lambda entry: entry not in found, entries)
             found += new
-        self.print_table(found, options.output, options.sortby[0],
-                         options.sortby[1])
+        entries = phonebook.sort_entries_by_field(found,
+                                                  options.sortby[0],
+                                                  options.sortby[1],
+                                                  options.ignore_case)
+        self.print_table(found, options.output)
 
     def _cmd_create(self, options, *args):
         """Interactivly create a new entry"""
@@ -482,7 +440,8 @@ class ConsoleIFace:
 
     def _cmd_remove(self, options, *args):
         for entry in self.parse_indices(*args):
-            resp = raw_input(_('Really delete entry "%s"? ') % repr(entry))
+            resp = raw_input(_('Really delete entry "%s"? ') %
+                             entry_repr(entry))
             if resp.lower() == 'y':
                 self.phonebook.remove(entry)
         self.phonebook.save()
@@ -501,10 +460,11 @@ class ConsoleIFace:
                     'terminal.')
 
     defaults = {
-        'file': DEF_FILENAME,
+        'file': tel.CONFIG.DEF_FILENAME,
         'output': phonebook.FIELDS,
         'ignore_case': False,
-        'sortby': ('index', False)
+        'sortby': ('index', False),
+        'fields': phonebook.FIELDS
         }
 
     global_options = [
@@ -513,12 +473,14 @@ class ConsoleIFace:
 
     command_options = [
         # command options
-        make_option('--list', action='command', options=['--sort-by'],
+        make_option('--list', action='command',
+                    options=['--sort-by', '--ignore-case'],
                     help=_('print a short list of the specified entries')),
         make_option('--table', action='command',
                     help=_('print a table with the specified entries.'),
-                    options=['--output', '--sort-by']),
-        make_option('--show', action='command', options=['--sort-by'],
+                    options=['--output', '--sort-by', '--ignore-case']),
+        make_option('--show', action='command',
+                    options=['--sort-by', '--ignore-case'],
                     help=_('show the specified entries')),
         make_option('--search', action='command', args='required',
                     help=_('search the phonebook for the specified '
@@ -552,8 +514,8 @@ class ConsoleIFace:
                            'with "-" are hidden.')),
         make_option('-i', '--ignore-case', action='store_true',
                     dest='ignore_case',
-                    help=_('ignore case, when searching. The default is '
-                           'not to ignore case.')),
+                    help=_('ignore case, when searching or sorting. The '
+                           'default is not to ignore case.')),
         # FIXME: someone knows a good short options for --fields?
         make_option('--fields', action='store', dest='fields',
                     type='field_list', metavar=_('fields'),
@@ -613,8 +575,8 @@ class ConsoleIFace:
     def start(self):
         """Starts the interface"""
         try:
-            if not os.path.exists(CONFIG_DIR):
-                os.mkdir(CONFIG_DIR)
+            if not os.path.exists(tel.CONFIG.CONFIG_DIR):
+                os.mkdir(tel.CONFIG.CONFIG_DIR)
             (options, args) = self._parse_args()
             self.phonebook = phonebook.PhoneBook(options.file)
             options.command_function(options, *args)

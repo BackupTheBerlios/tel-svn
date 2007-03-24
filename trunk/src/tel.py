@@ -42,6 +42,12 @@ class _Config:
     MESSAGES = '${install_messages}'
     APPMODULES = '${install_app_modules}'
     APPDATA = '${install_app_data}'
+    # The directory, where tel stores its config
+    CONFIG_DIR = os.path.expanduser(os.path.join('~', '.tel'))
+    # the default phonebook
+    DEF_FILENAME = os.path.join(CONFIG_DIR, 'phonebook.csv')
+
+
 
 
 CONFIG = _Config()

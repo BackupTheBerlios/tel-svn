@@ -37,8 +37,11 @@ import re
 import csv
 import itertools
 import gettext
+import UserDict
+import operator
 
 import tel
+
 
 _ = gettext.translation('tel', tel.CONFIG.MESSAGES).ugettext
 
@@ -63,40 +66,105 @@ FIELDS = ('index', 'firstname', 'lastname', 'street', 'postcode',
           'town', 'mobile', 'phone', 'email', 'birthdate', 'tags')
 
 
-class Entry(object):
+class Entry(UserDict.DictMixin):
     """This class stores a single adress entry.
-    
-    :ivar index: a unique index (like a db primary key)
-    :ivar firstname:
-    :ivar lastname:
-    :ivar street:
-    :ivar postcode:
-    :ivar town:
-    :ivar mobile:
-    :ivar phone:
-    :ivar email:
-    :ivar birthdate:
-    :ivar tags: The famous web 2.0 thingy
-    """
+    It supports a dictionary interface for setting field values.
+    Supported fields are listed in `FIELDS`."""
 
-    # FIXME: convert attributes into properties to support type checking
-    # FIXME: we could use new style classes here
-                  
+    # a simple pattern for phone numbers
+    PHONE_NUMBER_PATTERN = re.compile(r'^[-()/\d\s\W]+$')
+    # a simple pattern for mail addresses
+    MAIL_PATTERN = re.compile(r'^[^@\s]+@[^@\s]+\.[\w]+$')
+
+    def _check_unicode(self, value):
+        return unicode(value)
+        
+    def _check_int(self, value):
+        return int(value)
+
+    def _check_phone(self, value):
+        if self.PHONE_NUMBER_PATTERN.match(value):
+            return self._check_unicode(value)
+        else:
+            raise ValueError('Invalid literal for phone number: %s'
+                             % value)
+
+    def _check_email(self, value):
+        if self.MAIL_PATTERN.match(value):
+            return self._check_unicode(value)
+        else:
+            raise ValueError('Invalid literal for email address: %s'
+                             % value)
+
+    def _check_number(self, value):
+        """Checks if value is a number, but returns it as string"""
+        int(value)
+        return value
+
+    # dictionary for type checking methods
+    CHECKERS = {
+        'index': _check_int,
+        'firstname': _check_unicode,
+        'lastname': _check_unicode,
+        'street': _check_unicode,
+        'postcode': _check_number,
+        'town': _check_unicode,
+        'mobile': _check_phone,
+        'phone': _check_phone,
+        'email': _check_email,
+        # FIXME: use egenix datetime here to verify dates
+        'birthdate': _check_unicode,
+        'tags': _check_unicode
+        }
+
     def __init__(self):
         # init all fields
+        self.__dict__ = dict.fromkeys(FIELDS, u'')
         self.index = None
-        self.firstname = ''
-        self.lastname = ''
-        self.street = ''
-        self.postcode = ''
-        self.town = ''
-        self.mobile = ''
-        self.phone = ''
-        self.email = ''
-        self.birthdate = ''
-        self.tags = ''
 
-    def __str__(self):
+    # dict interface
+
+    def keys(self):
+        """Return a list of all keys, which is basically a copy of
+        `FIELDS`"""
+        return list(FIELDS)
+
+    def __getitem__(self, key):
+        if key not in FIELDS:
+            raise KeyError('Invalid field %s' % key)
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        if key not in FIELDS:
+            raise KeyError('Invalid field %s' % key)
+        setattr(self, key, value)
+
+    def __delitem__(self, key):
+        if key not in FIELDS:
+            raise KeyError('Invalid field %s' % key)
+        delattr(self, key)
+
+    # rest of mapping methods defined by DictMixin        
+
+    def __setattr__(self, name, value):
+        if name in FIELDS:
+            if value:
+                # only check non-empty fields
+                value = self.CHECKERS[name](self, value)
+            self.__dict__[name] = value
+        else:
+            self.__dict__[name] = value
+
+    def __delattr__(self, name):
+        if name in FIELDS:
+            if name == 'index':
+                self.__dict__[name] = None
+            else:
+                self.__dict__[name] = u''
+        else:
+            del self.__dict__[name]
+
+    def __unicode__(self):
         # return a pretty representation
         # NOTE: this doesn't respect field translations to allow pretty
         # printing without being bound to field limits
@@ -109,49 +177,23 @@ class Entry(object):
                 'Mobile:         %(mobile)s\n'
                 'eMail:          %(email)s\n'
                 'Date of birth:  %(birthdate)s\n'
-                'Tags:           %(tags)s\n') % self.__dict__
+                'Tags:           %(tags)s\n') % self
         return msg
 
-    def __lt__(self, other):
-        return NotImplemented
-
-    def __le__(self, other):
-        return NotImplemented
-
-    def __gt__(self, other):
-        return NotImplemented
-
-    def __ge__(self, other):
-        return NotImplemented
-
-    def __ne__(self, other):
-        for field in FIELDS:
-            if getattr(self, field) != getattr(other, field):
+    # nonzero is missing
+    def __nonzero__(self):
+        for field in FIELDS[1:]:
+            # ignore index, since empty entries can have indicies, too
+            if self[field]:
                 return True
         return False
-
-    def __eq__(self, other):
-        return not self.__ne__(other)
-
-    def __hash__(self):
-        hash_ = 0
-        for field in FIELDS:
-            hash_ ^= hash(getattr(self, field))
-        return hash_
 
     def __repr__(self):
         # return a short representation
-        msg = _('[%(index)s] %(firstname)s %(lastname)s') % self.__dict__
-        return msg
-
-    def __nonzero__(self):
-        # whether the entry is empty. an empty entry is an entry whose
-        # fields (except index) are empty.  Since index is auto-created on
-        # most cases, an empty entry can have an index.
+        fields = {}
         for field in FIELDS:
-            if field != 'index' and getattr(self, field):
-                return True
-        return False
+            fields[field] = self.__dict__[field]
+        return repr(fields)
 
     def matches(self, pattern, ignore_case=False, regexp=False,
                 fields=None):
@@ -168,11 +210,11 @@ class Entry(object):
                 flags = re.UNICODE | re.LOCALE
                 if ignore_case:
                     flags = flags | re.IGNORECASE
-                if bool(re.search(pattern, str(getattr(self, field)),
-                                  flags)):
-                    return True
+                    if bool(re.search(pattern, unicode(self[field]),
+                                      flags)):
+                        return True
             else:
-                value = str(getattr(self, field))
+                value = unicode(self[field])
                 if ignore_case:
                     pattern = pattern.lower()
                     value = value.lower()
@@ -257,9 +299,7 @@ class PhoneBook:
             for row in reader:
                 entry = Entry()
                 for k in row:
-                    setattr(entry, k, row[k].decode('utf-8'))
-                # make sure we have an integer as key
-                entry.index = int(entry.index)
+                    entry[k] = row[k].decode('utf-8')
                 self._entries[entry.index] = entry
 
     def save(self):
@@ -268,13 +308,12 @@ class PhoneBook:
         # write a head line containing the names of the fields
         writer = csv.writer(stream)
         writer.writerow(FIELDS)
-        # write all entries
-        writer = csv.DictWriter(stream, FIELDS, extrasaction='ignore')
         for entry in self._entries.values():
+            row = []
             for field in FIELDS:
-                value = unicode(getattr(entry, field))
-                setattr(entry, field, value.encode('utf-8'))
-            writer.writerow(entry.__dict__)
+                value = unicode(entry[field]).encode('utf-8')
+                row.append(value)
+            writer.writerow(row)
         stream.close()
 
     def add(self, entry):
@@ -316,13 +355,19 @@ class PhoneBook:
         raise NotImplementedError('Encryption is not yet supported')
 
 
-def sort_entries_by_field(iterable, field, descending):
+def sort_entries_by_field(entries, field, descending=False,
+                          ignore_case=False):
     """This sorts `iterable`, which may only contain Entry objects, by
     `field`, which may be be any of Entry.default_order. If `descending is
-    True, the list is reversed."""
-    def key_func(entry):
-        return getattr(entry, field)
-    return sorted(iterable, key=key_func, reverse=descending)
+    True, the list is reversed. If `ignore_case` is True, case is ignored
+    when sorting"""
+    def keyfunc(entry):
+        value = entry[field]
+        if isinstance(value, basestring) and ignore_case:
+            return value.lower()
+        return value
+            
+    return sorted(entries, key=keyfunc, reverse=descending)
 
 
 def translate_field(field):
@@ -331,5 +376,5 @@ def translate_field(field):
     try:
         return _TRANSLATIONS[field]
     except KeyError:
-        raise ValueError(_('There is no field %s') % field)
+        raise ValueError('There is no field %s' % field)
         
