@@ -42,17 +42,16 @@ import tel
 import phonebook
 
 
-_translation = gettext.translation('tel', tel.CONFIG.MESSAGES)
-_stdout_encoding = sys.stdout.encoding or sys.getfilesystemencoding()
+_TRANSLATION = gettext.translation('tel', tel.CONFIG.MESSAGES)
+_STDOUT_ENCODING = sys.stdout.encoding or sys.getfilesystemencoding()
 
 
 def _(msg):
-    return _translation.ugettext(msg).encode(_stdout_encoding)
+    return _TRANSLATION.ugettext(msg).encode(_STDOUT_ENCODING)
 
 
 # make optparse use our improved gettext ;)
 optparse._ = _
-
 
 
 class CommandHelpFormatter(IndentedHelpFormatter):
@@ -64,25 +63,22 @@ class CommandHelpFormatter(IndentedHelpFormatter):
         options."""
         result = IndentedHelpFormatter.format_option(self, option)
         if option.action == 'command' and option.options:
-            result = [result]
             options = ', '.join(option.options)
             msg = _('Supported options: ')
+            # make sure we have the correct length
+            # (and are not counting unicode double-bytes twice, which would
+            # break length calculation e.g. for german umlauts
+            msg_len = len(msg.decode(_STDOUT_ENCODING))
             # build the complete options string and wrap it to width of the
             # help
             opt_str = ''.join([msg, options])
-            lines = textwrap.wrap(opt_str, self.help_width - 4)
-            # this is the first line, which includes the message
-            first_line = lines[0]
-            first_indent = self.help_position + 4
-            # reindent and wrap the remaining option lines
-            opt_str = ' '.join(lines[1:])
-            options_indent = first_indent + len(msg)
-            lines = textwrap.wrap(opt_str, self.help_width - len(msg))
-
-            result.append('%*s%s\n' % (first_indent, '', first_line))
-            result.extend(['%*s%s\n' % (options_indent, '', line) for line
-                           in lines])
-            result = ''.join(result)
+            initial_indent = ' '*(self.help_position + 4)
+            subsequent_indent = ' '*(self.help_position + 4 + msg_len)
+            width = self.help_position + self.help_width
+            opt_str = textwrap.fill(opt_str, width,
+                                    initial_indent=initial_indent,
+                                    subsequent_indent=subsequent_indent)
+            result += opt_str + '\n'
         return result
         
     

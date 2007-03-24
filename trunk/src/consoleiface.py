@@ -90,7 +90,8 @@ class ConsoleEntryEditor:
                     entry[field] = value
                     break
                 except ValueError:
-                    msg = _('You entered an invalid value for the field %s')
+                    msg = _('You entered an invalid value for the field'
+                            '"%s"!')
                     print msg % phonebook.translate_field(field)
         self.finalize_editor()
         return entry
