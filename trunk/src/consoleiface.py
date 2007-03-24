@@ -42,12 +42,13 @@ import phonebook
 from cmdoptparse import CommandOptionParser, make_option
 
 
-_translation = gettext.translation('tel', tel.CONFIG.MESSAGES)
-_stdout_encoding = sys.stdout.encoding or sys.getfilesystemencoding()
+_TRANSLATION = gettext.translation('tel', tel.CONFIG.MESSAGES)
+_STDOUT_ENCODING = sys.stdout.encoding or sys.getfilesystemencoding()
+_STDIN_ENCODING = sys.stdin.encoding or sys.getfilesystemencoding()
 
 
 def _(msg):
-    return _translation.ugettext(msg).encode(_stdout_encoding)
+    return _TRANSLATION.ugettext(msg).encode(_STDOUT_ENCODING)
 
 
 # The directory, where tel stores its config
@@ -62,15 +63,15 @@ class ConsoleEntryEditor:
     :ivar current_field: The name of the currently edited field"""
 
     # a simple pattern for phone numbers
-    phone_number_pattern = re.compile(r'[-()/\d\s\W]+')
+    PHONE_NUMBER_PATTERN = re.compile(r'[-()/\d\s\W]+')
     # a simple pattern for mail addresses
-    mail_pattern = re.compile(r'[^@\s]+@[^@\s]+\.[\w]+')
+    MAIL_PATTERN = re.compile(r'[^@\s]+@[^@\s]+\.[\w]+')
 
     # this is a list of all editable fields
     # each item is a tuple containing the following values:
     #  'fieldname' as used by the Entry class
     #  'error_message' when verification failed
-    fields = [
+    FIELDS = [
         ('firstname', None),
         ('lastname', None),
         ('street', None),
@@ -82,14 +83,14 @@ class ConsoleEntryEditor:
         ('birthdate', None),
         ('tags', None)]
 
-    edit_msg = _('Editing entry %r...')
-    new_msg = _('Creating a new entry...')
+    EDIT_MSG = _('Editing entry %r...')
+    NEW_MSG = _('Creating a new entry...')
          
     def verify_phone_number(self, number):
-        return bool(self.phone_number_pattern.match(number))
+        return bool(self.PHONE_NUMBER_PATTERN.match(number))
 
     def verify_mail_address(self, address):
-        return bool(self.mail_pattern.match(address))
+        return bool(self.MAIL_PATTERN.match(address))
 
     def verify_postal_code(self, code):
         try:
@@ -111,91 +112,117 @@ class ConsoleEntryEditor:
             return self.verify_postal_code(value)
         else:
             return True
+
+    def edit(self, entry=None):
+        """Edits `entry`. If `entry` is none, a new entry is created.
+        This method supports readline, if available.
+        :returns: The edited `entry`"""
+        if entry is None:
+            entry = phonebook.Entry()
+            new = True
+            print self.NEW_MSG
+        else:
+            new = False
+            print self.EDIT_MSG % entry
+
+        self.initialize_editor(new)
+        self.print_help(new)
+        for field in self.FIELDS:
+            current_field = field[0]
+            oldvalue = getattr(entry, current_field)
+            while True:
+                value = self.get_input(current_field, oldvalue, new)
+                value = value.strip()
+                if self.verify_field(current_field, value): break
+                print field[1]
+            # doesn't work because cvs doesn't support unicode
+            # FIXME: this should be enabled, once we have a plugin
+            # archticture for file type plugins.
+            # dealing with unicode strings should then be moved to csv
+            # plugin
+            value = value.decode(_STDIN_ENCODING)
+            setattr(entry, current_field, value)
+        self.finalize_editor()
+        return entry
+
         
     try:
         # force raising a NameError if readline isn't present
         readline
-        
-        def _input_hook(self):
-            """displays the current value in the input line"""
-            if self.edited_entry:
-                val = getattr(self.edited_entry, self.current_field)
-                readline.insert_text(val)
-                readline.redisplay()
-        
-        # an edit method with readline support
-        def edit(self, entry=None):
-            """Edits the specified `entry`. If `entry` is None, a new entry
-            is created. This method supports the readline module for editing
 
-            :returns: The entry with the new values as entered by the
-            user"""
-            if entry is None:
-                entry = phonebook.Entry()
-                print self.new_msg
+        # input methods supporting readline
+        def print_help(self, new):
+            if new:
                 help = _('Please fill the following fields. To leave a '
                          'field empty, just press ENTER without entering '
                          'something.')
                 print textwrap.fill(help)
             else:
-                self.edited_entry = entry
-                print self.edit_msg % entry
-                help = _('Please fill the following fields.')
-                print textwrap.fill(help)
-                # set input hook to show the current value
+                print _('Please fill the following fields.')
+
+        def initialize_editor(self, new):
+            """Initialize the editor"""
+            if not new:
                 readline.set_pre_input_hook(self._input_hook)
-            print
-            for field in self.fields:
-                self.current_field = field[0]
-                prompt = '%s: ' % phonebook._TRANSLATIONS[field[0]]
-                resp = raw_input(prompt).strip()
-                while not self.verify_field(field[0], resp):
-                    print field[1]
-                    resp = raw_input(prompt).strip()
-                setattr(entry, field[0], resp)
-            # remove input hook
+
+        def finalize_editor(self):
             readline.set_pre_input_hook(None)
-            return entry
+
+        def get_input(self, field, oldvalue, new):
+            """Gets a value from command line input.
+
+            :param field: The fieldname of the edited field
+            :param oldvalue: The old value of the field
+            :param new: Whether the entry is new"""
+            if not new:
+                self.oldvalue = oldvalue
+            else:
+                self.oldvalue = None
+            prompt = '%s: ' % phonebook.translate_field(field)
+            prompt = prompt.encode(_STDOUT_ENCODING)
+            return raw_input(prompt)
+            
+        def _input_hook(self):
+            """displays the current value in the input line"""
+            if self.oldvalue:
+                readline.insert_text(self.oldvalue.encode(_STDOUT_ENCODING))
+                readline.redisplay()
         
     except NameError:
-        # the non-readline version
-        def edit(self, entry=None):
-            """Edits the specified `entry`. If `entry` is None, a new entry
-            is created.
 
-            :returns: The entry with the new values as entered by the
-            user"""
-            if entry is None:
-                new = True
-                entry = phonebook.Entry()
-                print self.new_msg
+        # don't do anything
+        def initialize_editor(*args, **kwargs):
+            pass
+        finalize_editor = initialize_editor
+        
+        def print_help(self, new):
+            """Print a little editing help"""
+            if new:
                 help = _('Please fill the following fields. To leave a '
                          'field empty, just press ENTER without entering '
                          'something.')
                 print textwrap.fill(help, 79)
             else:
-                new = False
-                print self.edit_msg % entry
                 help = _('Please fill the following fields. The current '
                          'value is shown in square brackets. NOTE: The '
                          'current value is not preserved. You have to '
                          're-enter every value!')
                 print textwrap.fill(help, 79)
-            print
-            for field in self.fields:
-                self.current_field = field[0]
-                if new:
-                    prompt = '%s: ' % phonebook._TRANSLATIONS[field[0]]
-                else:
-                    prompt = '%s [%s]: '
-                    prompt % (phonebook._TRANSLATIONS[field[0]],
-                              getattr(entry, field[0]))
-                resp = raw_input(prompt).strip()
-                while not self.verify_field(field[0], resp):
-                    print field[1]
-                    resp = raw_input(prompt).strip()
-                setattr(entry, field[0], resp)
-            return entry
+
+        def get_input(self, field, oldvalue, new):
+            """Gets a value from command line input.
+
+            :param field: The fieldname of the edited field
+            :param oldvalue: The old value of the field
+            :param new: Whether the entry is new"""
+            if new:
+                prompt = '%s: ' % phonebook.translate_field(field)
+            else:
+                prompt = '%s [%s]: '
+                prompt = prompt % (phonebook.translate_field(field),
+                                   oldvalue)
+            prompt = prompt.encode(_STDOUT_ENCODING)
+            return raw_input(prompt)
             
 
 class ConsoleIFace:
@@ -213,7 +240,7 @@ class ConsoleIFace:
         entries = phonebook.sort_entries_by_field(entries, sortby, desc)
         print
         for entry in entries:
-            print repr(entry).encode(_stdout_encoding)
+            print repr(entry).encode(_STDOUT_ENCODING)
 
     def print_long_list(self, entries, sortby='index', desc=False):
         """Prints every single entry in `entries` in full detail.
@@ -222,7 +249,7 @@ class ConsoleIFace:
         entries = phonebook.sort_entries_by_field(entries, sortby, desc)
         for entry in entries:
             print '-'*20
-            print entry.encode(_stdout_encoding)
+            print unicode(entry).encode(_STDOUT_ENCODING)
 
     def print_table(self, entries, fields, sortby='index', desc=False):
         """Prints `entries` as a table.
@@ -247,13 +274,13 @@ class ConsoleIFace:
         separator = map(lambda width: '-' * (width+2), column_widths)
         separator = '|%s|' % '|'.join(separator)
         # this adds two spaces add begin and and of the row
-        print headline.encode(_stdout_encoding)
-        print separator.encode(_stdout_encoding)
+        print headline.encode(_STDOUT_ENCODING)
+        print separator.encode(_STDOUT_ENCODING)
         for row in table_body:
             # FIXME: index should be right-justified
             row = map(unicode.ljust, row, column_widths)
             row = '| %s |' % ' | '.join(row)
-            print row.encode(_stdout_encoding)
+            print row.encode(_STDOUT_ENCODING)
 
     def edit_entry(self, entry=None):
         """Allows interactive editing of entries. If `entry` is None, a new

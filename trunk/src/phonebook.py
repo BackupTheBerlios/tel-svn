@@ -65,10 +65,7 @@ FIELDS = ('index', 'firstname', 'lastname', 'street', 'postcode',
 
 class Entry(object):
     """This class stores a single adress entry.
-
-    :cvar translations: Maps fieldnames to user-readable translations
-    :cvar default_order: A list of all field names in the default order in
-    which they should be saved or printed
+    
     :ivar index: a unique index (like a db primary key)
     :ivar firstname:
     :ivar lastname:
@@ -128,7 +125,7 @@ class Entry(object):
         return NotImplemented
 
     def __ne__(self, other):
-        for field in self.default_order:
+        for field in FIELDS:
             if getattr(self, field) != getattr(other, field):
                 return True
         return False
@@ -138,19 +135,20 @@ class Entry(object):
 
     def __hash__(self):
         hash_ = 0
-        for field in self.default_order:
+        for field in FIELDS:
             hash_ ^= hash(getattr(self, field))
         return hash_
 
     def __repr__(self):
         # return a short representation
-        return _('[%(index)s] %(firstname)s %(lastname)s') % self.__dict__
+        msg = _('[%(index)s] %(firstname)s %(lastname)s') % self.__dict__
+        return msg
 
     def __nonzero__(self):
         # whether the entry is empty. an empty entry is an entry whose
         # fields (except index) are empty.  Since index is auto-created on
         # most cases, an empty entry can have an index.
-        for field in self.default_order:
+        for field in FIELDS:
             if field != 'index' and getattr(self, field):
                 return True
         return False
@@ -164,7 +162,7 @@ class Entry(object):
         :returns: True, if any field in this entry matches `pattern`,
         False otherwise"""
         if fields is None:
-            fields = self.default_order
+            fields = FIELDS
         for field in fields:
             if regexp:
                 flags = re.UNICODE | re.LOCALE
@@ -255,25 +253,27 @@ class PhoneBook:
         the last invocation of _`save()` will be lost"""
         self._entries = {}
         if os.path.exists(self.path):
-            reader = csv.DictReader(open(self.path, 'rb'))
+            reader = csv.DictReader(open(self.path, 'rb',))
             for row in reader:
                 entry = Entry()
                 for k in row:
-                    setattr(entry, k, row[k])
+                    setattr(entry, k, row[k].decode('utf-8'))
                 # make sure we have an integer as key
                 entry.index = int(entry.index)
                 self._entries[entry.index] = entry
 
     def save(self):
         """Writes the phone book back to the file"""
-        stream = open(self.path, 'wb')
-        fields = Entry.default_order
+        stream = open(self.path, 'wb',)
         # write a head line containing the names of the fields
         writer = csv.writer(stream)
-        writer.writerow(fields)
+        writer.writerow(FIELDS)
         # write all entries
-        writer = csv.DictWriter(stream, fields, extrasaction='ignore')
+        writer = csv.DictWriter(stream, FIELDS, extrasaction='ignore')
         for entry in self._entries.values():
+            for field in FIELDS:
+                value = unicode(getattr(entry, field))
+                setattr(entry, field, value.encode('utf-8'))
             writer.writerow(entry.__dict__)
         stream.close()
 
