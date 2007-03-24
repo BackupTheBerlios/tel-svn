@@ -58,6 +58,12 @@ def entry_repr(entry):
     return msg.encode(_STDOUT_ENCODING)
 
 
+def enc_tr_field(field):
+    """Returns translation for `field` in appropriate encoding for console
+    output. Should only be used, where absolutly necessary."""
+    return phonebook.translate_field(field).encode(_STDOUT_ENCODING)
+
+
 class ConsoleEntryEditor:
     """This class provides a simple console-based entry editor.
 
@@ -92,7 +98,7 @@ class ConsoleEntryEditor:
                 except ValueError:
                     msg = _('You entered an invalid value for the field'
                             '"%s"!')
-                    print msg % phonebook.translate_field(field)
+                    print msg % enc_tr_field(field)
         self.finalize_editor()
         return entry
 

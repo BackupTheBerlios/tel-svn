@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-24 17:27+0100\n"
+"POT-Creation-Date: 2007-03-24 17:43+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -120,251 +120,251 @@ msgstr ""
 msgid "[%(index)s] %(firstname)s %(lastname)s"
 msgstr ""
 
-#: src/consoleiface.py:66
+#: src/consoleiface.py:72
 #, python-format
 msgid "Editing entry \"%s\"..."
 msgstr ""
 
-#: src/consoleiface.py:67
+#: src/consoleiface.py:73
 msgid "Creating a new entry..."
 msgstr ""
 
-#: src/consoleiface.py:93
+#: src/consoleiface.py:99
 #, python-format
 msgid "You entered an invalid value for the field\"%s\"!"
 msgstr ""
 
-#: src/consoleiface.py:107 src/consoleiface.py:152
+#: src/consoleiface.py:113 src/consoleiface.py:158
 msgid ""
 "Please fill the following fields. To leave a field empty, just press ENTER "
 "without entering something."
 msgstr ""
 
-#: src/consoleiface.py:112
+#: src/consoleiface.py:118
 msgid "Please fill the following fields."
 msgstr ""
 
-#: src/consoleiface.py:157
+#: src/consoleiface.py:163
 msgid ""
 "Please fill the following fields. The current value is shown in square "
 "brackets. NOTE: The current value is not preserved. You have to re-enter "
 "every value!"
 msgstr ""
 
-#: src/consoleiface.py:238
+#: src/consoleiface.py:244
 msgid "Do you really want to save an emtpy entry? "
 msgstr ""
 
-#: src/consoleiface.py:242
+#: src/consoleiface.py:248
 msgid "The entry is not saved"
 msgstr ""
 
-#: src/consoleiface.py:264
+#: src/consoleiface.py:270
 #, python-format
 msgid "WARNING: start index %s out of range"
 msgstr ""
 
-#: src/consoleiface.py:267
+#: src/consoleiface.py:273
 #, python-format
 msgid "WARNING: end index %s out of range"
 msgstr ""
 
-#: src/consoleiface.py:289
+#: src/consoleiface.py:295
 #, python-format
 msgid "WARNING: There is no entry with index %s"
 msgstr ""
 
-#: src/consoleiface.py:293
+#: src/consoleiface.py:299
 msgid "Error: An invalid index was specified"
 msgstr ""
 
-#: src/consoleiface.py:324
+#: src/consoleiface.py:330
 #, python-format
 msgid "Directory %s does not exist. Create it? "
 msgstr ""
 
-#: src/consoleiface.py:338
+#: src/consoleiface.py:344
 #, python-format
 msgid "%s already exists. Overwrite it? "
 msgstr ""
 
-#: src/consoleiface.py:346
+#: src/consoleiface.py:352
 #, python-format
 msgid "Error: Permission denied for %s"
 msgstr ""
 
-#: src/consoleiface.py:358
+#: src/consoleiface.py:364
 msgid "Do you really want to import the phone book you're just using? "
 msgstr ""
 
-#: src/consoleiface.py:361
+#: src/consoleiface.py:367
 #, python-format
 msgid "Not importing %s..."
 msgstr ""
 
-#: src/consoleiface.py:430
+#: src/consoleiface.py:436
 msgid "--create needs a number"
 msgstr ""
 
-#: src/consoleiface.py:432
+#: src/consoleiface.py:438
 msgid "--create accepts only one argument"
 msgstr ""
 
-#: src/consoleiface.py:444
+#: src/consoleiface.py:450
 #, python-format
 msgid "Really delete entry \"%s\"? "
 msgstr ""
 
-#: src/consoleiface.py:458
+#: src/consoleiface.py:464
 msgid "%prog [options] command [arguments]"
 msgstr ""
 
-#: src/consoleiface.py:460
+#: src/consoleiface.py:466
 msgid "tel is a little address book program for your terminal."
 msgstr ""
 
-#: src/consoleiface.py:473
+#: src/consoleiface.py:479
 msgid "file"
 msgstr ""
 
-#: src/consoleiface.py:473
+#: src/consoleiface.py:479
 msgid "use FILE as phone book"
 msgstr ""
 
-#: src/consoleiface.py:479
+#: src/consoleiface.py:485
 msgid "print a short list of the specified entries"
 msgstr ""
 
-#: src/consoleiface.py:481
+#: src/consoleiface.py:487
 msgid "print a table with the specified entries."
 msgstr ""
 
-#: src/consoleiface.py:485
+#: src/consoleiface.py:491
 msgid "show the specified entries"
 msgstr ""
 
-#: src/consoleiface.py:487
+#: src/consoleiface.py:493
 msgid "search the phonebook for the specified patterns"
 msgstr ""
 
-#: src/consoleiface.py:488
+#: src/consoleiface.py:494
 msgid "patterns"
 msgstr ""
 
-#: src/consoleiface.py:491
+#: src/consoleiface.py:497
 msgid "number"
 msgstr ""
 
-#: src/consoleiface.py:492
+#: src/consoleiface.py:498
 msgid "create the specified number of new entries"
 msgstr ""
 
-#: src/consoleiface.py:494
+#: src/consoleiface.py:500
 msgid "edit the entries at the specified indices"
 msgstr ""
 
-#: src/consoleiface.py:496
+#: src/consoleiface.py:502
 msgid "remove the entries at the specified indices"
 msgstr ""
 
-#: src/consoleiface.py:498
+#: src/consoleiface.py:504
 msgid "export phone book to all specified locations"
 msgstr ""
 
-#: src/consoleiface.py:499
+#: src/consoleiface.py:505
 msgid "targets"
 msgstr ""
 
-#: src/consoleiface.py:501
+#: src/consoleiface.py:507
 msgid "import all specified phone books"
 msgstr ""
 
-#: src/consoleiface.py:502
+#: src/consoleiface.py:508
 msgid "files"
 msgstr ""
 
-#: src/consoleiface.py:506
+#: src/consoleiface.py:512
 msgid ""
 "enable regular expressions. tel uses the Python-syntax. You can find an "
 "overview at the following URL: http://docs.python.org/lib/re-syntax.html"
 msgstr ""
 
-#: src/consoleiface.py:511 src/consoleiface.py:522
+#: src/consoleiface.py:517 src/consoleiface.py:528
 msgid "fields"
 msgstr ""
 
-#: src/consoleiface.py:512
+#: src/consoleiface.py:518
 msgid ""
 "specify the fields to show. Takes a comma-separated list of internal names "
 "as printed by --help-fields. Fields prefixed with \"-\" are hidden."
 msgstr ""
 
-#: src/consoleiface.py:518
+#: src/consoleiface.py:524
 msgid ""
 "ignore case, when searching or sorting. The default is not to ignore case."
 msgstr ""
 
-#: src/consoleiface.py:523
+#: src/consoleiface.py:529
 msgid ""
 "specify a list of fields to search in. Accepts the same syntax as the --"
 "output option"
 msgstr ""
 
-#: src/consoleiface.py:526
+#: src/consoleiface.py:532
 msgid "field"
 msgstr ""
 
-#: src/consoleiface.py:527
+#: src/consoleiface.py:533
 msgid ""
 "sort output. Specify a field name as printed by --help-fields. If prefixed "
 "with +, sorting order is ascending, if prefixed with a -, sorting order is "
 "descending. The default is ascending, if no prefix is used."
 msgstr ""
 
-#: src/consoleiface.py:544
+#: src/consoleiface.py:550
 msgid ""
 "Commands to modify the phone book and to search or print entries. Only one "
 "of these options may be specified. Commands, which accept indices, recognize "
 "range specifications like 4-6."
 msgstr ""
 
-#: src/consoleiface.py:548
+#: src/consoleiface.py:554
 msgid "Commands"
 msgstr ""
 
-#: src/consoleiface.py:551
+#: src/consoleiface.py:557
 msgid "These options are valid with every command"
 msgstr ""
 
-#: src/consoleiface.py:552
+#: src/consoleiface.py:558
 msgid "Global options"
 msgstr ""
 
-#: src/consoleiface.py:554
+#: src/consoleiface.py:560
 msgid ""
 "These options are only supported by certain commands. If you use them with "
 "other commands, they are just ignored."
 msgstr ""
 
-#: src/consoleiface.py:556
+#: src/consoleiface.py:562
 msgid "Special options"
 msgstr ""
 
-#: src/consoleiface.py:563
+#: src/consoleiface.py:569
 msgid "Please specify a command"
 msgstr ""
 
-#: src/consoleiface.py:566
+#: src/consoleiface.py:572
 #, python-format
 msgid "The command %s need arguments"
 msgstr ""
 
-#: src/consoleiface.py:569
+#: src/consoleiface.py:575
 #, python-format
 msgid "The command %s doesn't take any arguments"
 msgstr ""
 
-#: src/consoleiface.py:585
+#: src/consoleiface.py:591
 msgid "Dying peacefully ..."
 msgstr ""
 
