@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# main module
 
 __license__ = """\
 Copyright (c) 2007 Sebastian Wiesner
@@ -33,10 +34,6 @@ import os
 import sys
 
 
-CONFIG_DIR = os.path.expanduser(os.path.join('~', '.tel'))
-DEF_FILENAME = os.path.join(CONFIG_DIR, 'phonebook.csv')   
-
-
 class _Config:
     # these get replaced with proper paths on setup.py install
     MESSAGES = '${install_messages}'
@@ -48,14 +45,12 @@ class _Config:
     DEF_FILENAME = os.path.join(CONFIG_DIR, 'phonebook.csv')
 
 
-
-
 CONFIG = _Config()
 sys.path.append(CONFIG.APPMODULES)
 
 
-if not os.path.exists(CONFIG_DIR):
-    os.mkdir(CONFIG_DIR)
+if not os.path.exists(CONFIG.CONFIG_DIR):
+    os.mkdir(CONFIG.CONFIG_DIR)
 
 if __name__ == '__main__':
     # tel modules

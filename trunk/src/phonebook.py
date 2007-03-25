@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# 
 # module to manage phonebooks
 # Copyright (c) 2007 Sebastian Wiesner
 #
@@ -38,12 +36,14 @@ import csv
 import itertools
 import gettext
 import UserDict
-import operator
 
 import tel
 
-
-_ = gettext.translation('tel', tel.CONFIG.MESSAGES).ugettext
+try:
+    _ = gettext.translation('tel', tel.CONFIG.MESSAGES).ugettext
+except IOError:
+    def _(msg):
+        return unicode(msg)
 
 
 # mainly important for table printing and field specifications
@@ -62,8 +62,8 @@ _TRANSLATIONS = {
 }
 
 
-FIELDS = ('index', 'firstname', 'lastname', 'street', 'postcode',
-          'town', 'mobile', 'phone', 'email', 'birthdate', 'tags')
+FIELDS = ('index', 'firstname', 'lastname', 'street', 'postcode', 'town',
+          'mobile', 'phone', 'email', 'birthdate', 'tags')
 
 
 class Entry(UserDict.DictMixin):
@@ -164,7 +164,7 @@ class Entry(UserDict.DictMixin):
         else:
             del self.__dict__[name]
 
-    def __unicode__(self):
+    def __str__(self):
         # return a pretty representation
         # NOTE: this doesn't respect field translations to allow pretty
         # printing without being bound to field limits
@@ -372,7 +372,7 @@ def sort_entries_by_field(entries, field, descending=False,
 
 def translate_field(field):
     """:returns: A translation for `field`
-    :raises ValueError: If `field` is not in _FIELDS"""
+    :raises ValueError: If `field` is not in _TRANSLATIONS"""
     try:
         return _TRANSLATIONS[field]
     except KeyError:

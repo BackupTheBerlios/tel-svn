@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (c) 2007 Sebastian Wiesner
 #
@@ -42,13 +41,17 @@ import phonebook
 from cmdoptparse import CommandOptionParser, make_option
 
 
-_TRANSLATION = gettext.translation('tel', tel.CONFIG.MESSAGES)
 _STDOUT_ENCODING = sys.stdout.encoding or sys.getfilesystemencoding()
 _STDIN_ENCODING = sys.stdin.encoding or sys.getfilesystemencoding()
 
 
-def _(msg):
-    return _TRANSLATION.ugettext(msg).encode(_STDOUT_ENCODING)
+try:
+    _TRANSLATION = gettext.translation('tel', tel.CONFIG.MESSAGES)
+    def _(msg):
+        return _TRANSLATION.ugettext(msg).encode(_STDOUT_ENCODING)
+except IOError:
+    def _(msg):
+        return unicode(msg).encode(_STDOUT_ENCODING)
 
 
 def entry_repr(entry):
