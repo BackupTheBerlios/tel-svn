@@ -6,6 +6,7 @@ Sebastian "lunar" Wiesner<br />
 tel developer, webmaster<br />
 basti DOT wiesner AT gmx DOT net<br />
 GPG key: 0x82DE71BE on hkp://wwwkeys.eu.gpg.net<br />
+Jabber ID: lunar AT jabber DOT org<br />
 </p>
 
 <hr />
