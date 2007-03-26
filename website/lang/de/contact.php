@@ -15,7 +15,7 @@ Jabber ID: lunar AT jabber DOT org<br />
 Remo "pot" Wenger<br />
 Projekt Leiter, Webmaster<br />
 potrmwn AT gmail DOT com<br />
-Jabber ID: pot AT jabber DOT freenet DOT de</br />
+Jabber ID: pot AT jabber DOT freenet DOT de<br />
 GPG Schlüssel: 0xB6D4FFA0 auf hkp://wwwkeys.eu.gpg.net<br />
 </p>
 
