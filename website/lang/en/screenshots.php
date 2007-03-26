@@ -2,4 +2,4 @@
 
 <h2>edit</h2>
 <p>Editing an entry with tel is really easy:</p>
-<p><img src="images/screenshots/edit_entry.png" alt="edit entry"></p>
+<p><img src="images/screenshots/edit_entry.png" alt="edit entry" /></p>
