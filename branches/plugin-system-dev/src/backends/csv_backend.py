@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# csv backend for phonebook.py
+# csv backend for tel
 # Copyright (c) 2007 Sebastian Wiesner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -21,27 +21,25 @@
 # DEALINGS IN THE SOFTWARE.
 
 
+__revision__ = '$Id$'
+
+
 import os
 import csv
 
-import phonebook
 
+import backend
 
-# a list of all fields supported by this file type
-# if None, this file type supports all fields listed in phonebook.FIELDS
-SUPPORTED_FIELDS = None
+# Use this for backends, which are part of the upstream releases
+_ = backend._
 
-# if this filetype supports saving to files
-# This will be True for the most types, but could be False for bindings to
-# the KDE Addressbook for instance, since this is located at a fixed place
-SUPPORTS_FILES = True
-
-# the default filename for this file type. Only needs to be defined, if
-# SUPPORTS_FILES is True
-DEFAULT_FILENAME = 'phonebook.csv'
+# use __entry_storage__ attribute, if your storage class is not named
+# EntryStorage
+# use __supported_fields__ if your backend does only support a limited
+# subset of phonebook.FIELDS
 
 # The name of this backend... Used to specify this field on command line
-NAME = 'csv'
+__backend_name__ = 'csv'
 
 
 def supports(path):
@@ -51,54 +49,29 @@ def supports(path):
     return ext.lower() == '.csv'
 
 
-# note that, if SUPPORTS_FILES is False, these functions don't get a path
-# specified
-# If one of these functions is not implemented, reading or writing will be
-# disabled
-def reader(path):
-    """Return a reader for `path`"""
-    return CSVReader(path)
-
-def writer(path):
-    return CSVWriter(path)
-
-
-# Writer objects must support at least two methods:
-# write_entry(entry) and close
-
-class CSVWriter:
-    def __init__(self, path):
-        """The `path` to write to"""
-        self.filename = path
-        self.stream = open(self.filename, 'wb')
-        self.writer = csv.writer(stream)
-        self.writer.writerow(phonebook.FIELDS)
-
-
-    def write_entry(self, entry):
-        """Write `entry` to the file"""
-        row = [unicode(entry[field]).encode('utf-8') for field in
-               phonebook.FIELDS]
-        writer.writerow(row)
-
-    def close(self):
-        self.stream.close()
-
-# Reader objects must support iteration over Entry objects and a close
-# method
-
-class CSVReader:
-    def __init__(self, path):
-        self.filename = path
-        self.stream = open(self.filename, 'rb')
+class EntryStorage(backend.DictStorage):
+    def load(self):
+        """Load entries."""
+        self.stream = open(self.uri, 'rb')
         self.reader = csv.DictReader(self.stream)
-
-    def close(self):
-        self.stream.close()
-
-    def __iter__(self):
         for row in self.reader:
-            entry = phonebook.Entry()
+            entry = self.create_new()
             for k in row:
                 entry[k] = row[k].decode('utf-8')
-            yield entry
+            self[None] = entry
+        self.stream.close()
+
+    def save(self):
+        """Save entries."""
+        stream = open(self.uri, 'wb')
+        writer = csv.writer(stream)
+        writer.writerow(backend.FIELDS)
+        for entry in self:
+            row = [unicode(entry[field]).encode('utf-8') for field in
+                   backend.FIELDS]
+            writer.writerow(row)
+        stream.close()
+
+    def create_new(self):
+        return backend.StandardEntry()
+    

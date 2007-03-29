@@ -11,8 +11,8 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
@@ -36,35 +36,26 @@ except ImportError:
     pass
 
 # tel modules
-import tel
 import phonebook
+from tel import config
 from cmdoptparse import CommandOptionParser, make_option
 
 
-_STDOUT_ENCODING = sys.stdout.encoding or sys.getfilesystemencoding()
-_STDIN_ENCODING = sys.stdin.encoding or sys.getfilesystemencoding()
-
-
-try:
-    _TRANSLATION = gettext.translation('tel', tel.CONFIG.MESSAGES)
-    def _(msg):
-        return _TRANSLATION.ugettext(msg).encode(_STDOUT_ENCODING)
-except IOError:
-    def _(msg):
-        return unicode(msg).encode(_STDOUT_ENCODING)
+def _(msg):
+    return config.translation.ugettext(msg).encode(config.stdout_encoding)
 
 
 def entry_repr(entry):
     """Returns a short representation of `entry` in appropriate encoding for
     console output"""
     msg = _('[%(index)s] %(firstname)s %(lastname)s') % entry
-    return msg.encode(_STDOUT_ENCODING)
+    return msg.encode(config.stdout_encoding)
 
 
 def enc_tr_field(field):
     """Returns translation for `field` in appropriate encoding for console
     output. Should only be used, where absolutly necessary."""
-    return phonebook.translate_field(field).encode(_STDOUT_ENCODING)
+    return phonebook.translate_field(field).encode(config.stdout_encoding)
 
 
 class ConsoleEntryEditor:
@@ -94,7 +85,7 @@ class ConsoleEntryEditor:
             while True:
                 value = self.get_input(field, oldvalue, new)
                 value = value.strip()
-                value = value.decode(_STDIN_ENCODING)
+                value = value.decode(config.stdin_encoding)
                 try:
                     entry[field] = value
                     break
@@ -139,13 +130,14 @@ class ConsoleEntryEditor:
             else:
                 self.oldvalue = None
             prompt = '%s: ' % phonebook.translate_field(field)
-            prompt = prompt.encode(_STDOUT_ENCODING)
+            prompt = prompt.encode(config.stdout_encoding)
             return raw_input(prompt)
             
         def _input_hook(self):
             """displays the current value in the input line"""
             if self.oldvalue:
-                readline.insert_text(self.oldvalue.encode(_STDOUT_ENCODING))
+                readline.insert_text(
+                    self.oldvalue.encode(config.stdout_encoding))
                 readline.redisplay()
         
     except NameError:
@@ -181,7 +173,7 @@ class ConsoleEntryEditor:
                 prompt = '%s [%s]: '
                 prompt = prompt % (phonebook.translate_field(field),
                                    oldvalue)
-            prompt = prompt.encode(_STDOUT_ENCODING)
+            prompt = prompt.encode(config.stdout_encoding)
             return raw_input(prompt)
             
 
@@ -205,7 +197,7 @@ class ConsoleIFace:
         :param asc: True, if sorting order is descending"""
         for entry in entries:
             print '-'*20
-            print unicode(entry).encode(_STDOUT_ENCODING)
+            print unicode(entry).encode(config.stdout_encoding)
 
     def print_table(self, entries, fields):
         """Prints `entries` as a table.
@@ -228,13 +220,13 @@ class ConsoleIFace:
         separator = map(lambda width: '-' * (width+2), column_widths)
         separator = '|%s|' % '|'.join(separator)
         # this adds two spaces add begin and and of the row
-        print headline.encode(_STDOUT_ENCODING)
-        print separator.encode(_STDOUT_ENCODING)
+        print headline.encode(config.stdout_encoding)
+        print separator.encode(config.stdout_encoding)
         for row in table_body:
             # FIXME: index should be right-justified
             row = map(unicode.ljust, row, column_widths)
             row = '| %s |' % ' | '.join(row)
-            print row.encode(_STDOUT_ENCODING)
+            print row.encode(config.stdout_encoding)
 
     def edit_entry(self, entry=None):
         """Allows interactive editing of entries. If `entry` is None, a new
@@ -470,7 +462,7 @@ class ConsoleIFace:
                     'terminal.')
 
     defaults = {
-        'file': tel.CONFIG.DEF_FILENAME,
+        'file': os.path.join(config.user_directory, 'phonebook.csv'),
         'output': phonebook.FIELDS,
         'ignore_case': False,
         'sortby': ('index', False),
@@ -541,14 +533,13 @@ class ConsoleIFace:
 
     def _parse_args(self):
         """Parses command line arguments"""
-        license = tel.__license__
         parser = CommandOptionParser(prog='tel',
                                      usage=self.usage,
                                      description=self.description,
-                                     version=tel.__version__,
-                                     authors=tel.__authors__,
-                                     license=license,
-                                     copyright=license.splitlines()[0])
+                                     version=config.version,
+                                     authors=config.authors,
+                                     license=config.license,
+                                     copyright=config.copyright)
         # command options
         desc = _('Commands to modify the phone book and to search or print '
                  'entries. Only one of these options may be specified. '
@@ -585,8 +576,6 @@ class ConsoleIFace:
     def start(self):
         """Starts the interface"""
         try:
-            if not os.path.exists(tel.CONFIG.CONFIG_DIR):
-                os.mkdir(tel.CONFIG.CONFIG_DIR)
             (options, args) = self._parse_args()
             self.phonebook = phonebook.PhoneBook(options.file)
             options.command_function(options, *args)

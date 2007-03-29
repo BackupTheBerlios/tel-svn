@@ -21,9 +21,13 @@
 # DEALINGS IN THE SOFTWARE.
 
 
+__revision__ = '$Id$'
+
+
 import os
 import imp
-from glob import glob
+
+from tel import config
 
 
 def get_module_description(filename):
@@ -69,42 +73,21 @@ class BackendWrapper:
         """Creates a new wrapper for `backend_module`"""
         self.backend = backend_module
         try:
-            self.name = self.backend.NAME
-            self.supports_files = self.backend.SUPPORTS_FILES
-            self.supported_fields = self.backend.SUPPORTED_FIELDS
-            self.default_filename = self.backend.DEFAULT_FILENAME
-            self.supports_read = hasattr(self.backend, 'reader')
-            self.supports_write = hasattr(self.backend, 'writer')
-            # check, if backend has a supports method
+            self.name = self.backend.__backend_name__
+##             self.default_filename = self.backend.DEFAULT_FILENAME
+            if hasattr(self.backend, '__entry_storage__'):
+                self.storage_class = self.backend.__entry_storage__
+            else:
+                self.storage_class = self.backend.EntryStorage
+            if hasattr(self.backend, '__supported_fields__'):
+                self.supported_fields = self.backend.__supported_fields__
+            else:
+                self.supported_fields = 'all'
             getattr(self.backend, 'supports')
+            self.can_save = hasattr(self.storage_class, 'save')
+            self.can_load = hasattr(self.storage_class, 'load')
         except AttributeError:
             raise BackendException('Invalid backend', self.backend)
-
-    def reader(self, path=None):
-        if not self.supports_read:
-            raise BackendException('Backend doesn\'t support reading',
-                                   self.backend)
-        if self.supports_files:
-            return self.backend.reader(path)
-        else:
-            if path is not None:
-                raise BackendException('Backend doesn\'t support files',
-                                       self.backend)
-            else:
-                return self.backend.reader()
-        
-    def writer(self, path=None):
-        if not self.supports_write:
-            raise BackendException('Backend doesn\'t support writing',
-                                   self.backend)
-        if self.supports_files:
-            return self.backend.writer(path)
-        else:
-            if path is not None:
-                raise BackendException('Backend doesn\'t support files',
-                                       self.backend)
-            else:
-                return self.backend.writer()
 
     def supports(self, path):
         return self.backend.supports(path)
@@ -121,12 +104,9 @@ class BackendManager:
         self.backends = None
         self.backend_directories = backend_directories
         if not self.backend_directories:
-            self.backend_directories = tel.CONFIG.backend_path
+            self.backend_directories = config.backend_directories
         if isinstance(self.backend_directories, basestring):
             self.backend_directories = [self.backend_directories]
-
-        print 'backend directories', self.backend_directories
-
         self.load_backends()
 
     def load_backends(self):
@@ -134,21 +114,17 @@ class BackendManager:
         self.backends = {}
         imported = []
         for path in self.backend_directories:
-            print 'searching in', path
-            print os.listdir(path)
-            files = os.listdir(path)
-            print 'found', files
+            files = sorted(os.listdir(path), reverse=True)
             for fso in files:
                 filename = os.path.join(path, fso)
                 name = get_module_name(filename)
                 if name not in imported:
-                    print 'importing', filename
                     module = load_module(filename, name)
                     if module is not None:
                         try:
-                            imported.append(name)
                             wrapper = BackendWrapper(module)
                             self.backends[wrapper.name] = wrapper
+                            imported.append(name)
                         except BackendException:
                             # ignore mis-formatted backends
                             pass

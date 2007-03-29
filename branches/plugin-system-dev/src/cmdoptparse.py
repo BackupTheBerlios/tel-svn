@@ -36,19 +36,13 @@ import optparse
 from optparse import (Option, OptionError, OptionParser, OptionValueError,
                       IndentedHelpFormatter, OptionGroup)
 
-import tel
 import phonebook
+from tel import config
 
 
-_STDOUT_ENCODING = sys.stdout.encoding or sys.getfilesystemencoding()
+def _(msg):
+    return config.translation.ugettext(msg).encode(stdout_encoding)
 
-try:
-    _TRANSLATION = gettext.translation('tel', tel.CONFIG.MESSAGES)
-    def _(msg):
-        return _TRANSLATION.ugettext(msg).encode(_STDOUT_ENCODING)
-except IOError:
-    def _(msg):
-        return unicode(msg).encode(_STDOUT_ENCODING)
 
 # make optparse use our improved gettext ;)
 optparse._ = _
@@ -68,7 +62,7 @@ class CommandHelpFormatter(IndentedHelpFormatter):
             # make sure we have the correct length
             # (and are not counting unicode double-bytes twice, which would
             # break length calculation e.g. for german umlauts
-            msg_len = len(msg.decode(_STDOUT_ENCODING))
+            msg_len = len(msg.decode(config.stdout_encoding))
             # build the complete options string and wrap it to width of the
             # help
             opt_str = ''.join([msg, options])
@@ -283,7 +277,7 @@ class CommandOptionParser(OptionParser):
             item = ' - '.join(map(lambda item,width: item.ljust(width),
                                   item, column_widths))
             table.append(' '+item)
-        return '\n'.join(table)
+        return '\n'.join(table).encode(config.stdout_encoding)
 
     def print_license(self, stream=None):
         """Prints license information to `stream`"""
