@@ -49,11 +49,14 @@ except IOError:
 # mainly important for table printing and field specifications
 _TRANSLATIONS = {
     'index': _('Index'),
+    'title': _('Title'),
     'firstname': _('First name'),
     'lastname': _('Last name'),
     'street': _('Street and number'),
     'postcode': _('Postal code'),
     'town': _('Town'),
+    'country': _('Country'),
+    'postbox': _('Post office box'),
     'mobile': _('Mobile'),
     'phone': _('Phone'),
     'email': _('eMail'),
@@ -62,8 +65,9 @@ _TRANSLATIONS = {
 }
 
 
-FIELDS = ('index', 'firstname', 'lastname', 'street', 'postcode', 'town',
-          'mobile', 'phone', 'email', 'birthdate', 'tags')
+FIELDS = ('index', 'title', 'firstname', 'lastname', 'street', 'postcode',
+          'town', 'country', 'postbox', 'mobile', 'phone', 'email',
+          'birthdate', 'tags')
 
 
 class Entry(UserDict.DictMixin):
@@ -96,19 +100,17 @@ class Entry(UserDict.DictMixin):
             raise ValueError('Invalid literal for email address: %s'
                              % value)
 
-    def _check_number(self, value):
-        """Checks if value is a number, but returns it as string"""
-        int(value)
-        return value
-
     # dictionary for type checking methods
     CHECKERS = {
         'index': _check_int,
+        'title': _check_unicode,
         'firstname': _check_unicode,
         'lastname': _check_unicode,
         'street': _check_unicode,
-        'postcode': _check_number,
+        'postcode': _check_unicode,
         'town': _check_unicode,
+        'country': _check_unicode,
+        'postbox': _check_int,
         'mobile': _check_phone,
         'phone': _check_phone,
         'email': _check_email,
@@ -169,15 +171,18 @@ class Entry(UserDict.DictMixin):
         # NOTE: this doesn't respect field translations to allow pretty
         # printing without being bound to field limits
         # TODO: use textwrap here to prevent overlong lines
-        msg = _('Index:          %(index)s\n'
-                'Name:           %(firstname)s %(lastname)s\n'
-                'Street:         %(street)s\n'
-                'Town:           %(postcode)s %(town)s\n'
-                'Phone:          %(phone)s\n'
-                'Mobile:         %(mobile)s\n'
-                'eMail:          %(email)s\n'
-                'Date of birth:  %(birthdate)s\n'
-                'Tags:           %(tags)s\n') % self
+        msg = _('Index:           %(index)s\n'
+                'Title:           %(title)s\n'
+                'Name:            %(firstname)s %(lastname)s\n'
+                'Street:          %(street)s\n'
+                'Town:            %(postcode)s %(town)s\n'
+                'Country:         %(country)s\n'
+                'Post office box: %(postbox)s\n'
+                'Phone:           %(phone)s\n'
+                'Mobile:          %(mobile)s\n'
+                'eMail:           %(email)s\n'
+                'Date of birth:   %(birthdate)s\n'
+                'Tags:            %(tags)s\n') % self
         return msg
 
     # nonzero is missing
