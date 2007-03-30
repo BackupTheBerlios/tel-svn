@@ -233,6 +233,16 @@ def phonebook_open(uri):
 
 # Utility methods
 
+def prettify(entry):
+    """Returns a pretty string representation of `entry`
+    Note, that index is most likly excluded of this representation, since
+    it should be usable for printing and can be changed by the user
+    through a config file (not yet)"""
+    # return a pretty representation
+    # TODO: use textwrap here to prevent overlong lines
+    return config.pretty_entry_format % entry
+
+
 def sort_entries_by_field(entries, field, descending=False,
                           ignore_case=False):
     """This sorts `iterable`, which may only contain Entry objects, by

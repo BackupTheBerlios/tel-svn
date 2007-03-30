@@ -39,6 +39,8 @@ __authors__ = ('Sebastian Wiesner <basti.wiesner@gmx.net>',
 import sys
 import os
 import gettext
+# make sure, empty finds its way into global namespace
+import teltypes
 
 class _Configuration(object):
     """This object stores configuration.
@@ -51,10 +53,8 @@ class _Configuration(object):
     _copyright = None
     _translation = None
     _backend_directories = None
-    stdout_encoding = sys.stdout.encoding or sys.getfilesystemencoding()
-    stdin_encoding = sys.stdin.encoding or sys.getfilesystemencoding()
-
-
+    _pretty_entry_format = None
+    
     @property
     def messages(self):
         """Installation directory of gettext messsage catalogs"""
@@ -63,6 +63,16 @@ class _Configuration(object):
         if os.path.isdir(self._messages):
             return self._messages
         return None
+
+    @property
+    def stdout_encoding(self):
+        """Encoding of standard output stream"""
+        return sys.stdout.encoding or sys.getfilesystemencoding()
+
+    @property
+    def stdin_encoding(self):
+        """Encoding of standard input stream"""
+        return sys.stdin.encoding or sys.getfilesystemencoding()
 
     @property
     def appmodules(self):
@@ -86,22 +96,22 @@ class _Configuration(object):
 
     @property
     def version(self):
-        """Returns tel's version"""
+        """tel's version"""
         return __version__
 
     @property
     def license(self):
-        """Returns tel's license"""
+        """tel's license"""
         return __license__
 
     @property
     def license_name(self):
-        """Returns the name of tel's license"""
+        """the name of tel's license"""
         return __license_name__
 
     @property
     def authors(self):
-        """Returns a tuple of all authors"""
+        """a tuple of all authors"""
         return __authors__
 
     @property
@@ -113,7 +123,7 @@ class _Configuration(object):
 
     @property
     def translation(self):
-        """Returns the approriate gettext translation class."""
+        """The gettext translation class for tel"""
         if self._translation is None:
             self._translation = gettext.translation('tel', config.messages,
                                                     fallback=True)
@@ -121,11 +131,29 @@ class _Configuration(object):
 
     @property
     def backend_directories(self):
+        """Directories which are searched for storage backends"""
         if self._backend_directories is None:
             # default directory
-            def_dir = [os.path.join(self.appmodules, 'backends')]
-            self._backend_directories = def_dir
+            def_dirs = [os.path.join(self.appmodules, 'backends'),
+                        os.path.join(self.user_directory, 'backends')]
+            self._backend_directories = def_dirs
         return self._backend_directories
+
+    @property
+    def pretty_entry_format(self):
+        """A nice readable entry format"""
+        if not self._pretty_entry_format:
+            msg = _('Name:           %(title)s %(firstname)s %(lastname)s\n'
+                    'Address:        %(street)s\n'
+                    '                %(country)s, %(postcode)s %(town)s\n'
+                    'POB:            %(postbox)s\n'
+                    'E-Mail:         %(email)s\n'
+                    'Phone:          %(phone)s\n'
+                    'Mobile:         %(mobile)s\n'
+                    'Date of birth:  %(birthdate)s\n'
+                    'Tags:           %(tags)s\n')
+            self._pretty_entry_format = msg
+        return self._pretty_entry_format
 
     
 # create the global configuration object
@@ -133,6 +161,7 @@ config = _Configuration()
 
 
 sys.path.append(config.appmodules)
+_ = config.translation.ugettext
 
 
 if __name__ == '__main__':
