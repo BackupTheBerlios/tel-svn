@@ -113,7 +113,8 @@ class BackendManager:
         """Loads backends"""
         self.backends = {}
         imported = []
-        for path in self.backend_directories:
+        directories = filter(os.path.isdir, self.backend_directories)
+        for path in directories:
             files = sorted(os.listdir(path), reverse=True)
             for fso in files:
                 filename = os.path.join(path, fso)
