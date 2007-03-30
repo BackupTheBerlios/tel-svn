@@ -43,135 +43,21 @@ _ = config.translation.ugettext
 FIELDS = phonebook.FIELDS
 
 
-def prettify(entry):
-    """Returns a nice string representation of `entry`"""
-    # return a pretty representation
-    # NOTE: this doesn't respect field translations to allow pretty
-    # printing without being bound to field limits
-    # TODO: use textwrap here to prevent overlong lines    
-    msg = _('Index:          %(index)s\n'
-            'Name:           %(firstname)s %(lastname)s\n'
-            'Street:         %(street)s\n'
-            'Town:           %(postcode)s %(town)s\n'
-            'Phone:          %(phone)s\n'
-            'Mobile:         %(mobile)s\n'
-            'eMail:          %(email)s\n'
-            'Date of birth:  %(birthdate)s\n'
-            'Tags:           %(tags)s\n') % entry
-    return msg
-
-
-class StandardEntry(UserDict.DictMixin):
+class StandardEntry(phonebook.BaseEntry):
     """This class provides a standard entry class. Storage modules, which
     have no need to create special attributes, can rely on this class.
-    Each field can be assigned to a checking method, which verifies the
-    correctness of the field. This methods are assigned int the CHECKERS
-    dict.
 
-    The following attributes are supported:
-    fields, which holds a dictionary of all fields except for index,
-    index, which stores the index.
-    The index is available only through the readonly index property.
-
-    Custom entry classes must emulate the behaviour of this class.
-    In particular, the need to support a mapping interface to the fields.
-    Additionally the need to provide a not_indexed method, which returns
-    True, if the entry has not been assigned with an index.
-    Entries must support string formatting through str and unicode.
+    :ivar fields: The dictionary storing all fields
     """
-
-    # a simple pattern for phone numbers
-    PHONE_NUMBER_PATTERN = re.compile(r'^[-()/\d\s\W]+$')
-    # a simple pattern for mail addresses
-    MAIL_PATTERN = re.compile(r'^[^@\s]+@[^@\s]+\.[\w]+$')
-
-    def _check_unicode(self, value):
-        return unicode(value)
-        
-    def _check_int(self, value):
-        return int(value)
-
-    def _check_phone(self, value):
-        if self.PHONE_NUMBER_PATTERN.match(value):
-            return self._check_unicode(value)
-        else:
-            raise ValueError('Invalid literal for phone number: %s'
-                             % value)
-
-    def _check_email(self, value):
-        if self.MAIL_PATTERN.match(value):
-            return self._check_unicode(value)
-        else:
-            raise ValueError('Invalid literal for email address: %s'
-                             % value)
-
-    def _check_numeric(self, value):
-        """Checks if value is a number, but returns it as string"""
-        int(value)
-        return value
-
-    # dictionary for type checking methods
-    CHECKERS = {
-        'index': _check_int,
-        'firstname': _check_unicode,
-        'lastname': _check_unicode,
-        'street': _check_unicode,
-        'postcode': _check_numeric,
-        'town': _check_unicode,
-        'mobile': _check_phone,
-        'phone': _check_phone,
-        'email': _check_email,
-        # FIXME: use egenix datetime here to verify dates
-        'birthdate': _check_unicode,
-        'tags': _check_unicode
-        }
-
     def __init__(self):
         # init all fields
-        self.fields = dict.fromkeys(FIELDS, u'')
-        self.fields['index'] = None
+        self.fields = dict.fromkeys(FIELDS, empty)
 
-    # dict interface
-    def keys(self):
-        """Return a list of all keys, which is basically a copy of
-        `FIELDS`"""
-        return list(FIELDS)
+    def _set(self, field, value):
+        self.fields[field] = value
 
-    def __getitem__(self, key):      
-        if key not in FIELDS:
-            raise KeyError('Invalid field %s' % key)
-        return self.fields[key]
-
-    def __setitem__(self, key, value):
-        if key not in FIELDS:
-            raise KeyError('Invalid field %s' % key)
-        # check non-empty values
-        if value:
-            value = self.CHECKERS[key](self, value)
-        self.fields[key] = value
-
-    def __delitem__(self, key):
-        if key not in FIELDS:
-            raise KeyError('Invalid field %s' % key)
-        del self.fields[key]
-
-    def __str__(self):
-        return prettify(self)
-
-    def __nonzero__(self):
-        for field in FIELDS[1:]:
-            # ignore index, since empty entries can have indicies, too
-            if self.fields[field]:
-                return True
-        return False
-
-    def __repr__(self):
-        # return a short representation
-        return repr(self.fields)
-
-    def not_indexed(self):
-        """Returns True, if this entry is not indexed"""
-        return (self['index'] is None)
+    def _get(self, field):
+        return self.fields[field]    
 
 
 class DictStorage(object):
@@ -222,7 +108,7 @@ class DictStorage(object):
     def __iter__(self):
         # iterate over the values of _entries here, since the key is present
         # in Entry.index
-        return iter(self.entries.values())
+        return self.entries.itervalues()
 
     def __contains__(self, item):
         if isinstance(item, int):

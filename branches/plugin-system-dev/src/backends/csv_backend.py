@@ -57,7 +57,10 @@ class EntryStorage(backend.DictStorage):
         for row in self.reader:
             entry = self.create_new()
             for k in row:
-                entry[k] = row[k].decode('utf-8')
+                val = row[k].decode('utf-8')
+                if val == '':
+                    val = empty
+                entry[k] = val
             self[None] = entry
         self.stream.close()
 
