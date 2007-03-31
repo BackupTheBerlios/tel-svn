@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # main module
 
-
 """Contains globale configuration and provides the starter script for tel.
 
 :mvar config: Stores a global configuration object, which provides access to
@@ -31,7 +30,8 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE."""
-__version__ = '0.1.7-pre1'
+
+__version__ = '0.2.0-pre1'
 __authors__ = ('Sebastian Wiesner <basti.wiesner@gmx.net>',
                'Remo Wenger <potrmwn@gmail.com>')
 

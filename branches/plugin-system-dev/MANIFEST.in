@@ -1,4 +1,5 @@
 recursive-include po *.po
+recursive-include src *.py
 include *.py
 include INSTALL
 include COPYING
