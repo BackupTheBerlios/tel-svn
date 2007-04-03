@@ -41,7 +41,7 @@ from tel import config
 
 
 def _(msg):
-    return config.translation.ugettext(msg).encode(stdout_encoding)
+    return config.translation.ugettext(msg).encode(config.stdout_encoding)
 
 
 # make optparse use our improved gettext ;)

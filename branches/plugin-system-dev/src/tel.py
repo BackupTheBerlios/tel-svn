@@ -53,7 +53,8 @@ class _Configuration(object):
     _copyright = None
     _translation = None
     _backend_directories = None
-    _pretty_entry_format = None
+    _long_entry_format = None
+    _short_entry_format = None
     
     @property
     def messages(self):
@@ -140,7 +141,7 @@ class _Configuration(object):
         return self._backend_directories
 
     @property
-    def pretty_entry_format(self):
+    def long_entry_format(self):
         """A nice readable entry format"""
         if not self._pretty_entry_format:
             msg = _('Name:           %(title)s %(firstname)s %(lastname)s\n'
@@ -154,6 +155,14 @@ class _Configuration(object):
                     'Tags:           %(tags)s\n')
             self._pretty_entry_format = msg
         return self._pretty_entry_format
+
+    @property
+    def short_entry_format(self):
+        if not self._short_entry_format:
+            msg = _('[%(index)s] %(firstname)s %(lastname)s')
+            self._short_entry_format = msg
+        return self._short_entry_format
+
 
     
 # create the global configuration object

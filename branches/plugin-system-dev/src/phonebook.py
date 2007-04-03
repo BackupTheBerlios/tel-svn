@@ -96,7 +96,7 @@ def init(manager=None):
         _manager = manager
 
 
-class BaseEntry(UserDict.DictMixin):
+class BaseEntry(object, UserDict.DictMixin):
     """This is the base class of all entry objects.
     Its purpose is mainly type testing, but it provides some functionallity,
     which is really useful for child classes: Conversation to field types is
@@ -140,6 +140,7 @@ class BaseEntry(UserDict.DictMixin):
         self._set(field, None)
 
     def __nonzero__(self):
+        # ignore index, since empty entries can have indices too
         for field in FIELDS[1:]:
             if self[field]:
                 return True
@@ -155,9 +156,9 @@ class BaseEntry(UserDict.DictMixin):
         for field in self:
             yield (field, self[field])
 
-    def not_indexed(self):
+    def has_index(self):
         """Returns True, if this entry is not indexed"""
-        return (self['index'] is empty)
+        return (self['index'] is not empty)
 
 
 class URI(object):
@@ -231,32 +232,7 @@ def phonebook_open(uri):
     return storage(uri.location)
 
 
-# Utility methods
-
-def prettify(entry):
-    """Returns a pretty string representation of `entry`
-    Note, that index is most likly excluded of this representation, since
-    it should be usable for printing and can be changed by the user
-    through a config file (not yet)"""
-    # return a pretty representation
-    # TODO: use textwrap here to prevent overlong lines
-    return config.pretty_entry_format % entry
-
-
-def sort_entries_by_field(entries, field, descending=False,
-                          ignore_case=False):
-    """This sorts `iterable`, which may only contain Entry objects, by
-    `field`, which may be be any of Entry.default_order. If `descending is
-    True, the list is reversed. If `ignore_case` is True, case is ignored
-    when sorting"""
-    def keyfunc(entry):
-        value = entry[field]
-        if isinstance(value, basestring) and ignore_case:
-            return value.lower()
-        return value
-            
-    return sorted(entries, key=keyfunc, reverse=descending)
-
+# functions to query field information
 
 def translate_field(field):  
     """:returns: A translation for `field`
@@ -276,3 +252,43 @@ def field_type(field):
         raise ValueError('There is no field %s' % field)
 
 
+# Utility functions
+
+def long_prettify(entry):
+    """Returns a pretty string representation of `entry`
+    Note, that index is most likly excluded of this representation, since
+    it should be usable for printing and can be changed by the user
+    through a config file (not yet)"""
+    # return a pretty representation
+    # TODO: use textwrap here to prevent overlong lines
+    return config.long_entry_format % entry
+
+
+def short_prettify(entry):
+    """Returns a short representation of `entry` suitable for printing it in
+    lists."""
+    return config.short_entry_format % entry
+
+
+def sort_entries_by_field(entries, field, descending=False,
+                          ignore_case=False):
+    """This sorts `iterable`, which may only contain Entry objects, by
+    `field`, which may be be any of Entry.default_order. If `descending is
+    True, the list is reversed. If `ignore_case` is True, case is ignored
+    when sorting"""
+    def keyfunc(entry):
+        value = entry[field]
+        if isinstance(value, basestring) and ignore_case:
+            return value.lower()
+        return value
+            
+    return sorted(entries, key=keyfunc, reverse=descending)
+
+
+def copy_entry(src, dest, index=False):
+    """Copies field values from entry `src` to entry `dest`, exluding the
+    index if `index` is False"""
+    for field in FIELDS:
+        if field == 'index' and not index:
+            continue
+        dest[field] = src[field]
