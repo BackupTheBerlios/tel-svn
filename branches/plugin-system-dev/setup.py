@@ -50,9 +50,13 @@ optparse_source = optparse.__file__.rstrip('c')
 
 
 tel_sources = ['src/tel.py',
+               'src/backendmanager.py',
                'src/phonebook.py',
+               'src/consoleiface.py',
+               'src/teltypes.py',
                'src/cmdoptparse.py',
-               'src/consoleiface.py']
+               'src/backend.py',
+               'src/backends/']
 
 
 appdistutils.setup(name='tel',

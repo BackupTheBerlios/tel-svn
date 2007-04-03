@@ -325,8 +325,24 @@ class InstallAppModules(install_lib):
                 target, copied = self.copy_file(item, self.install_dir)
                 self.outfiles.append(target)
             elif os.path.isdir(item):
-                # FIXME: respect "configureable" files
-                files.extend(filelist.findall(item))
+                for dirpath, directories, files in os.walk(item):
+                    files = filter(lambda f: f.endswith('.py'), files)
+                    if not files:
+                        continue
+
+                    # create target directory
+                    dirname = os.path.basename(os.path.dirname(dirpath))
+                    target = os.path.join(self.install_dir, dirname)
+                    if not os.path.exists(target):
+                        self.outfiles.extend(self.mkpath(target))
+                    
+                    for fso in files:
+                        # get full path
+                        fso = os.path.join(dirpath, fso)
+                        # respect configured files
+                        if fso in self.configurable:
+                            fso = os.path.join(build_configure, fso)
+                        self.outfiles.append(self.copy_file(fso, target)[0])
             else:
                 self.warn('Unable to find %s...' % item)
                 
@@ -410,6 +426,7 @@ class InstallLinks(InstallStuff):
 
         for link in self.distribution.links:
             dest = os.path.join(self.install_dir, link[0])
+
             target = os.path.join(target_directory, link[1])
             # make sure, target is executable (link would be vain otherwise)
             mode = int('755', 8)
@@ -470,7 +487,7 @@ class AppInstall(install):
     def run(self):
         install.run(self)
         stream = open(INSTALL_LOG, 'w')
-        outputs = self.get_outputs()
+        outputs = map(os.path.normpath, self.get_outputs())
         stream.write('\n'.join(outputs))
         stream.write('\n')
         stream.close()
@@ -493,7 +510,7 @@ class Uninstall(Command):
             raise SystemExit(msg)
 
         stream = open(INSTALL_LOG)
-        files = stream.readlines()
+        files = stream.read().splitlines()
         stream.close()
 
         # sort and reverse the file list. This puts the directories after
