@@ -24,10 +24,7 @@ __revision__ = '$Id$'
 import os
 import sys
 import itertools
-import shutil
-import re
 import textwrap
-import gettext
 
 try:
     # more comfortable line editing
@@ -45,17 +42,23 @@ def _(msg):
     return config.translation.ugettext(msg).encode(config.stdout_encoding)
 
 
-def entry_repr(entry):
-    """Returns a short representation of `entry` in appropriate encoding for
-    console output"""
-    msg = _('[%(index)s] %(firstname)s %(lastname)s') % entry
-    return msg.encode(config.stdout_encoding)
-
-
 def enc_tr_field(field):
     """Returns translation for `field` in appropriate encoding for console
     output. Should only be used, where absolutly necessary."""
     return phonebook.translate_field(field).encode(config.stdout_encoding)
+
+
+def long_prettify(entry):
+    """Short-hand for phonebook.long_prettify, which returns representation
+    in proper encoding"""
+    return phonebook.long_prettify(entry).encode(config.stdout_encoding)
+
+
+def short_prettify(entry):
+    """Short-hand for phonebook.long_prettify, which returns representation
+    in proper encoding"""
+    return phonebook.short_prettify(entry).encode(config.stdout_encoding)
+
 
 
 class ConsoleEntryEditor:
@@ -66,17 +69,14 @@ class ConsoleEntryEditor:
     EDIT_MSG = _('Editing entry "%s"...')
     NEW_MSG = _('Creating a new entry...')
          
-    def edit(self, entry=None):
-        """Edits `entry`. If `entry` is none, a new entry is created.
-        This method supports readline, if available.
+    def edit(self, entry, new=True):
+        """Edits `entry`. If `new` is True, the entry is identified as new
+        entry. This method supports readline, if available.
         :returns: The edited `entry`"""
-        if entry is None:
-            entry = phonebook.Entry()
-            new = True
+        if new:
             print self.NEW_MSG
         else:
-            new = False
-            print self.EDIT_MSG % entry_repr(entry)
+            print self.EDIT_MSG % long_prettify(entry)
 
         self.initialize_editor(new)
         self.print_help(new)
@@ -129,7 +129,7 @@ class ConsoleEntryEditor:
                 self.oldvalue = oldvalue
             else:
                 self.oldvalue = None
-            prompt = '%s: ' % phonebook.translate_field(field)
+            prompt = u'%s: ' % phonebook.translate_field(field)
             prompt = prompt.encode(config.stdout_encoding)
             return raw_input(prompt)
             
@@ -168,9 +168,9 @@ class ConsoleEntryEditor:
             :param oldvalue: The old value of the field
             :param new: Whether the entry is new"""
             if new:
-                prompt = '%s: ' % phonebook.translate_field(field)
+                prompt = u'%s: ' % phonebook.translate_field(field)
             else:
-                prompt = '%s [%s]: '
+                prompt = u'%s [%s]: '
                 prompt = prompt % (phonebook.translate_field(field),
                                    oldvalue)
             prompt = prompt.encode(config.stdout_encoding)
@@ -189,7 +189,7 @@ class ConsoleIFace:
         """Prints all `entries` in a short format."""
         print
         for entry in entries:
-            print entry_repr(entry)
+            print short_prettify(entry)
 
     def print_long_list(self, entries, sortby='index', desc=False):
         """Prints every single entry in `entries` in full detail.
@@ -197,7 +197,7 @@ class ConsoleIFace:
         :param asc: True, if sorting order is descending"""
         for entry in entries:
             print '-'*20
-            print unicode(entry).encode(config.stdout_encoding)
+            print long_prettify(entry)
 
     def print_table(self, entries, fields):
         """Prints `entries` as a table.
@@ -228,12 +228,12 @@ class ConsoleIFace:
             row = '| %s |' % ' | '.join(row)
             print row.encode(config.stdout_encoding)
 
-    def edit_entry(self, entry=None):
-        """Allows interactive editing of entries. If `entry` is None, a new
-        entry is created."""
+    def edit_entry(self, entry, new):
+        """Allows interactive editing of entries. If `new` is True, `entry`
+        is identified as new entry"""
         print
         editor = ConsoleEntryEditor()
-        entry = editor.edit(entry)
+        entry = editor.edit(entry, new)
         # check if the user wants to add an empty entry
         if not entry:
             msg = _('Do you really want to save an emtpy entry? ')
@@ -242,7 +242,11 @@ class ConsoleIFace:
                 # abort without saving
                 print _('The entry is not saved')
                 return
-        self.phonebook.add(entry)
+        if entry.has_index():
+            # assign entry to its index in the phonebook
+            self.phonebook[None] = entry
+        else:
+            self.phonebook.append(entry)
         self.phonebook.save()
         print 'The entry was saved'
 
@@ -317,56 +321,56 @@ class ConsoleIFace:
     #   These options can be queried trough the options argument of the
     #   command function
 
-    def _cmd_export(self, options, *args):
-        """Exports phone book"""
-        for path in args:
-            if not os.path.exists(path) and not os.path.basename(path):
-                # create non-existing directories here, if the user wants it
-                msg = _('Directory %s does not exist. Create it? ')
-                resp = raw_input(msg % path)
-                if resp.lower() == 'y':
-                    os.makedirs(path)
-                else:
-                    # do not export
-                    continue
-            if os.path.isdir(path):
-                # if path is a directory, create the export target by
-                # joining the filename of the phone book with the path
-                filename = os.path.basename(self.phonebook.path)
-                path = os.path.join(path, filename)
-            if os.path.isfile(path):
-                # now check, if the file denoted by path already exists
-                msg = _('%s already exists. Overwrite it? ')
-                resp = raw_input(msg % path)
-                if resp.lower() != 'y':
-                    continue
-            try:
-                shutil.copyfile(self.phonebook.path, path)
-            except IOError, e:
-                if e.errno == 13:
-                    msg = _('Error: Permission denied for %s') % path
-                else:
-                    msg = e
-                print >> sys.stderr, msg
+##     def _cmd_export(self, options, *args):
+##         """Exports phone book"""
+##         for path in args:
+##             if not os.path.exists(path) and not os.path.basename(path):
+##                 # create non-existing directories here, if the user wants it
+##                 msg = _('Directory %s does not exist. Create it? ')
+##                 resp = raw_input(msg % path)
+##                 if resp.lower() == 'y':
+##                     os.makedirs(path)
+##                 else:
+##                     # do not export
+##                     continue
+##             if os.path.isdir(path):
+##                 # if path is a directory, create the export target by
+##                 # joining the filename of the phone book with the path
+##                 filename = os.path.basename(self.phonebook.path)
+##                 path = os.path.join(path, filename)
+##             if os.path.isfile(path):
+##                 # now check, if the file denoted by path already exists
+##                 msg = _('%s already exists. Overwrite it? ')
+##                 resp = raw_input(msg % path)
+##                 if resp.lower() != 'y':
+##                     continue
+##             try:
+##                 shutil.copyfile(self.phonebook.path, path)
+##             except IOError, e:
+##                 if e.errno == 13:
+##                     msg = _('Error: Permission denied for %s') % path
+##                 else:
+##                     msg = e
+##                 print >> sys.stderr, msg
 
-    def _cmd_import(self, options, *args):
-        """Import phone books"""
-        for path in args:
-            # import all specified phone books
-            if os.path.exists(path):
-                if (os.path.abspath(path) ==
-                    os.path.abspath(self.phonebook.path)):
-                    resp = raw_input(_('Do you really want to import the '
-                                       'phone book you\'re just using? '))
-                    if resp.lower() != 'y':
-                        print _('Not importing %s...') % path
-                        continue
-                import_book = phonebook.PhoneBook(path)
-                for entry in import_book:
-                    # enable auto-generation of index
-                    entry.index = None
-                    self.phonebook.add(entry)
-        self.phonebook.save()
+##     def _cmd_import(self, options, *args):
+##         """Import phone books"""
+##         for path in args:
+##             # import all specified phone books
+##             if os.path.exists(path):
+##                 if (os.path.abspath(path) ==
+##                     os.path.abspath(self.phonebook.path)):
+##                     resp = raw_input(_('Do you really want to import the '
+##                                        'phone book you\'re just using? '))
+##                     if resp.lower() != 'y':
+##                         print _('Not importing %s...') % path
+##                         continue
+##                 import_book = phonebook.PhoneBook(path)
+##                 for entry in import_book:
+##                     # enable auto-generation of index
+##                     entry.index = None
+##                     self.phonebook.add(entry)
+##         self.phonebook.save()
 
     def _cmd_table(self, options, *args):
         """Print a table"""
@@ -404,22 +408,22 @@ class ConsoleIFace:
                                                   options.ignore_case)
         self.print_long_list(entries)
 
-    def _cmd_search(self, options, *args):
-        """Search the phone book for `pattern`"""
-        found = []
-        for pattern in args:
-            entries = self.phonebook.search(pattern, options.ignore_case,
-                                            options.regexp, options.fields)
-            # add all entries which aren't already in found. This avoids
-            # printing entries twice, which are matched by more than one
-            # pattern
-            new = filter(lambda entry: entry not in found, entries)
-            found += new
-        entries = phonebook.sort_entries_by_field(found,
-                                                  options.sortby[0],
-                                                  options.sortby[1],
-                                                  options.ignore_case)
-        self.print_table(found, options.output)
+##     def _cmd_search(self, options, *args):
+##         """Search the phone book for `pattern`"""
+##         found = []
+##         for pattern in args:
+##             entries = self.phonebook.search(pattern, options.ignore_case,
+##                                             options.regexp, options.fields)
+##             # add all entries which aren't already in found. This avoids
+##             # printing entries twice, which are matched by more than one
+##             # pattern
+##             new = filter(lambda entry: entry not in found, entries)
+##             found += new
+##         entries = phonebook.sort_entries_by_field(found,
+##                                                   options.sortby[0],
+##                                                   options.sortby[1],
+##                                                   options.ignore_case)
+##         self.print_table(found, options.output)
 
     def _cmd_create(self, options, *args):
         """Interactivly create a new entry"""
@@ -432,18 +436,19 @@ class ConsoleIFace:
         if len(args) > 1:
             sys.exit(_('--create accepts only one argument'))
         for func in itertools.repeat(self.edit_entry, number):
-            func()
+            entry = self.phonebook.create_new()
+            func(entry, True)
 
     def _cmd_edit(self, options, *args):
         """Interactivly edit entries"""
         entries = self.parse_indices(*args)
         for entry in entries:
-            self.edit_entry(entry)
+            self.edit_entry(entry, False)
 
     def _cmd_remove(self, options, *args):
         for entry in self.parse_indices(*args):
             resp = raw_input(_('Really delete entry "%s"? ') %
-                             entry_repr(entry))
+                             short_prettify(entry))
             if resp.lower() == 'y':
                 self.phonebook.remove(entry)
         self.phonebook.save()
@@ -577,7 +582,8 @@ class ConsoleIFace:
         """Starts the interface"""
         try:
             (options, args) = self._parse_args()
-            self.phonebook = phonebook.PhoneBook(options.file)
+            self.phonebook = phonebook.phonebook_open(options.file)
+            self.phonebook.load()
             options.command_function(options, *args)
         except KeyboardInterrupt:
             sys.exit(_('Dying peacefully ...'))
