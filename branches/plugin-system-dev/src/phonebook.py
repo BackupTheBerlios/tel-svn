@@ -68,53 +68,23 @@ _field_information = {
 
 
 # backend manager
-_manager = None
+_manager = BackendManager()
 
 
-def get_backendmanager():
-    """Return the backend manager used by this module"""
-    return _manager
-
-
-def set_backendmanager(manager):
-    """Set the backend manager used by this module"""
-    global _manager
-    _manager = manager
-
-
-def initialized():
-    """True, if this module is initialized"""
-    return _manager is not None
-
-
-def init(manager=None):
-    """Intializes this module explicitly."""
-    global _manager
-    if not initialized():
-        if manager is None:
-            manager = BackendManager()
-        _manager = manager
-
-
-class BaseEntry(object, UserDict.DictMixin):
-    """This is the base class of all entry objects.
-    Its purpose is mainly type testing, but it provides some functionallity,
-    which is really useful for child classes: Conversation to field types is
-    available through the _convert_field method.
-    Subclasses need to overwrite at least _get and _set, which do what their
-    name indicates to do ;) : getting and settings field values"""
-
-    def _set(self, field, value):
-        """Called by __setitem__ to set `value` for `field`.
-        `value` is guaranteed to be of the correct type"""
-        raise NotImplementedError()
-
-    def _get(self, field):
-        """Called to return the value of `field`"""
-        raise NotImplementedError()
+class Entry(object, UserDict.DictMixin):
+    """This class represents a single entry in a phonebook.
+    It supports all fields present in the FIELDS tuple."""
+          
+    def __init__(self, entry=None, **kwargs):
+        """If `entry` is given, copy all fields from `entry`.
+        Any keyword arguments are regarded as field values, and are stored
+        if no other value has been given"""
+        self.fields = dict.fromkeys(FIELDS, "")
+        if entry:
+            self.fields.update(entry)
+        for k in kwargs:
+            self.setdefault(k, kwargs[k])
             
-    def __init__(self):
-        raise NotImplementedError()
 
     def keys(self):
         """Return a list of all keys, which is basically a copy of
@@ -124,27 +94,35 @@ class BaseEntry(object, UserDict.DictMixin):
     def __getitem__(self, field):
         if field not in FIELDS:
             raise KeyError('Invalid field %s' % field)
-        return self._get(field)
+        return self.fields[field]
 
     def __setitem__(self, field, value):
         if field not in FIELDS:
             raise KeyError('Invalid field %s' % field)
+        # get the field type
         ftype = field_type(field)
-        if value is not empty and not isinstance(value, ftype):
+        if value != '' and not isinstance(value, ftype):
+            # convert the given value into the field type
             value = ftype(value)
-        self._set(field, value)
+        self.fields[field] = value
 
     def __delitem__(self, field):
         if field not in FIELDS:
             raise KeyError('Invalid field %s' % field)
-        self._set(field, None)
+        self.fields[field] = ''
 
     def __nonzero__(self):
         # ignore index, since empty entries can have indices too
         for field in FIELDS[1:]:
-            if self[field]:
+            if self[field] != '':
                 return True
         return False
+
+    def setdefault(self, field, value):
+        """Sets field to `value`, if field is empty"""
+        if self[field] == '':
+            self[field] = value
+        return self[field]
 
     def __contains__(self, field):
         return field in FIELDS
@@ -153,16 +131,78 @@ class BaseEntry(object, UserDict.DictMixin):
         return iter(FIELDS)
 
     def iteritems(self):
+        """Returns an iterator over key, value pairs"""
         for field in self:
             yield (field, self[field])
 
     def has_index(self):
         """Returns True, if this entry is not indexed"""
-        return (self['index'] is not empty)
+        return (self['index'] != "")
 
+
+class BaseStorage(object):
+    """The base class of all storage implementations.
+    It's use is mainly for type testing and as a reference"""
+
+    def __init__(self, uri):
+        """Creates a new instance, which is bound to `uri`.
+        load() and save() must operate on this `uri`"""
+        raise NotImplementedError
+
+    def __getitem__(self, indices):
+        """Returns entries at the specified indices.
+        Must support slice objects (NOT YET IMPLEMENTED)"""
+        raise NotImplementedError
+
+    def __delitem__(self, indices):
+        """Remove the entries at the specified indices
+        Must support slice objects (NOT YET IMPLEMENTED)."""
+        raise NotImplementedError
+
+    def __iter__(self):
+        """Iterate over all entries in this storage"""
+        raise NotImplementedError
+
+    def __contains__(self, entry):
+        """Check, whether `entry` is contained in this storage"""
+        raise NotImplementedError
+
+    def remove(self, entry):
+        """Remove `entry`."""
+        if entry in self:
+            del self[entry['index']]
+
+##     def search(self, *args, **kwargs):
+##         """Searchs the phone book.
+##         `*args` and `**kwargs` are the same as for Entry.matches"""
+##         found_entries = []
+##         for entry in self:
+##             if entry.matches(*args, **kwargs):
+##                 found_entries.append(entry)
+##         return found_entries
+
+    def append(self, entry):
+        """Adds `entry` to this storage"""
+        raise NotImplementedError()
+
+    def save(self):
+        """Saves the phonebook"""
+        raise NotImplementedError()
+
+    def load(self):
+        """Loads entries into this storage"""
+        raise NotImplementedError()
+    
 
 class URI(object):
-    """Encapsulates a phonebook uri"""
+    
+    """Encapsulates a phonebook uri.
+
+    An uri is separated in the scheme and the location part.
+    The scheme is the name of the backend, which shall be used to load
+    location. Both parts a separated by the usual url separator ://.
+    See uri_pattern for the regular expression which is used to extract
+    the parts from an uri string."""
     # regular expression to extract single parts from an uri
     uri_pattern = re.compile(r'((?P<scheme>\w*)://)?(?P<location>.*)',
                              re.DOTALL)
@@ -171,8 +211,8 @@ class URI(object):
         """Accepts one or two arguments. If there is only one argument,
         it is parsed according to `uri_pattern`, if there are two arguments,
         the first one is the scheme, the second the location"""
-        # make sure module is initialized
-        init()
+        # make sure module is initialized, so that we have a backendmanager
+        # available
         self.scheme = None
         self.location = None
 
@@ -188,16 +228,14 @@ class URI(object):
         """Return the absolute uri (with a scheme)"""
         scheme = self.scheme
         if not scheme:
-            manager = get_backendmanager()
-            scheme = manager.find_backend_for_file(self.location).name
-        return scheme + '://' + location
+            scheme = _manager.find_backend_for_file(self.location).name
+        return scheme + '://' + self.location
 
     def absolutize(self):
         """Set the scheme of this URI by guessing it from location.
         Only changes scheme, if it is None or empty."""
         if not self.isabsolute():
-            manager = get_backendmanager()
-            self.scheme = manager.find_backend_for_file(self.location).name
+            self.scheme = _manager.find_backend_for_file(self.location).name
 
     def isabsolute(self):
         """Checks whether this URI is absolute"""
@@ -216,7 +254,7 @@ def get_backend_for_uri(uri):
         raise IOError(_('Couldn\'t determine backend for %s') % uri)
 
     try:
-        return get_backendmanager().get_backend(uri.scheme)
+        return _manager.get_backend(uri.scheme)
     except KeyError:
         raise IOError(_('No backend found for %s') % uri.scheme)
 
@@ -253,7 +291,6 @@ def field_type(field):
 
 
 # Utility functions
-
 def long_prettify(entry):
     """Returns a pretty string representation of `entry`
     Note, that index is most likly excluded of this representation, since
@@ -283,12 +320,3 @@ def sort_entries_by_field(entries, field, descending=False,
         return value
             
     return sorted(entries, key=keyfunc, reverse=descending)
-
-
-def copy_entry(src, dest, index=False):
-    """Copies field values from entry `src` to entry `dest`, exluding the
-    index if `index` is False"""
-    for field in FIELDS:
-        if field == 'index' and not index:
-            continue
-        dest[field] = src[field]
