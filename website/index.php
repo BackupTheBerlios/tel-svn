@@ -5,15 +5,7 @@
 	// include configuration
 	include "config.php";
 
-	// determinate the client's language
-	$allowed_langs = array('en', 'de');
-	if (isset($_GET["lang"])) {
-		$lang = $_GET["lang"];
-	}
-	else {
-		$lang = lang_getfrombrowser($allowed_langs, 'en', null, false);
-	}
-	
+
 	include "header.php";
 
 	// include content in the appropriate language
