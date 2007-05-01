@@ -27,7 +27,7 @@
 			<a href="http://developer.berlios.de"><img src="http://developer.berlios.de/bslogo.php?group_id=8132" alt="BerliOS.de" /></a>
 		</div>
 
-		<div>
+		<div id="banner">
 			<a href="index.php"><img src="images/logo_new_rc1.png" alt="tel logo" style="border:none;"/></a><br />
             <? include("lang/".$lang."/slogan.php"); ?>
 		</div>
