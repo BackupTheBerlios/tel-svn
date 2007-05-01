@@ -1,6 +1,6 @@
 <h1>Was ist tel?</h1>
 <p>tel ist ein kleines, elektronisches Telefonbuch, das im Terminal läuft. Es erlaubt dir Einträge hinzuzufügen, zu löschen, zu bearbeiten und nach Einträgen zu suchen und gibt sie in einem schönen Format aus.</p>
-<p>Die Einträge werden in einer einfachen CSV-Datei gespeichert, die man auch bei anderen Programmen wie OpenOffice.org Calc oder Excel benutzen kann.</p>
+<p>Die Einträge werden in einer einfachen CSV-Datei gespeichert, die man auch bei anderen Programmen wie OpenOffice.org Calc oder Microsoft Excel benutzen kann.</p>
 <p>tel ist in <a href="http://www.python.org">Python</a> geschrieben und steht unter der <a href="http://www.opensource.org/licenses/mit-license.php">MIT-Lizenz</a>, ist also freie Software. Du kannst es kostenlos herunterladen, an deine Freunde weitergeben, verändern und sogar verkaufen.</p>
 
 <h1>Geschichte</h1>
