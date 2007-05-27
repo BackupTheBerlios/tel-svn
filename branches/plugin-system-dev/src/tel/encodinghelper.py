@@ -15,7 +15,10 @@ This module attempts to identify the current encoding according to different
 platforms. If encoding was successfully identified, stdout is redirected
 through a codecs.DataWriter.
 """
- 
+
+
+__revision__ = "$Id$"
+
 
 import os
 import sys

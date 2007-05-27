@@ -3,7 +3,7 @@
 
 """This package provides all classes of tel"""
 
-__revision__ = '$Id: tel.py 126 2007-04-03 11:37:39Z lunar $'
+__revision__ = '$Id$'
 
 __license_name__ = 'MIT/X11'
 __license__ = """\
@@ -31,6 +31,9 @@ __version__ = '0.2.0-pre1'
 __authors__ = ('Sebastian Wiesner <basti.wiesner@gmx.net>',
                'Remo Wenger <potrmwn@gmail.com>')
 
+
+# switch sys.stdout to proper encoding
+import encodinghelper
 
 from configuration import Configuration
 
