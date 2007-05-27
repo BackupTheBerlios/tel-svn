@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# This module defines types for fields of phonebooks
+# teltypes: defines field types
 # Copyright (c) 2007 Sebastian Wiesner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -21,34 +21,14 @@
 # DEALINGS IN THE SOFTWARE.
 
 
+"""This modules defines additional types for fields"""
+
+
 __revision__ = '$Id$'
 
 
 import re
 
-
-class emptytype:
-    """Special class, emulating an empty field.
-    It is used in place of None, because None would result in the string
-    representation 'None', which is not acutally cool when displaying
-    entries"""
-    def __str__(False):
-        return ''
-
-    def __unicode__(False):
-        return u''
-
-    def __nonzero__(self):
-        return False
-
-    def __repr__(self):
-        return 'empty'
-
-
-empty = emptytype()
-# installs empty into global namespace
-__builtins__['empty'] = empty
-        
 
 class email(unicode):
     """Represents a mail address.

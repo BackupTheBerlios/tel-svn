@@ -30,6 +30,7 @@ import csv
 
 import backend
 
+
 # Use this for backends, which are part of the upstream releases
 _ = backend._
 
@@ -76,5 +77,8 @@ class EntryStorage(backend.DictStorage):
         stream.close()
 
     def create_new(self):
-        return backend.StandardEntry()
-    
+        entry = backend.StandardEntry()
+        index = self._lowest_free_index()
+        entry['index'] = index
+        self.entries[index] = entry
+        return entry
