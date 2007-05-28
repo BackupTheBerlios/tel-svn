@@ -33,16 +33,6 @@ class Configuration(object):
         return None
 
     @property
-    def stdout_encoding(self):
-        """Encoding of standard output stream"""
-        return sys.stdout.encoding or sys.getfilesystemencoding()
-
-    @property
-    def stdin_encoding(self):
-        """Encoding of standard input stream"""
-        return sys.stdin.encoding or sys.getfilesystemencoding()
-
-    @property
     def appmodules(self):
         """Installation directory of tel modules"""
         if os.path.isdir(self._appmodules):
@@ -93,7 +83,7 @@ class Configuration(object):
     def translation(self):
         """The gettext translation class for tel"""
         if self._translation is None:
-            self._translation = gettext.translation('tel', config.messages,
+            self._translation = gettext.translation('tel', self.messages,
                                                     fallback=True)
         return self._translation
 
