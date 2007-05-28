@@ -26,17 +26,6 @@ import codecs
 import subprocess
 
 
-def _istrue(function, iterable):
-    """
-    Helper function which returns True, if `function` returned True for
-    every element in `iterable`.
-    """
-    for value in iterable:
-        if function(value):
-            return True
-    return False
-
-
 # Only execute _outside_ idle
 if "idlelib" not in sys.modules:
     # determine out_enc from standard values
@@ -47,7 +36,7 @@ if "idlelib" not in sys.modules:
         plat = sys.platform
         if plat.startswith("win"):
             out_enc = "cp850"
-        elif _istrue(plat.startswith, ("linux", "aix")):
+        elif any((plat.startswith(p) for p in ("linux", "aix"))):
             # try to read locale output
             process = subprocess(['locale'], stdout=subprocess.PIPE)
             process.wait()
