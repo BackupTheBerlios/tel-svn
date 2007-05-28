@@ -27,118 +27,68 @@ __revision__ = '$Id$'
 import os
 import imp
 
+from UserDict import DictMixin
+
 from tel import config
 
 
-def get_module_description(filename):
-    """Return description for `filename` or None, if `filename` is not a
-    python module"""
-    if os.path.isfile(filename):
-        for desc in imp.get_suffixes():
-            if filename.endswith(desc[0]):
-                return desc
-    return None
+MODULE_SUFFIXES = zip(*imp.get_suffixes())[0]
 
 
 def get_module_name(filename):
-    """Returns the module name for `filename`"""
-    return os.path.splitext(os.path.basename(filename))[0]
-            
-
-def load_module(filename, name=None):
-    """Loads module from `filename` as `name`. If `name` is None,
-    it is determined from `filename`."""
-    desc = get_module_description(filename)
-    if desc:
-        name = name or get_module_name(filename)
-        stream = open(filename, desc[1])
-        module = imp.load_module(name, stream, filename, desc)
-        stream.close()
-        return module
-    else:
-        return None
+    """If `filename` is a module"""
+    for suffix in MODULE_SUFFIXES:
+        if filename.endswith(suffix):
+            return filename[:-len(suffix)]
+    return None
 
 
-class BackendException(Exception):
-    def __init__(self, msg, module):
-        self.message = msg
-        self.module = module
+class BackendManager(DictMixin):
+    """Responsible for loading backends.
 
+    Supports dictionary interface for getting backends"""
+    
+    def __init__(self):
+        """Creates a new backend manager."""
+        self.backends = self._find_backends()
+        self._loaded_cache = {}
 
-class BackendWrapper:
-    """Provides safe access to a backend. Wraps exceptions to
-    make sure, that mis-formatted plugins don't blow tel."""
-
-    def __init__(self, backend_module):
-        """Creates a new wrapper for `backend_module`"""
-        self.backend = backend_module
-        try:
-            self.name = self.backend.__backend_name__
-##             self.default_filename = self.backend.DEFAULT_FILENAME
-            if hasattr(self.backend, '__entry_storage__'):
-                self.storage_class = self.backend.__entry_storage__
-            else:
-                self.storage_class = self.backend.EntryStorage
-            if hasattr(self.backend, '__supported_fields__'):
-                self.supported_fields = self.backend.__supported_fields__
-            else:
-                self.supported_fields = 'all'
-            getattr(self.backend, 'supports')
-            self.can_save = hasattr(self.storage_class, 'save')
-            self.can_load = hasattr(self.storage_class, 'load')
-        except AttributeError:
-            raise BackendException('Invalid backend', self.backend)
-
-    def supports(self, path):
-        return self.backend.supports(path)
-            
-
-
-class BackendManager:
-    """Responsible for loading backends"""
-    def __init__(self, backend_directories=None):
-        """Creates a new backend manager.
-        :param backend_path: A path or a list of path names denoted
-        directories to load backends from. If None, tel.CONFIG.backend_path
-        is used"""
-        self.backends = None
-        self.backend_directories = backend_directories
-        if not self.backend_directories:
-            self.backend_directories = config.backend_directories
-        if isinstance(self.backend_directories, basestring):
-            self.backend_directories = [self.backend_directories]
-        self.load_backends()
-
-    def load_backends(self):
-        """Loads backends"""
-        self.backends = {}
-        imported = []
-        directories = filter(os.path.isdir, self.backend_directories)
-        for path in directories:
-            files = sorted(os.listdir(path), reverse=True)
+    def _find_backends(self):
+        """Finds all backends"""
+        backends = []
+        for path in config.directories:
+            files = os.listdir(path)
             for fso in files:
-                filename = os.path.join(path, fso)
-                name = get_module_name(filename)
-                if name not in imported:
-                    module = load_module(filename, name)
-                    if module is not None:
-                        try:
-                            wrapper = BackendWrapper(module)
-                            self.backends[wrapper.name] = wrapper
-                            imported.append(name)
-                        except BackendException:
-                            # ignore mis-formatted backends
-                            pass
-                    
-    def get_backend(self, name):
-        """Return the backend called `name`.
-        :raises KeyError: If `name` is not found"""
-        return self.backends[name]
+                mod_name = get_module_name(fso)
+                if mod_name and mod_name not in backends:
+                    backends.append(mod_name)
+        return backends
 
-    def find_backend_for_file(self, filename):
-        """Return a appropriate backend for `filename` or None,
-        if `filename` is not supported by any backend"""
-        for backend in self.backends.itervalues():
-            if backend.supports(filename):
-                return backend
-        return None
+    def _load_backend(self, backend, force=False):
+        """Loads `backend`. Tries to get loaded backend from internal cache,
+        unless force is True."""
+        if backend not in self._loaded_cache or force:
+            desc = imp.find_module(backend, config.backend_directories)
+            try:
+                module = imp.load_backend(backend, *desc)
+            finally:
+                # close the file object opened by find_module
+                desc[0].close()
+            self._loaded_cache[backend] = module
+            return module
+        return self._loaded_cache[backend]
+
+    def __getitem__(self, name):
+        return self._load_backend(name)
+
+    def __iter__(self):
+        return iter(self.backends)
+
+    def __contains__(self, item):
+        return item in self.backends
+
+    def iteritems(self):
+        return ((backend, self[backend]) for backend in self.backends)
+
+    def itervalues(self):
+        return (self[backend] for backend in self.backends)
