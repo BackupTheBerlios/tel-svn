@@ -92,3 +92,18 @@ class BackendManager(DictMixin):
 
     def itervalues(self):
         return (self[backend] for backend in self.backends)
+
+    def backend_for_file(self, filename):
+        """Returns a backend, which supports `filename`"""
+        for backend in self:
+            if self[backend].supports(filename):
+                return self[backend]
+        return None
+
+
+# create the global manager instance
+_global_manager = BackendManager()
+
+
+def manager():
+    return _global_manager
