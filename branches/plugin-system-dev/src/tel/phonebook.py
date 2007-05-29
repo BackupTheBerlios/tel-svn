@@ -32,8 +32,8 @@ import re
 import UserDict
 
 import teltypes
+import backendmanager
 from tel import config
-from backendmanager import BackendManager
 
 
 _ = config.translation.ugettext
@@ -47,8 +47,8 @@ FIELDS = ('index', 'title', 'firstname', 'lastname', 'street', 'postcode',
 # this contains a mapping of field names to valuable information about
 # fields. The first tuple item contains the preferred translation for a
 # field, the second the type of the field
-# NOTE: You should never use this mapping directly. Instead use the function
-# provided by this module
+# NOTE: You should never use this mapping directly. Instead use the
+# functions provided by this module
 _field_information = {
     'index': (_('Index'), int),
     'title': (_('Title'), unicode),
@@ -67,10 +67,6 @@ _field_information = {
 }
 
 
-# backend manager
-_manager = BackendManager()
-
-
 class Entry(object, UserDict.DictMixin):
     """This class represents a single entry in a phonebook.
     It supports all fields present in the FIELDS tuple."""
@@ -81,6 +77,7 @@ class Entry(object, UserDict.DictMixin):
         if no other value has been given"""
         self.fields = dict.fromkeys(FIELDS, "")
         if entry:
+            # copy constructor
             self.fields.update(entry)
         for k in kwargs:
             self.setdefault(k, kwargs[k])
@@ -125,7 +122,8 @@ class Entry(object, UserDict.DictMixin):
         return self[field]
 
     def __contains__(self, field):
-        return field in FIELDS
+        """Returns True, if `field` contains a non-empty value"""
+        return self[field] != ''
 
     def __iter__(self):
         return iter(FIELDS)
@@ -137,10 +135,12 @@ class Entry(object, UserDict.DictMixin):
 
     def has_index(self):
         """Returns True, if this entry is not indexed"""
-        return (self['index'] != "")
+        return (self['index'] != '')
+
 
 
 class BaseStorage(object):
+    # XXX: there seems to be no need for this!
     """The base class of all storage implementations.
     It's use is mainly for type testing and as a reference"""
 
@@ -194,8 +194,8 @@ class BaseStorage(object):
         raise NotImplementedError()
     
 
-class URI(object):
-    
+
+class URI(object):  
     """Encapsulates a phonebook uri.
 
     An uri is separated in the scheme and the location part.
@@ -225,17 +225,20 @@ class URI(object):
             self.scheme, self.location = args
 
     def absuri(self):
-        """Return the absolute uri (with a scheme)"""
-        scheme = self.scheme
-        if not scheme:
-            scheme = _manager.find_backend_for_file(self.location).name
-        return scheme + '://' + self.location
+        """Returns a new URI object containing the absolute uri
+        (with a scheme)"""
+        uri = URI(self.location)
+        uri.absolutize()
+        return uri if uri.scheme else None
 
     def absolutize(self):
         """Set the scheme of this URI by guessing it from location.
         Only changes scheme, if it is None or empty."""
         if not self.isabsolute():
-            self.scheme = _manager.find_backend_for_file(self.location).name
+            manager = backendmanager.manager()
+            backend = manager.backend_for_file(self.location)
+            if backend:
+                self.scheme = backend.name
 
     def isabsolute(self):
         """Checks whether this URI is absolute"""
@@ -248,24 +251,18 @@ class URI(object):
             return self.location
 
 
-def get_backend_for_uri(uri):
-    """Tries to find a backend suitable for uri"""
-    if uri.scheme is None:
-        raise IOError(_('Couldn\'t determine backend for %s') % uri)
-
-    try:
-        return _manager.get_backend(uri.scheme)
-    except KeyError:
-        raise IOError(_('No backend found for %s') % uri.scheme)
-
 
 def phonebook_open(uri):
     """Open a phonebook from `uri`"""
     if isinstance(uri, basestring):
         uri = URI(uri)
     uri.absolutize()
-
-    backend = get_backend_for_uri(uri)
+    if uri.scheme is None:
+        raise IOError(_('Couldn\'t determine backend for %s') % uri)
+    try:
+        backend = backendmanager.manager()[uri.scheme]
+    except KeyError:
+        raise IOError(_('No backend found for %s') % uri.scheme)
     storage = backend.storage_class
     return storage(uri.location)
 
