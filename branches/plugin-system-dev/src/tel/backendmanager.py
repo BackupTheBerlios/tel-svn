@@ -33,11 +33,14 @@ from tel import config
 
 
 MODULE_SUFFIXES = zip(*imp.get_suffixes())[0]
+# this is the pattern used to expand a backend name
+BACKEND_MODULE_PATTERN = '%s_backend'
 
 
-def get_module_name(filename):
+def get_backend_name(filename):
     """If `filename` is a module"""
     for suffix in MODULE_SUFFIXES:
+        suffix = '_backend' + suffix
         if filename.endswith(suffix):
             return filename[:-len(suffix)]
     return None
@@ -45,8 +48,9 @@ def get_module_name(filename):
 
 class BackendManager(DictMixin):
     """Responsible for loading backends.
-
-    Supports dictionary interface for getting backends"""
+    Backends don't need to be loaded explicitly. Just use the provided
+    dictionary interface to access backends by name. Loading will happen
+    automatically."""
     
     def __init__(self):
         """Creates a new backend manager."""
@@ -59,7 +63,7 @@ class BackendManager(DictMixin):
         for path in config.directories:
             files = os.listdir(path)
             for fso in files:
-                mod_name = get_module_name(fso)
+                mod_name = get_backend_name(fso)
                 if mod_name and mod_name not in backends:
                     backends.append(mod_name)
         return backends
@@ -68,18 +72,31 @@ class BackendManager(DictMixin):
         """Loads `backend`. Tries to get loaded backend from internal cache,
         unless force is True."""
         if backend not in self._loaded_cache or force:
-            desc = imp.find_module(backend, config.backend_directories)
+            mod_name = BACKEND_MODULE_PATTERN % backend
+            desc = imp.find_module(mod_name, config.backend_directories)
             try:
-                module = imp.load_backend(backend, *desc)
+                module = imp.load_backend(mod_name, *desc)
             finally:
                 # close the file object opened by find_module
                 desc[0].close()
+            if not self._check_module(module):
+                raise ImportError('Invalid backend: %s' % backend)
             self._loaded_cache[backend] = module
             return module
         return self._loaded_cache[backend]
 
+    def _check_module(self, module):
+        """Checks `module`. Returns False, if `module` is not valid
+        backend"""
+        return (hasattr(module, 'supports')
+                and (hasattr(module, 'EntryStorage') or
+                     hasattr(module, '__storage_class__')))
+
     def __getitem__(self, name):
-        return self._load_backend(name)
+        try:
+            return self._load_backend(name)
+        except ImportError:
+            raise KeyError('No backend "%s" found' % name)
 
     def __iter__(self):
         return iter(self.backends)
