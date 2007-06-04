@@ -78,7 +78,7 @@ class Phonebook(object):
 
     # defaults to FIELDS
     # overwrite to change the list of supported fields
-    supported_fields = None
+    fields = None
     
     def __init__(self, uri):
         self.uri = uri
@@ -156,6 +156,13 @@ class Phonebook(object):
                         entries.append(entry)
                         break
         return entries
+
+    def supported_fields(self):
+        """Returns a list of all supported fields
+
+        Basically it just inteprets the fields attribute.
+        If this attribute is None, then it returns FIELDS"""
+        return self.fields or FIELDS
 
 
 class Entry(object, UserDict.DictMixin):
@@ -295,7 +302,7 @@ def phonebook_open(uri):
         backend = backendmanager.manager()[uri.scheme]
     except KeyError:
         raise IOError(_('Unknown backend %s') % uri.scheme)
-    return backend.__storage_class__(uri)
+    return backend.__phonebook_class__(uri)
 
 
 # functions to query field information
