@@ -109,7 +109,7 @@ class Phonebook(object):
 
     def clear(self):
         """Removes all entries"""
-        self._entries.clear()
+        self._entries = []
 
     def remove(self, entry):
         """Removes `entry`"""
@@ -195,7 +195,12 @@ class Entry(object, UserDict.DictMixin):
         return self.fields[field]
 
     def __unicode__(self):
-        return config.short_entry_format % self              
+        return config.short_entry_format % self
+
+    __str__ = __unicode__
+
+    def __repr__(self):
+        return '%(firstname)s %(lastname)s' % self
 
     def prettify(self):
         """Returns a pretty representation of this entry"""
@@ -282,7 +287,7 @@ class URI(object):
             manager = backendmanager.manager()
             backend = manager.backend_for_file(self.location)
             if backend:
-                self.scheme = backend.name
+                self.scheme = backend.__name__
 
     def isabsolute(self):
         """Checks whether this URI is absolute"""
@@ -302,7 +307,7 @@ def phonebook_open(uri):
     Note, that the returned phonebook instance doesn't contain entries.
     These must be loaded explicitly using the load() method"""
     if isinstance(uri, basestring):
-        uri = URI(basestring)
+        uri = URI(uri)
     # guess backend, if uri was not absolute (= no scheme was given)
     uri.absolutize()
     if uri.scheme is None:

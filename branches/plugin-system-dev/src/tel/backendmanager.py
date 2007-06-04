@@ -72,7 +72,7 @@ class BackendManager(DictMixin):
     def _find_backends(self):
         """Finds all backends"""
         backends = []
-        for path in config.directories:
+        for path in filter(os.path.isdir, config.backend_directories):
             files = os.listdir(path)
             for fso in files:
                 mod_name = get_backend_name(fso)
@@ -87,7 +87,7 @@ class BackendManager(DictMixin):
             mod_name = BACKEND_MODULE_PATTERN % backend
             desc = imp.find_module(mod_name, config.backend_directories)
             try:
-                module = imp.load_backend(mod_name, *desc)
+                module = imp.load_module(mod_name, *desc)
             finally:
                 # close the file object opened by find_module
                 desc[0].close()
@@ -95,6 +95,8 @@ class BackendManager(DictMixin):
                 raise ImportError(_(u'Invalid backend %s') % backend)
             else:
                 self._loaded_cache[backend] = module
+                # set the module name
+                setattr(module, '__name__', backend)
                 return module
         return self._loaded_cache[backend]
 
