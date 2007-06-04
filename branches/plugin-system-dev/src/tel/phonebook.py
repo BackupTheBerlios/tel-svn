@@ -31,15 +31,15 @@ __revision__ = '$Id$'
 import re
 import UserDict
 
-import teltypes
-import backendmanager
+from tel import teltypes
+from tel import backendmanager
 from tel import config
 
 
 _ = config.translation.ugettext
 
 
-FIELDS = ('index', 'title', 'firstname', 'lastname', 'street', 'postcode',
+FIELDS = ('title', 'firstname', 'lastname', 'street', 'postcode',
           'town', 'country', 'postbox', 'mobile', 'phone', 'email',
           'birthdate', 'tags')
 
@@ -50,7 +50,6 @@ FIELDS = ('index', 'title', 'firstname', 'lastname', 'street', 'postcode',
 # NOTE: You should never use this mapping directly. Instead use the
 # functions provided by this module
 _field_information = {
-    'index': (_('Index'), int),
     'title': (_('Title'), unicode),
     'firstname': (_('First name'), unicode),
     'lastname': (_('Last name'), unicode),
@@ -67,6 +66,98 @@ _field_information = {
 }
 
 
+class Phonebook(object):
+    """Base class for all phonebook classes defined by backends.
+
+    Note, that although this class supports access by indexes, this is
+    absolutely *not* recommended. Indexes may change when reloading
+    phonebooks.
+
+    Access to entries should happen using iterators or the find_all method.
+    """
+
+    # defaults to FIELDS
+    # overwrite to change the list of supported fields
+    supported_fields = None
+    
+    def __init__(self, uri):
+        self.uri = uri
+        self.entries = []
+
+    def load():
+        """Loads entries from backend"""
+        raise NotImplementedError()
+
+    def save():
+        """Loads entries from backend"""
+        raise NotImplementedError()
+
+    def __delitem__(self, index):
+        del self._entries[index]
+
+    def __getitem__(self, index):
+        return self._entries[index]
+
+    def __setitem__(self, key, entry):
+        return self._entries[key] = entry
+
+    def __contains__(self, entry):
+        return entry in self._entries
+
+    def __iter__(self):
+        return iter(self._entries)
+
+    def remove(self, entry):
+        """Removes `entry`"""
+        self._entries.remove(entry)          
+
+    def add(self, entry):
+        """Adds `entry`"""
+        self._entries.append(entry)
+
+    def sort_by_field(self, field, descending=False, ignore_case=False):
+        """Returns a sorted list of entries in this phonebook"""
+        def keyfunc(entry):
+            value = entry[field]
+            if isinstance(value, basestring) and ignore_case:
+                return value.lower()
+            return value
+        return sorted(self, key=keyfunc, reverse=descending)
+
+    def find_all(self, pattern, *fields):
+        """Searchs this phonebook for certain patterns.
+        `pattern` may either be
+
+        - a plain string, which is searched in `fields`
+        - a regular expression, which is matched against the content of
+          `fields`
+        - a callable object, which gets an entry object as parameter and
+          may return a boolean value indicating, if the entry is matched.
+
+        If the last form of invocation is used, *fields is ignored."""
+        if callable(pattern):
+            return [entry for entry in entries if pattern(entry)]
+        # if fields are empty raise ValueError
+        if not fields:
+            raise ValueError(u'No fields specified')
+        
+        entries = []
+        if isinstance(pattern, basestring):
+            for entry in self:
+                for field in fields:
+                    if pattern in entry[field]:
+                        entries.append(entry)
+                        break
+        else:
+            # assume pattern is a regular expression
+            for entry in self:
+                for field in fields:
+                    if pattern.match(entry[field]):
+                        entries.append(entry)
+                        break
+        return entries
+
+
 class Entry(object, UserDict.DictMixin):
     """This class represents a single entry in a phonebook.
     It supports all fields present in the FIELDS tuple."""
@@ -80,8 +171,7 @@ class Entry(object, UserDict.DictMixin):
             # copy constructor
             self.fields.update(entry)
         for k in kwargs:
-            self.setdefault(k, kwargs[k])
-            
+            self.setdefault(k, kwargs[k])           
 
     def keys(self):
         """Return a list of all keys, which is basically a copy of
@@ -92,6 +182,13 @@ class Entry(object, UserDict.DictMixin):
         if field not in FIELDS:
             raise KeyError('Invalid field %s' % field)
         return self.fields[field]
+
+    def __unicode__(self):
+        return config.short_entry_format % self
+
+    def prettify(self):
+        """Returns a pretty representation of this entry"""
+        return config.long_entry_format % self
 
     def __setitem__(self, field, value):
         if field not in FIELDS:
@@ -110,10 +207,7 @@ class Entry(object, UserDict.DictMixin):
 
     def __nonzero__(self):
         # ignore index, since empty entries can have indices too
-        for field in FIELDS[1:]:
-            if self[field] != '':
-                return True
-        return False
+        return any((field in self for field in FIELDS[1:]))
 
     def setdefault(self, field, value):
         """Sets field to `value`, if field is empty"""
@@ -130,70 +224,8 @@ class Entry(object, UserDict.DictMixin):
 
     def iteritems(self):
         """Returns an iterator over key, value pairs"""
-        for field in self:
-            yield (field, self[field])
-
-    def has_index(self):
-        """Returns True, if this entry is not indexed"""
-        return (self['index'] != '')
-
-
-
-class BaseStorage(object):
-    # XXX: there seems to be no need for this!
-    """The base class of all storage implementations.
-    It's use is mainly for type testing and as a reference"""
-
-    def __init__(self, uri):
-        """Creates a new instance, which is bound to `uri`.
-        load() and save() must operate on this `uri`"""
-        raise NotImplementedError
-
-    def __getitem__(self, indices):
-        """Returns entries at the specified indices.
-        Must support slice objects (NOT YET IMPLEMENTED)"""
-        raise NotImplementedError
-
-    def __delitem__(self, indices):
-        """Remove the entries at the specified indices
-        Must support slice objects (NOT YET IMPLEMENTED)."""
-        raise NotImplementedError
-
-    def __iter__(self):
-        """Iterate over all entries in this storage"""
-        raise NotImplementedError
-
-    def __contains__(self, entry):
-        """Check, whether `entry` is contained in this storage"""
-        raise NotImplementedError
-
-    def remove(self, entry):
-        """Remove `entry`."""
-        if entry in self:
-            del self[entry['index']]
-
-##     def search(self, *args, **kwargs):
-##         """Searchs the phone book.
-##         `*args` and `**kwargs` are the same as for Entry.matches"""
-##         found_entries = []
-##         for entry in self:
-##             if entry.matches(*args, **kwargs):
-##                 found_entries.append(entry)
-##         return found_entries
-
-    def append(self, entry):
-        """Adds `entry` to this storage"""
-        raise NotImplementedError()
-
-    def save(self):
-        """Saves the phonebook"""
-        raise NotImplementedError()
-
-    def load(self):
-        """Loads entries into this storage"""
-        raise NotImplementedError()
+        return ((field, self[field]) for field in self)
     
-
 
 class URI(object):  
     """Encapsulates a phonebook uri.
@@ -203,6 +235,7 @@ class URI(object):
     location. Both parts a separated by the usual url separator ://.
     See uri_pattern for the regular expression which is used to extract
     the parts from an uri string."""
+    
     # regular expression to extract single parts from an uri
     uri_pattern = re.compile(r'((?P<scheme>\w*)://)?(?P<location>.*)',
                              re.DOTALL)
@@ -251,24 +284,21 @@ class URI(object):
             return self.location
 
 
-
 def phonebook_open(uri):
-    """Open a phonebook from `uri`"""
     if isinstance(uri, basestring):
-        uri = URI(uri)
+        uri = URI(basestring)
+    # guess backend, if uri was not absolute (= no scheme was given)
     uri.absolutize()
     if uri.scheme is None:
-        raise IOError(_('Couldn\'t determine backend for %s') % uri)
+        raise IOError(_('Couldn\'t find a backend for %s') % uri)
     try:
         backend = backendmanager.manager()[uri.scheme]
     except KeyError:
-        raise IOError(_('No backend found for %s') % uri.scheme)
-    storage = backend.storage_class
-    return storage(uri.location)
+        raise IOError(_('Unknown backend %s') % uri.scheme)
+    return backend.__storage_class__(uri)
 
 
 # functions to query field information
-
 def translate_field(field):  
     """:returns: A translation for `field`
     :raises ValueError: If `field` is not known"""
@@ -287,33 +317,4 @@ def field_type(field):
         raise ValueError('There is no field %s' % field)
 
 
-# Utility functions
-def long_prettify(entry):
-    """Returns a pretty string representation of `entry`
-    Note, that index is most likly excluded of this representation, since
-    it should be usable for printing and can be changed by the user
-    through a config file (not yet)"""
-    # return a pretty representation
-    # TODO: use textwrap here to prevent overlong lines
-    return config.long_entry_format % entry
 
-
-def short_prettify(entry):
-    """Returns a short representation of `entry` suitable for printing it in
-    lists."""
-    return config.short_entry_format % entry
-
-
-def sort_entries_by_field(entries, field, descending=False,
-                          ignore_case=False):
-    """This sorts `iterable`, which may only contain Entry objects, by
-    `field`, which may be be any of Entry.default_order. If `descending is
-    True, the list is reversed. If `ignore_case` is True, case is ignored
-    when sorting"""
-    def keyfunc(entry):
-        value = entry[field]
-        if isinstance(value, basestring) and ignore_case:
-            return value.lower()
-        return value
-            
-    return sorted(entries, key=keyfunc, reverse=descending)
