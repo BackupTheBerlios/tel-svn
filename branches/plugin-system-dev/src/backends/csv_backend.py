@@ -28,19 +28,7 @@ import os
 import csv
 
 
-import backend
-
-
-# Use this for backends, which are part of the upstream releases
-_ = backend._
-
-# use __entry_storage__ attribute, if your storage class is not named
-# EntryStorage
-# use __supported_fields__ if your backend does only support a limited
-# subset of phonebook.FIELDS
-
-# The name of this backend... Used to specify this field on command line
-__backend_name__ = 'csv'
+from tel.phonebook import Entry, Phonebook
 
 
 def supports(path):
@@ -50,19 +38,17 @@ def supports(path):
     return ext.lower() == '.csv'
 
 
-class EntryStorage(backend.DictStorage):
+class CsvPhonebook(Phonebook):
     def load(self):
         """Load entries."""
         self.stream = open(self.uri, 'rb')
         self.reader = csv.DictReader(self.stream)
         for row in self.reader:
-            entry = self.create_new()
+            entry = Entry()
             for k in row:
                 val = row[k].decode('utf-8')
-                if val == '':
-                    val = empty
                 entry[k] = val
-            self[None] = entry
+            self.add(entry)
         self.stream.close()
 
     def save(self):
@@ -72,13 +58,9 @@ class EntryStorage(backend.DictStorage):
         writer.writerow(backend.FIELDS)
         for entry in self:
             row = [unicode(entry[field]).encode('utf-8') for field in
-                   backend.FIELDS]
+                   self.supported_fields]
             writer.writerow(row)
         stream.close()
 
-    def create_new(self):
-        entry = backend.StandardEntry()
-        index = self._lowest_free_index()
-        entry['index'] = index
-        self.entries[index] = entry
-        return entry
+
+__phonebook_class__ = CsvPhonebook
