@@ -58,7 +58,7 @@ class CsvPhonebook(Phonebook):
         writer.writerow(backend.FIELDS)
         for entry in self:
             row = [unicode(entry[field]).encode('utf-8') for field in
-                   self.supported_fields]
+                   self.supported_fields()]
             writer.writerow(row)
         stream.close()
 
