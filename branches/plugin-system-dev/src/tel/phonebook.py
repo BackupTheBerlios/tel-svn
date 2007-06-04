@@ -50,19 +50,19 @@ FIELDS = ('title', 'firstname', 'lastname', 'street', 'postcode',
 # NOTE: You should never use this mapping directly. Instead use the
 # functions provided by this module
 _field_information = {
-    'title': (_('Title'), unicode),
-    'firstname': (_('First name'), unicode),
-    'lastname': (_('Last name'), unicode),
-    'street': (_('Street and number'), unicode),
-    'postcode': (_('Postal code'), unicode),
-    'town': (_('Town'), unicode),
-    'country': (_('Country'), unicode),
-    'postbox': (_('Post office box'), int),
-    'mobile': (_('Mobile'), teltypes.phone_number),
-    'phone': (_('Phone'), teltypes.phone_number),
-    'email': (_('eMail'), teltypes.email),
-    'birthdate': (_('Date of birth'), unicode),
-    'tags': (_('Tags'), unicode)
+    'title': (_(u'Title'), unicode),
+    'firstname': (_(u'First name'), unicode),
+    'lastname': (_(u'Last name'), unicode),
+    'street': (_(u'Street and number'), unicode),
+    'postcode': (_(u'Postal code'), unicode),
+    'town': (_(u'Town'), unicode),
+    'country': (_(u'Country'), unicode),
+    'postbox': (_(u'Post office box'), int),
+    'mobile': (_(u'Mobile'), teltypes.phone_number),
+    'phone': (_(u'Phone'), teltypes.phone_number),
+    'email': (_(u'eMail'), teltypes.email),
+    'birthdate': (_(u'Date of birth'), unicode),
+    'tags': (_(u'Tags'), unicode)
 }
 
 
@@ -82,13 +82,13 @@ class Phonebook(object):
     
     def __init__(self, uri):
         self.uri = uri
-        self.entries = []
+        self._entries = []
 
-    def load():
+    def load(self):
         """Loads entries from backend"""
         raise NotImplementedError()
 
-    def save():
+    def save(self):
         """Loads entries from backend"""
         raise NotImplementedError()
 
@@ -99,7 +99,7 @@ class Phonebook(object):
         return self._entries[index]
 
     def __setitem__(self, key, entry):
-        return self._entries[key] = entry
+        self._entries[key] = entry
 
     def __contains__(self, entry):
         return entry in self._entries
@@ -136,7 +136,7 @@ class Phonebook(object):
 
         If the last form of invocation is used, *fields is ignored."""
         if callable(pattern):
-            return [entry for entry in entries if pattern(entry)]
+            return [entry for entry in self._entries if pattern(entry)]
         # if fields are empty raise ValueError
         if not fields:
             raise ValueError(u'No fields specified')
@@ -187,7 +187,7 @@ class Entry(object, UserDict.DictMixin):
 
     def __getitem__(self, field):
         if field not in FIELDS:
-            raise KeyError('Invalid field %s' % field)
+            raise KeyError(u'Invalid field %s' % field)
         return self.fields[field]
 
     def __unicode__(self):
@@ -199,7 +199,7 @@ class Entry(object, UserDict.DictMixin):
 
     def __setitem__(self, field, value):
         if field not in FIELDS:
-            raise KeyError('Invalid field %s' % field)
+            raise KeyError(u'Invalid field %s' % field)
         # get the field type
         ftype = field_type(field)
         if value != '' and not isinstance(value, ftype):
@@ -209,17 +209,17 @@ class Entry(object, UserDict.DictMixin):
 
     def __delitem__(self, field):
         if field not in FIELDS:
-            raise KeyError('Invalid field %s' % field)
+            raise KeyError(u'Invalid field %s' % field)
         self.fields[field] = ''
 
     def __nonzero__(self):
         # ignore index, since empty entries can have indices too
-        return any((field in self for field in FIELDS[1:]))
+        return any((unicode(field) in self for field in FIELDS[1:]))
 
-    def setdefault(self, field, value):
+    def setdefault(self, field, default=None):
         """Sets field to `value`, if field is empty"""
         if self[field] == '':
-            self[field] = value
+            self[field] = default
         return self[field]
 
     def __contains__(self, field):
@@ -245,7 +245,7 @@ class URI(object):
     
     # regular expression to extract single parts from an uri
     uri_pattern = re.compile(r'((?P<scheme>\w*)://)?(?P<location>.*)',
-                             re.DOTALL)
+                             re.DOTALL | re.UNICODE)
     
     def __init__(self, *args):
         """Accepts one or two arguments. If there is only one argument,
@@ -259,7 +259,7 @@ class URI(object):
         if len(args) == 1:
             match = self.uri_pattern.match(args[0])
             if not match:
-                raise ValueError(_('%s is no valid URI'))
+                raise ValueError(_(u'%s is no valid URI'))
             self.__dict__.update(match.groupdict())
         elif len(args) == 2:
             self.scheme, self.location = args
@@ -269,7 +269,7 @@ class URI(object):
         (with a scheme)"""
         uri = URI(self.location)
         uri.absolutize()
-        return uri if uri.scheme else None
+        return (uri if uri.scheme else None)
 
     def absolutize(self):
         """Set the scheme of this URI by guessing it from location.
@@ -292,16 +292,21 @@ class URI(object):
 
 
 def phonebook_open(uri):
+    """Opens a phonebook denoted by `uri`. `uri` may be a plain string, or
+    an instance of URI class.
+
+    Note, that the returned phonebook instance doesn't contain entries.
+    These must be loaded explicitly using the load() method"""
     if isinstance(uri, basestring):
         uri = URI(basestring)
     # guess backend, if uri was not absolute (= no scheme was given)
     uri.absolutize()
     if uri.scheme is None:
-        raise IOError(_('Couldn\'t find a backend for %s') % uri)
+        raise IOError(_(u'Couldn\'t find a backend for %s') % uri)
     try:
         backend = backendmanager.manager()[uri.scheme]
     except KeyError:
-        raise IOError(_('Unknown backend %s') % uri.scheme)
+        raise IOError(_(u'Unknown backend %s') % uri.scheme)
     return backend.__phonebook_class__(uri)
 
 
@@ -312,7 +317,7 @@ def translate_field(field):
     try:
         return _field_information[field][0]
     except KeyError:
-        raise ValueError('There is no field %s' % field)
+        raise ValueError(u'There is no field %s' % field)
 
 
 def field_type(field):
@@ -321,7 +326,7 @@ def field_type(field):
     try:
         return _field_information[field][1]
     except KeyError:
-        raise ValueError('There is no field %s' % field)
+        raise ValueError(u'There is no field %s' % field)
 
 
 
