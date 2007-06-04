@@ -44,19 +44,22 @@ class CsvPhonebook(Phonebook):
     def load(self):
         """Load entries."""
         self.clear()
-        self.stream = open(self.uri, 'rb')
+        self.stream = open(self.uri.location, 'rb')
         self.reader = csv.DictReader(self.stream)
         for row in self.reader:
             entry = Entry()
             for k in row:
                 val = row[k].decode('utf-8')
-                entry[k] = val
+                try:
+                    entry[k] = val
+                except KeyError:
+                    pass
             self.add(entry)
         self.stream.close()
 
     def save(self):
         """Save entries."""
-        stream = open(self.uri, 'wb')
+        stream = open(self.uri.location, 'wb')
         writer = csv.writer(stream)
         writer.writerow(backend.FIELDS)
         for entry in self:
