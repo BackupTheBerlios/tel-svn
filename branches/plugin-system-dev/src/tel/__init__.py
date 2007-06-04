@@ -32,9 +32,7 @@ __authors__ = ('Sebastian Wiesner <basti.wiesner@gmx.net>',
                'Remo Wenger <potrmwn@gmail.com>')
 
 
-# switch sys.stdout to proper encoding
-import encodinghelper
-
+import sys
 from configuration import Configuration
 
 
