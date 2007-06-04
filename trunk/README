@@ -1,46 +1,62 @@
-README for tel, a little terminal phone book
+tel, a little terminal phone book
+=================================
+
+What's new in this version of tel?
+----------------------------------
+
+See the file "ChangeLog"
 
 
 Introduction
-============
+------------
 
 tel is a little console-based phone book program. It allows adding,
 modifing, editing and searching of phone book entries right on your
 terminal. Pretty printing capabilites are also provided.
 
 Entries are stored in simple csv file. This eases import and export with
-common spread sheet applications like Microsoft Excel or OpenOffice.org
-Calc.
+common spread sheet applications like OpenOffice.org Calc or
+Microsoft Excel Calc.
+
+
+License information
+-------------------
+
+See the file "COPYING" for more information.
 
 
 Installing tel
-=================================
+--------------
 
-See the INSTALL file for this.
+See the "INSTALL" file for this.
 
 
 Running tel
-================
+-----------
 
-tel --help gives you an overview of the options and commands tel supports.
+"tel --help" gives you an overview of the options and commands tel
+supports.
 
 
 Troubleshooting
-===============
+---------------
 
 A mailing-list has been set up for support and discussion about
 tel. Its address is:
 
     <tel-users@lists.berlios.de>
 
+
 You can subscribe to it by visiting the following url:
 
     https://lists.berlios.de/mailman/listinfo/tel-users
+
 
 To report bugs, you can also register at http://developer.berlios.de and use
 the tel Bug Manager:
 
     http://developer.berlios.de/bugs/?group_id=8132
+
 
 Please be as precise as possible when reporting bugs. You should include at
 least the following information:
@@ -55,6 +71,6 @@ least the following information:
 
 
 Resources
-=========
+---------
 
 Have a look at http://tel.berlios.de for more information.
