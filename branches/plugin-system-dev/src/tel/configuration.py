@@ -22,7 +22,7 @@ class Configuration(object):
     _backend_directories = None
     _long_entry_format = None
     _short_entry_format = None
-    
+
     @property
     def messages(self):
         """Installation directory of gettext messsage catalogs"""
@@ -38,7 +38,7 @@ class Configuration(object):
         if os.path.isdir(self._appmodules):
             return self._appmodules
         else:
-            return os.path.dirname(__file__)
+            return os.getcwd()
 
     @property
     def user_directory(self):
@@ -100,7 +100,8 @@ class Configuration(object):
     @property
     def long_entry_format(self):
         """A nice readable entry format"""
-        if not self._pretty_entry_format:
+        if not self._long_entry_format:
+            _ = self.translation.ugettext
             msg = _('Name:           %(title)s %(firstname)s %(lastname)s\n'
                     'Address:        %(street)s\n'
                     '                %(country)s, %(postcode)s %(town)s\n'
@@ -110,13 +111,14 @@ class Configuration(object):
                     'Mobile:         %(mobile)s\n'
                     'Date of birth:  %(birthdate)s\n'
                     'Tags:           %(tags)s\n')
-            self._pretty_entry_format = msg
-        return self._pretty_entry_format
+            self._long_entry_format = msg
+        return self._long_entry_format
 
     @property
     def short_entry_format(self):
         if not self._short_entry_format:
-            msg = _('[%(index)s] %(firstname)s %(lastname)s')
+            _ = self.translation.ugettext
+            msg = _('%(firstname)s %(lastname)s')
             self._short_entry_format = msg
         return self._short_entry_format
 
