@@ -28,6 +28,8 @@ import os
 import csv
 
 
+from __future__ import with_statement
+
 from tel.phonebook import Entry, Phonebook
 
 
@@ -44,29 +46,27 @@ class CsvPhonebook(Phonebook):
     def load(self):
         """Load entries."""
         self.clear()
-        self.stream = open(self.uri.location, 'rb')
-        self.reader = csv.DictReader(self.stream)
-        for row in self.reader:
-            entry = Entry()
-            for k in row:
-                val = row[k].decode('utf-8')
-                try:
-                    entry[k] = val
-                except KeyError:
-                    pass
-            self.add(entry)
-        self.stream.close()
+        with open(self.uri.location, 'rb') as stream:
+            self.reader = csv.DictReader(stream)
+            for row in self.reader:
+                entry = Entry()
+                for k in row:
+                    val = row[k].decode('utf-8')
+                    try:
+                        entry[k] = val
+                    except KeyError:
+                        pass
+                self.add(entry)
 
     def save(self):
         """Save entries."""
-        stream = open(self.uri.location, 'wb')
-        writer = csv.writer(stream)
-        writer.writerow(backend.FIELDS)
-        for entry in self:
-            row = [unicode(entry[field]).encode('utf-8') for field in
-                   self.supported_fields()]
-            writer.writerow(row)
-        stream.close()
+        with open(self.uri.location, 'wb') as stream:
+            writer = csv.writer(stream)
+            writer.writerow(backend.FIELDS)
+            for entry in self:
+                row = [unicode(entry[field]).encode('utf-8') for field in
+                       self.supported_fields()]
+                writer.writerow(row)
 
 
 __phonebook_class__ = CsvPhonebook
