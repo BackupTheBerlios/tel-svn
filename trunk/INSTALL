@@ -8,6 +8,10 @@ Users of debian systems can install these with:
 
     apt-get install python2.4
 
+Users of gentoo systems:
+
+    emerge dev-lang/python
+
 If you have completed installing all dependencies, you can install tel by
 running the following command:
     
