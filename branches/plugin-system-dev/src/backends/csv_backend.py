@@ -31,6 +31,8 @@ import csv
 from tel.phonebook import Entry, Phonebook
 
 
+# Modules, that don't define this function are never loaded for
+# non-absolute uris
 def supports(path):
     """Checks, if `path` denotes a valid file for this filetype.
     :returns: True, if `path` is supported"""
@@ -41,6 +43,7 @@ def supports(path):
 class CsvPhonebook(Phonebook):
     def load(self):
         """Load entries."""
+        self.clear()
         self.stream = open(self.uri, 'rb')
         self.reader = csv.DictReader(self.stream)
         for row in self.reader:

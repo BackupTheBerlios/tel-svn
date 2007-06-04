@@ -107,6 +107,10 @@ class Phonebook(object):
     def __iter__(self):
         return iter(self._entries)
 
+    def clear(self):
+        """Removes all entries"""
+        self._entries.clear()
+
     def remove(self, entry):
         """Removes `entry`"""
         self._entries.remove(entry)          
@@ -178,7 +182,7 @@ class Entry(object, UserDict.DictMixin):
             # copy constructor
             self.fields.update(entry)
         for k in kwargs:
-            self.setdefault(k, kwargs[k])           
+            self.setdefault(k, kwargs[k])
 
     def keys(self):
         """Return a list of all keys, which is basically a copy of
@@ -191,7 +195,7 @@ class Entry(object, UserDict.DictMixin):
         return self.fields[field]
 
     def __unicode__(self):
-        return config.short_entry_format % self
+        return config.short_entry_format % self              
 
     def prettify(self):
         """Returns a pretty representation of this entry"""
