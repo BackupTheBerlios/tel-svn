@@ -21,6 +21,9 @@
 # DEALINGS IN THE SOFTWARE.
 
 
+"""This module provides access to phonebook backends."""
+
+
 __revision__ = '$Id$'
 
 
@@ -32,13 +35,23 @@ from UserDict import DictMixin
 from tel import config
 
 
+_ = config.translation.ugettext
+
+
 MODULE_SUFFIXES = zip(*imp.get_suffixes())[0]
 # this is the pattern used to expand a backend name
-BACKEND_MODULE_PATTERN = '%s_backend'
+BACKEND_MODULE_PATTERN = u'%s_backend'
 
 
 def get_backend_name(filename):
-    """If `filename` is a module"""
+    """Returns the backend name for filename, or None, if filename is not a
+    python module or no valid backend.
+
+    The backend name is the module name, stripped of the python module
+    suffix as returned by imp.get_suffixes and the suffix '_backend'
+
+    *Note*: Iterators returned by this module silently ignore invalid
+    backends"""
     for suffix in MODULE_SUFFIXES:
         suffix = '_backend' + suffix
         if filename.endswith(suffix):
@@ -54,7 +67,6 @@ class BackendManager(DictMixin):
     
     def __init__(self):
         """Creates a new backend manager."""
-        self.backends = self._find_backends()
         self._loaded_cache = {}
 
     def _find_backends(self):
@@ -80,41 +92,52 @@ class BackendManager(DictMixin):
                 # close the file object opened by find_module
                 desc[0].close()
             if not self._check_module(module):
-                raise ImportError('Invalid backend: %s' % backend)
-            self._loaded_cache[backend] = module
-            return module
+                raise ImportError(_(u'Invalid backend %s') % backend)
+            else:
+                self._loaded_cache[backend] = module
+                return module
         return self._loaded_cache[backend]
 
     def _check_module(self, module):
         """Checks `module`. Returns False, if `module` is not valid
         backend"""
-        return (hasattr(module, 'supports')
-                and (hasattr(module, 'EntryStorage') or
-                     hasattr(module, '__storage_class__')))
+        return hasattr(module, '__phonebook_class__')
 
     def __getitem__(self, name):
         try:
             return self._load_backend(name)
         except ImportError:
-            raise KeyError('No backend "%s" found' % name)
+            raise KeyError(_(u'No backend "%s" found') % name)
 
     def __iter__(self):
-        return iter(self.backends)
+        return iter(self._find_backends())
 
     def __contains__(self, item):
-        return item in self.backends
+        return item in self._find_backends()
 
     def iteritems(self):
-        return ((backend, self[backend]) for backend in self.backends)
+        for backend in self._find_backends():
+            try:
+                yield (backend, self[backend])
+            except KeyError:
+                continue
 
     def itervalues(self):
-        return (self[backend] for backend in self.backends)
+        for backend in self._find_backends():
+            try:
+                yield self[backend]
+            except KeyError:
+                continue
 
     def backend_for_file(self, filename):
         """Returns a backend, which supports `filename`"""
         for backend in self:
-            if self[backend].supports(filename):
-                return self[backend]
+            try:
+                if self[backend].supports(filename):
+                    return self[backend]
+            except AttributeError:
+                # backend doesn't define "support"
+                pass
         return None
 
 
@@ -123,4 +146,5 @@ _global_manager = BackendManager()
 
 
 def manager():
+    """Returns a global manager instance"""
     return _global_manager
