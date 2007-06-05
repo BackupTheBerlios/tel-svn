@@ -62,11 +62,14 @@ stdin_encoding = _get_encoding(sys.stdin)
 
 
 def redirect_std_streams():
-    """Redirects output stream"""
+    """Redirects output stream.
+
+    **Note**: sys.stdin isn't currently redirected, as this breaks with
+    raw_input"""
     # Only execute _outside_ idle
     if "idlelib" not in sys.modules:
         # redirect standard output stream
         if stdout_encoding:
             sys.stdout = codecs.getwriter(stdout_encoding)(sys.stdout)
-        if stdin_encoding:
-            sys.stdin = codecs.getreader(stdin_encoding)(sys.stdin)
+        ## if stdin_encoding:
+        ##     sys.stdin = codecs.getreader(stdin_encoding)(sys.stdin)
