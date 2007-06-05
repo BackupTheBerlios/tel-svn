@@ -93,12 +93,22 @@ class Phonebook(object):
         raise NotImplementedError()
 
     def __delitem__(self, index):
+        if isinstance(index, slice):
+            for entry in self._entries[index]:
+                entry.parent = None
+        else:
+            self._entries[index].parent = None
         del self._entries[index]
 
     def __getitem__(self, index):
         return self._entries[index]
 
-    def __setitem__(self, key, entry):
+    def __setitem__(self, index, entry):
+        if isinstance(index, slice):    
+            for e in entry:
+                e.parent = self
+        else:
+            entry.parent = self
         self._entries[key] = entry
 
     def __contains__(self, entry):
@@ -113,10 +123,12 @@ class Phonebook(object):
 
     def remove(self, entry):
         """Removes `entry`"""
-        self._entries.remove(entry)          
+        self._entries.remove(entry)
+        entry.parent = None
 
     def add(self, entry):
         """Adds `entry`"""
+        entry.parent = self
         self._entries.append(entry)
 
     def sort_by_field(self, field, descending=False, ignore_case=False):
@@ -171,12 +183,16 @@ class Phonebook(object):
 
 class Entry(object, UserDict.DictMixin):
     """This class represents a single entry in a phonebook.
-    It supports all fields present in the FIELDS tuple."""
+    It supports all fields present in the FIELDS tuple.
+
+    :ivar parent: The phonebook, which contains this entry, or None, if this
+    entry has not been added to a phonebook"""
           
     def __init__(self, entry=None, **kwargs):
         """If `entry` is given, copy all fields from `entry`.
         Any keyword arguments are regarded as field values, and are stored
         if no other value has been given"""
+        self.parent = None
         self.fields = dict.fromkeys(FIELDS, "")
         if entry:
             # copy constructor
