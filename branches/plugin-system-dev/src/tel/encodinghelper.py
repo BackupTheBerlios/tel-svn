@@ -20,7 +20,7 @@ through a codecs.DataWriter.
 __revision__ = "$Id$"
 
 
-import os
+
 import sys
 import codecs
 import subprocess
@@ -28,7 +28,7 @@ import subprocess
 
 def _read_locale():
     """Asks the 'locale' command on unix like systems"""
-    process = subprocess(['locale'], stdout=subprocess.PIPE)
+    process = subprocess.Popen(['locale'], stdout=subprocess.PIPE)
     process.wait()
     for line in process.stdout:
         line = line.strip()
@@ -38,30 +38,30 @@ def _read_locale():
 
 def _get_encoding(outputstream):
     """Tries to determine encoding of standard output"""
-    out_enc = (getattr(outputstream, "encoding", None) or
-               sys.getfilesystemencoding())
-    if not out_enc:
+    enc = (getattr(outputstream, "encoding", None) or
+           sys.getfilesystemencoding())
+    if not enc:
         # if it's still not identified
         plat = sys.platform
         if plat.startswith("win"):
-            out_enc = "cp850"
+            enc = "cp850"
         elif any((plat.startswith(p) for p in ("linux", "aix"))):
             # try to read locale output
-
+            enc = _read_locale()
         elif plat.startswith("cygwin"):
-            out_enc = "raw_unicode_escape"
+            enc = "raw_unicode_escape"
         else:
-            out_enc = ""
-    if out_enc.upper() in ("ASCII", "US-ASCII", "ANSI_X3.4-1968", "POSIX"):
-        out_enc = ""
-    return out_enc
+            enc = ""
+    if enc.upper() in ("ASCII", "US-ASCII", "ANSI_X3.4-1968", "POSIX"):
+        enc = ""
+    return enc
 
 
 stdout_encoding = _get_encoding(sys.stdout)
 stdin_encoding = _get_encoding(sys.stdin)
 
 
-def redirect_stream():
+def redirect_std_streams():
     """Redirects output stream"""
     # Only execute _outside_ idle
     if "idlelib" not in sys.modules:
