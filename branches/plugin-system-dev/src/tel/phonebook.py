@@ -128,17 +128,11 @@ class Phonebook(object):
 
     def add(self, entry):
         """Adds `entry`"""
+        if entry.parent is not None:
+            # copy entry, if it is already contained in a phonebook
+            entry = Entry(entry)
         entry.parent = self
         self._entries.append(entry)
-
-    def sort_by_field(self, field, descending=False, ignore_case=False):
-        """Returns a sorted list of entries in this phonebook"""
-        def keyfunc(entry):
-            value = entry[field]
-            if isinstance(value, basestring) and ignore_case:
-                return value.lower()
-            return value
-        return sorted(self, key=keyfunc, reverse=descending)
 
     def find_all(self, pattern, *fields):
         """Searchs this phonebook for certain patterns.
@@ -333,6 +327,16 @@ def phonebook_open(uri):
     except KeyError:
         raise IOError(_(u'Unknown backend %s') % uri.scheme)
     return backend.__phonebook_class__(uri)
+
+# sorting shortcut
+def sort_by_field(entries, field, descending=False, ignore_case=False):
+    """Returns a sorted list of entries in this phonebook"""
+    def keyfunc(entry):
+        value = entry[field]
+        if isinstance(value, basestring) and ignore_case:
+            return value.lower()
+        return value
+    return sorted(self, key=keyfunc, reverse=descending)
 
 
 # functions to query field information
