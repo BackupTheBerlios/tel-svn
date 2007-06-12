@@ -1,7 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (c) 2006-2007 Gerold Penz <gerold.penz@tirol.utanet.at>
-# This code is public domain
+# Copyright (c) 2007 Sebastian Wiesner <basti.wiesner@gmx.net>
+
+# Unlike the rest of tel, which is subject to the terms of MIT License as
+# denoted in the file headers, this code is placed under public domain and
+# may therefore be used without any restrictions by anyone.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
 
 # Based on Gerold Penz' encodinghelper.py
 # http://gelb.bcom.at/trac/misc/wiki/Encodinghelper
