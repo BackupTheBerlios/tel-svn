@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (c) 2007 Sebastian Wiesner
 #
@@ -25,6 +26,7 @@ import os
 import sys
 import itertools
 import textwrap
+import re
 
 try:
     # more comfortable line editing
@@ -33,50 +35,30 @@ except ImportError:
     pass
 
 # tel modules
-import phonebook
-from tel import config
-from cmdoptparse import CommandOptionParser, make_option
+from tel import phonebook, encodinghelper, config
+from tel.cmdoptparse import CommandOptionParser, make_option
 
 
-def _(msg):
-    return config.translation.ugettext(msg).encode(config.stdout_encoding)
+_ = config.translation.ugettext
 
 
-def enc_tr_field(field):
-    """Returns translation for `field` in appropriate encoding for console
-    output. Should only be used, where absolutly necessary."""
-    return phonebook.translate_field(field).encode(config.stdout_encoding)
-
-
-def long_prettify(entry):
-    """Short-hand for phonebook.long_prettify, which returns representation
-    in proper encoding"""
-    return phonebook.long_prettify(entry).encode(config.stdout_encoding)
-
-
-def short_prettify(entry):
-    """Short-hand for phonebook.long_prettify, which returns representation
-    in proper encoding"""
-    return phonebook.short_prettify(entry).encode(config.stdout_encoding)
-
-
-
-class ConsoleEntryEditor:
+class ConsoleEntryEditor(object):
     """This class provides a simple console-based entry editor.
 
     :ivar current_field: The name of the currently edited field"""
 
-    EDIT_MSG = _('Editing entry "%s"...')
-    NEW_MSG = _('Creating a new entry...')
+    EDIT_MSG = _(u'Editing entry "%s"...')
+    NEW_MSG = _(u'Creating a new entry...')
          
-    def edit(self, entry, new=True):
-        """Edits `entry`. If `new` is True, the entry is identified as new
-        entry. This method supports readline, if available.
+    def edit(self, entry):
+        """Edits `entry`.
         :returns: The edited `entry`"""
+        new = entry.parent is None
         if new:
+            # entry is new
             print self.NEW_MSG
         else:
-            print self.EDIT_MSG % long_prettify(entry)
+            print self.EDIT_MSG % entry.prettify()
 
         self.initialize_editor(new)
         self.print_help(new)
@@ -84,15 +66,13 @@ class ConsoleEntryEditor:
             oldvalue = entry[field]
             while True:
                 value = self.get_input(field, oldvalue, new)
-                value = value.strip()
-                value = value.decode(config.stdin_encoding)
                 try:
                     entry[field] = value
                     break
                 except ValueError:
-                    msg = _('You entered an invalid value for the field'
-                            '"%s"!')
-                    print msg % enc_tr_field(field)
+                    msg = _(u'You entered an invalid value for the field'
+                            u'"%s"!')
+                    print msg % phonebook.translate_field(field)
         self.finalize_editor()
         return entry
 
@@ -104,12 +84,12 @@ class ConsoleEntryEditor:
         # input methods supporting readline
         def print_help(self, new):
             if new:
-                help = _('Please fill the following fields. To leave a '
-                         'field empty, just press ENTER without entering '
-                         'something.')
-                print textwrap.fill(help)
+                help = _(u'Please fill the following fields. To leave a '
+                         u'field empty, just press ENTER without entering '
+                         u'something.')
+                print textwrap.fill(help, 79)
             else:
-                print _('Please fill the following fields.')
+                print _(u'Please fill the following fields.')
 
         def initialize_editor(self, new):
             """Initialize the editor"""
@@ -130,35 +110,33 @@ class ConsoleEntryEditor:
             else:
                 self.oldvalue = None
             prompt = u'%s: ' % phonebook.translate_field(field)
-            prompt = prompt.encode(config.stdout_encoding)
             return raw_input(prompt)
             
         def _input_hook(self):
             """displays the current value in the input line"""
             if self.oldvalue:
-                readline.insert_text(
-                    self.oldvalue.encode(config.stdout_encoding))
+                readline.insert_text(self.oldvalue)
                 readline.redisplay()
         
     except NameError:
 
         # don't do anything
-        def initialize_editor(*args, **kwargs):
+        def initialize_editor(self, *args, **kwargs):
             pass
         finalize_editor = initialize_editor
         
         def print_help(self, new):
             """Print a little editing help"""
             if new:
-                help = _('Please fill the following fields. To leave a '
-                         'field empty, just press ENTER without entering '
-                         'something.')
+                help = _(u'Please fill the following fields. To leave a '
+                         u'field empty, just press ENTER without entering '
+                         u'something.')
                 print textwrap.fill(help, 79)
             else:
-                help = _('Please fill the following fields. The current '
-                         'value is shown in square brackets. NOTE: The '
-                         'current value is not preserved. You have to '
-                         're-enter every value!')
+                help = _(u'Please fill the following fields. The current '
+                         u'value is shown in square brackets. NOTE: The '
+                         u'current value is not preserved. You have to '
+                         u're-enter every value!')
                 print textwrap.fill(help, 79)
 
         def get_input(self, field, oldvalue, new):
@@ -173,11 +151,10 @@ class ConsoleEntryEditor:
                 prompt = u'%s [%s]: '
                 prompt = prompt % (phonebook.translate_field(field),
                                    oldvalue)
-            prompt = prompt.encode(config.stdout_encoding)
             return raw_input(prompt)
             
 
-class ConsoleIFace:
+class ConsoleIFace(object):
     """Provides a console interface to Tel"""
 
     def __init__(self):
@@ -189,15 +166,15 @@ class ConsoleIFace:
         """Prints all `entries` in a short format."""
         print
         for entry in entries:
-            print short_prettify(entry)
+            print entry
 
-    def print_long_list(self, entries, sortby='index', desc=False):
+    def print_long_list(self, entries):
         """Prints every single entry in `entries` in full detail.
         :param sortby: The field to sort by
         :param asc: True, if sorting order is descending"""
         for entry in entries:
             print '-'*20
-            print long_prettify(entry)
+            print entry.prettify()
 
     def print_table(self, entries, fields):
         """Prints `entries` as a table.
@@ -215,87 +192,60 @@ class ConsoleIFace:
             # correct the column width, if an entry is too width
             column_widths = map(max, map(len, row), column_widths)
         # print the headline
-        headline = map(unicode.center, headline, column_widths)
-        headline = '| %s |' % ' | '.join(headline)
-        separator = map(lambda width: '-' * (width+2), column_widths)
-        separator = '|%s|' % '|'.join(separator)
-        # this adds two spaces add begin and and of the row
-        print headline.encode(config.stdout_encoding)
-        print separator.encode(config.stdout_encoding)
+        headline = itertools.imap(unicode.center, headline, column_widths)
+        headline = u'| %s |' % u' | '.join(headline)
+        separator = ('-'*(width+2) for width in column_widths)
+        separator = u'|%s|' % u'+'.join(separator)
+        print headline
+        print separator
         for row in table_body:
-            # FIXME: index should be right-justified
-            row = map(unicode.ljust, row, column_widths)
-            row = '| %s |' % ' | '.join(row)
-            print row.encode(config.stdout_encoding)
+            row = itertools.imap(unicode.ljust, row, column_widths)
+            row = u'| %s |' % u' | '.join(row)
+            print row
 
-    def edit_entry(self, entry, new):
+    def edit_entry(self, entry):
         """Allows interactive editing of entries. If `new` is True, `entry`
         is identified as new entry"""
         print
         editor = ConsoleEntryEditor()
-        entry = editor.edit(entry, new)
+        entry = editor.edit(entry)
         # check if the user wants to add an empty entry
         if not entry:
             msg = _('Do you really want to save an emtpy entry? ')
-            resp = raw_input(msg)
+            resp = raw_input(msg).lower()
             if resp != 'y':
                 # abort without saving
                 print _('The entry is not saved')
                 return
-        if entry.has_index():
-            # assign entry to its index in the phonebook
-            self.phonebook[None] = entry
-        else:
+        if entry.parent is not None:
             self.phonebook.append(entry)
         self.phonebook.save()
         print 'The entry was saved'
 
-    # UTILITIES
+    def _find_entries(self, options, *args):
+        """Finds entries according to command line arguments"""
+        entries = self.phonebook
+        if args:
+            patterns = args
+            if options.regexp:
+                patterns = (re.compile(pat) for pat in patterns)
+            entries = []
+            for pat in patterns:
+                entries.extend(self.phonebook.find_all(self, pat,
+                                                       *options.fields))
+        return entries
 
-    def parse_indices(self, *args):
-        """Takes strings arguments, interprets them as numeric indices an
-        returns a list of all entries denoted by these indices.
-
-        The syntax looks like the following: 4-5 4 6 7
-
-        Eachentry is only returned once, even if the index appears more than
-        once"""
-        entries = []
-        try:
-            for arg in args:
-                if '-' in arg:
-                    start, end = map(int, arg.split('-'))
-                    if not start in self.phonebook:
-                        msg = _('WARNING: start index %s out of range')
-                        print >> sys.stderr, msg % start
-                    if not end in self.phonebook:
-                        msg = _('WARNING: end index %s out of range')
-                        print >> sys.stderr, msg % end
-                    # verify start and end
-                    # FIXME: use slicing here, if phone supports it
-                    for i in xrange(start, end+1):
-                        try:
-                            # check if we have already added the index
-                            if self.phonebook[i] not in entries:
-                                entries.append(self.phonebook[i])
-                        except KeyError:
-                            # silenty ignore non-existing keys here
-                            # this avoids page-long listings for typing
-                            # mistakes like 5-100 instead of 5-10
-                            pass 
-                else:
-                    index = int(arg)
-                    try:
-                        entry = self.phonebook[index]
-                        # check if we have already added the index
-                        if entry not in entries:
-                            entries.append(entry)
-                    except KeyError:
-                        msg = _('WARNING: There is no entry with index %s')
-                        print >> sys.stderr, msg % index
-            return entries
-        except ValueError:
-            sys.exit(_('Error: An invalid index was specified'))
+    def _get_entries_from_options(self, options, *args):
+        """Analyzes arguments and options, and returns a list of entries
+        that should be worked with"""
+        # sort entries
+        return phonebook.sort_by_field(self._find_entries(options, *args),
+                                        # the field to sort by
+                                       options.sortby[0],
+                                       # ascending or descending
+                                       options.sortby[1], 
+                                       options.ignore_case)
+        
 
     ## COMMAND FUNCTIONS
 
@@ -370,42 +320,21 @@ class ConsoleIFace:
 ##                     # enable auto-generation of index
 ##                     entry.index = None
 ##                     self.phonebook.add(entry)
-##         self.phonebook.save()
+##         self.phonebook.save()      
 
     def _cmd_table(self, options, *args):
         """Print a table"""
-        if args:
-            entries = self.parse_indices(*args)
-        else:
-            entries = self.phonebook
-        entries = phonebook.sort_entries_by_field(entries,
-                                                  options.sortby[0],
-                                                  options.sortby[1],
-                                                  options.ignore_case)
+        entries = self._get_entries_from_options(options, *args)
         self.print_table(entries, options.output)
 
     def _cmd_list(self, options, *args):
-        """Print a list"""
-        if args:
-            entries = self.parse_indices(*args)
-        else:
-            entries = self.phonebook
-        entries = phonebook.sort_entries_by_field(entries,
-                                                  options.sortby[0],
-                                                  options.sortby[1],
-                                                  options.ignore_case)
+        """Print a short list of entries"""
+        entries = self._get_entries_from_options(options, *args)
         self.print_short_list(entries)
 
     def _cmd_show(self, options, *args):
-        """Show a single entry"""
-        if args:
-            entries = self.parse_indices(*args)            
-        else:
-            entries = self.phonebook
-        entries = phonebook.sort_entries_by_field(entries,
-                                                  options.sortby[0],
-                                                  options.sortby[1],
-                                                  options.ignore_case)
+        """Shows entries"""
+        entries = self._get_entries_from_options(options, *args)
         self.print_long_list(entries)
 
 ##     def _cmd_search(self, options, *args):
@@ -436,19 +365,18 @@ class ConsoleIFace:
         if len(args) > 1:
             sys.exit(_('--create accepts only one argument'))
         for func in itertools.repeat(self.edit_entry, number):
-            entry = self.phonebook.create_new()
+            entry = phonebook.Entry()
             func(entry, True)
 
     def _cmd_edit(self, options, *args):
         """Interactivly edit entries"""
-        entries = self.parse_indices(*args)
+        entries = self._find_entries(options, *args)
         for entry in entries:
             self.edit_entry(entry, False)
 
     def _cmd_remove(self, options, *args):
-        for entry in self.parse_indices(*args):
-            resp = raw_input(_('Really delete entry "%s"? ') %
-                             short_prettify(entry))
+        for entry in self._find_entries(options, *args):
+            resp = raw_input(_('Really delete entry "%s"? ') % entry)
             if resp.lower() == 'y':
                 self.phonebook.remove(entry)
         self.phonebook.save()
@@ -470,7 +398,7 @@ class ConsoleIFace:
         'file': os.path.join(config.user_directory, 'phonebook.csv'),
         'output': phonebook.FIELDS,
         'ignore_case': False,
-        'sortby': ('index', False),
+        'sortby': ('lastname', False),
         'fields': phonebook.FIELDS
         }
 
@@ -481,19 +409,22 @@ class ConsoleIFace:
     command_options = [
         # command options
         make_option('--list', action='command',
-                    options=['--sort-by', '--ignore-case'],
+                    options=['--sort-by', '--ignore-case', '--regexp',
+                             '--fields'],
                     help=_('print a short list of the specified entries')),
         make_option('--table', action='command',
                     help=_('print a table with the specified entries.'),
-                    options=['--output', '--sort-by', '--ignore-case']),
+                    options=['--output', '--sort-by', '--ignore-case',
+                             '--regexp', '--fields']),
         make_option('--show', action='command',
-                    options=['--sort-by', '--ignore-case'],
+                    options=['--sort-by', '--ignore-case', '--regexp',
+                             '--fields'],
                     help=_('show the specified entries')),
-        make_option('--search', action='command', args='required',
-                    help=_('search the phonebook for the specified '
-                           'patterns'), metavar=_('patterns'),
-                    options=['--regexp, --output', '--fields',
-                             '--ignore-case', '--sort-by']),
+        ## make_option('--search', action='command', args='required',
+        ##             help=_('search the phonebook for the specified '
+        ##                    'patterns'), metavar=_('patterns'),
+        ##             options=['--regexp, --output', '--fields',
+        ##                      '--ignore-case', '--sort-by']),
         make_option('--create', action='command', metavar=_('number'),
                     help=_('create the specified number of new entries')),
         make_option('--edit', action='command', args='required',
@@ -587,3 +518,10 @@ class ConsoleIFace:
             options.command_function(options, *args)
         except KeyboardInterrupt:
             sys.exit(_('Dying peacefully ...'))
+
+
+def main():
+    ConsoleIFace().start()
+
+if __name__ == '__main__':
+    main()
