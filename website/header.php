@@ -17,11 +17,11 @@
 <head>
 <title>tel</title>
 <?php
-    if (isset($_GET['stylesheet'] && $_GET['stylesheet'] == "new")) {
-        echo '<link rel="stylesheet" type="text/css" href="stylesheet_new.css"></link>'
+    if (isset($_GET['stylesheet'])) {
+        echo '<link rel="stylesheet" type="text/css" href="stylesheet_new.css"></link>';
     }
     else {
-        echo '<link rel="stylesheet" type="text/css" href="stylesheet.css"></link>'
+        echo '<link rel="stylesheet" type="text/css" href="stylesheet.css"></link>';
     }
 ?>
 
