@@ -23,29 +23,26 @@
 """This module provides an extended OptionParser class, which supports
 things like command options"""
 
+
 __revision__ = '$Id$'
 
 
 import sys
 import optparse
-import gettext
 import textwrap
+import itertools
 
 from copy import copy
+
 import optparse
 from optparse import (Option, OptionError, OptionParser, OptionValueError,
                       IndentedHelpFormatter, OptionGroup)
 
-import phonebook
+from tel import phonebook
 from tel import config
 
-
-def _(msg):
-    return config.translation.ugettext(msg).encode(config.stdout_encoding)
-
-
 # make optparse use our improved gettext ;)
-optparse._ = _
+optparse._ = _ = config.translation.ugettext
 
 
 class CommandHelpFormatter(IndentedHelpFormatter):
@@ -59,15 +56,11 @@ class CommandHelpFormatter(IndentedHelpFormatter):
         if option.action == 'command' and option.options:
             options = ', '.join(option.options)
             msg = _('Supported options: ')
-            # make sure we have the correct length
-            # (and are not counting unicode double-bytes twice, which would
-            # break length calculation e.g. for german umlauts
-            msg_len = len(msg.decode(config.stdout_encoding))
             # build the complete options string and wrap it to width of the
             # help
             opt_str = ''.join([msg, options])
             initial_indent = ' '*(self.help_position + 4)
-            subsequent_indent = ' '*(self.help_position + 4 + msg_len)
+            subsequent_indent = ' '*(self.help_position + 4 + len(msg))
             width = self.help_position + self.help_width
             opt_str = textwrap.fill(opt_str, width,
                                     initial_indent=initial_indent,
@@ -80,11 +73,11 @@ class CommandHelpFormatter(IndentedHelpFormatter):
         """Extend option string formatting to support arguments for
         commands"""
         if option.action == 'command' and not option.args == 'no':
-            arg_name = option.metavar or _('indices')
+            arg_name = option.metavar or _('pattern')
             if option.args == 'optional':
                 arg_name = ''.join(['[', arg_name, ']'])
-            lopts = [' '.join([lopt, arg_name]) for lopt in
-                     option._long_opts]
+            lopts = (' '.join([lopt, arg_name]) for lopt in
+                     option._long_opts)
             return ', '.join(lopts)
         else:
             return IndentedHelpFormatter.format_option_strings(self, option)
@@ -195,7 +188,7 @@ class CommandOption(Option):
 make_option = CommandOption
     
 
-#FIXME: we could verify options and args keyword for commands
+# FIXME: could verify options and args keyword for commands
 
 class CommandOptionParser(OptionParser):
     """An option parser, which supports things like command options"""
@@ -269,15 +262,21 @@ class CommandOptionParser(OptionParser):
         column_widths = map(len, headline)
         for item in items:
             column_widths = map(max, map(len, item), column_widths)
-        headline = ' - '.join(map(lambda item, width: item.center(width),
-                                  headline, column_widths))
-        separator = '-' * (column_widths[0] + column_widths[1] + 5)
-        table = [' '+headline, separator]
+        headline = itertools.imap(unicode.center, headline, column_widths)
+        headline = u' - '.join(headline)
+        separator = u'-' * (column_widths[0] + column_widths[1] + 5)
+        table = [u' '+headline, separator]
         for item in items:
-            item = ' - '.join(map(lambda item,width: item.ljust(width),
-                                  item, column_widths))
-            table.append(' '+item)
-        return '\n'.join(table).encode(config.stdout_encoding)
+            item = itertools.imap(unicode.ljust, item, column_widths)
+            table.append(' '+u' - '.join(item))
+        return '\n'.join(table)
+
+    def add_option_group(self, *args, **kwargs):
+        if isinstance(args[0], basestring):
+            group = OptionGroup(self, *args, **kwargs)
+            return OptionParser.add_option_group(self, group)
+        else:
+            return OptionParser.add_option_group(self, *args, **kwargs)
 
     def print_license(self, stream=None):
         """Prints license information to `stream`"""
