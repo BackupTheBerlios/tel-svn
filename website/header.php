@@ -16,7 +16,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
 <head>
 <title>tel</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css"></link>
+<?php
+    if $_GET['stylesheet'] == "new" {
+        echo '<link rel"stylesheet" type="text/css" href="stylesheet_new.css"></link>'
+    }
+    else {
+        echo '<link rel="stylesheet" type="text/css" href="stylesheet.css"></link>'
+    }
+?>
+
 </head>
 
 <body>
