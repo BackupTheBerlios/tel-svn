@@ -232,8 +232,7 @@ class Entry(object, UserDict.DictMixin):
         self.fields[field] = ''
 
     def __nonzero__(self):
-        # ignore index, since empty entries can have indices too
-        return any((unicode(field) in self for field in FIELDS[1:]))
+        return any((field != '' for field in self))
 
     def setdefault(self, field, default=None):
         """Sets field to `value`, if field is empty"""
