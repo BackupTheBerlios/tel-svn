@@ -1,114 +1,48 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
 body
 {
 	font: 0.8em 'Bitstream Vera Sans', 'Arial', sans-serif;
-	color: #CCCCCC;
+	color: red;
 	background-color: #00CCFF;
-}
-
-h1
-{
-	font-size: 1.5em;
-	font-weight: bold;
-}
-
-h2
-{
-	font-size: 1.2em;
-	font-weight: bold;
-}
-
-hr
-{
-	border: solid #CFCFCF 1px
-}
-
-a:link
-{
-	color: #55FFFF;
-	font-weight: bold;
-	text-decoration: none;
-}
-
-a:active
-{
-	color: #55FFFF;
-	font-weight: bold;
-	text-decoration: none;
-}
-
-a:visited
-{
-	color: #55FFFF;
-	font-weight: bold;
-	text-decoration: none;
-}
-
-a:hover
-{
-	color: #55FFFF;
-	font-weight: bold;
-	text-decoration: underline;
-}
-
-img
-{
-	border: none;
-}
-
-a.navigation
-{
-	display : block;
-	padding : 4px 10px;
-}
-
-ul.navigation
-{
-	list-style: none;
-	margin : 0.5em;
-	padding : 0.5em;
 }
 
 #container
 {
-	margin: 0 auto;
-	text-align: left;
-	width: 900px;
-	border: 0px;
+    width: 100%;
+	margin: 0;
+    border: 0;
+    padding: 0;
+    text-align: center;
 }
 
 #ihv {
-	width: 172px;
-	padding:4px;
-	background-color: black;
-	border: 1px solid black;
-	float: left;
-	clear: left;
+    background-color: silver;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+    text-align: left;
+    padding: 2px;
+}
+
+#ihv a {
+    margin: 5px;
+    padding: 3px;
+    border-right: 1px solid black;
+    border-left: 1px solid black;
+    vertical-align: middle;
 }
 
 #header {
-	text-align:center;
-	width: auto;
-	padding: 4px;
-	border: 1px solid black;
-	margin-bottom: 7px;
 }
 
 #content {
-	width: auto;
-	padding: 4px;
-	background-color: black;
-	border: 1px solid black;
 }
 
 #index {
-	width: 700px;
-	padding: 4px;
-	background-color: black;
-	border: 1px solid black;
-	float: right;
 }
 
 #banner {
-    font-weight: bold;
-	font: 1.8em 'Bitstream Vera Sans', 'Arial', sans-serif;
-    color: black;
+}
