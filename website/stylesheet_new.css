@@ -5,9 +5,17 @@
 
 body
 {
-	font: 0.8em 'Bitstream Vera Sans', 'Arial', sans-serif;
-	color: red;
-	background-color: #00CCFF;
+	font: 0.9em 'Lucida Grande', 'Bitstream Vera Sans', 'Arial', sans-serif;
+	color: black;
+	background-color: white;
+}
+
+img {
+    border: 0;
+}
+
+.banner {
+    width: 120px;
 }
 
 #container
@@ -20,7 +28,7 @@ body
 }
 
 #ihv {
-    background-color: silver;
+    background-image: url('images/menu_background.png');
     border-top: 1px solid black;
     border-bottom: 1px solid black;
     text-align: left;
@@ -42,7 +50,11 @@ body
 }
 
 #index {
+    margin-left: 20px;
+    margin-top: 10px;
+    width: 55%;
 }
 
 #banner {
+    background-image: url('images/banner_background.png');
 }

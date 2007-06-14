@@ -36,7 +36,7 @@
 		</div>
 
 		<div id="banner">
-			<a href="index.php"><img src="images/logo_new_rc1.png" alt="tel logo" style="border:none;"/></a><br />
+			<a href="index.php"><img class="banner" src="images/logo_new_rc1.png" alt="tel logo" style="border:none;"/></a><br />
             <? include("lang/".$lang."/slogan.php"); ?>
 		</div>
 	</div>
