@@ -57,7 +57,7 @@ def _get_encoding(outputstream):
         plat = sys.platform
         if plat.startswith("win"):
             enc = "cp850"
-        elif any((plat.startswith(p) for p in ("linux", "aix"))):
+        elif plat.startswith(("linux", "aix")):
             # try to read locale output
             enc = _read_locale()
         elif plat.startswith("cygwin"):
