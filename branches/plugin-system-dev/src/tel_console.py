@@ -20,6 +20,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+"""This is the command line front end to tel"""
+
 __revision__ = '$Id$'
 
 import os
@@ -39,6 +41,7 @@ from tel import phonebook, encodinghelper, config
 from tel.cmdoptparse import CommandOptionParser, make_option
 
 
+encodinghelper.redirect_std_streams(True)
 _ = config.translation.ugettext
 
 
@@ -47,8 +50,8 @@ class ConsoleEntryEditor(object):
 
     :ivar current_field: The name of the currently edited field"""
 
-    EDIT_MSG = _(u'Editing entry "%s"...')
-    NEW_MSG = _(u'Creating a new entry...')
+    EDIT_MSG = _('Editing entry "%s"...')
+    NEW_MSG = _('Creating a new entry...')
          
     def edit(self, entry):
         """Edits `entry`.
@@ -70,8 +73,8 @@ class ConsoleEntryEditor(object):
                     entry[field] = value
                     break
                 except ValueError:
-                    msg = _(u'You entered an invalid value for the field'
-                            u'"%s"!')
+                    msg = _('You entered an invalid value for the field'
+                            '"%s"!')
                     print msg % phonebook.translate_field(field)
         self.finalize_editor()
         return entry
@@ -84,12 +87,12 @@ class ConsoleEntryEditor(object):
         # input methods supporting readline
         def print_help(self, new):
             if new:
-                help = _(u'Please fill the following fields. To leave a '
-                         u'field empty, just press ENTER without entering '
-                         u'something.')
+                help = _('Please fill the following fields. To leave a '
+                         'field empty, just press ENTER without entering '
+                         'something.')
                 print textwrap.fill(help, 79)
             else:
-                print _(u'Please fill the following fields.')
+                print _('Please fill the following fields.')
 
         def initialize_editor(self, new):
             """Initialize the editor"""
@@ -128,15 +131,15 @@ class ConsoleEntryEditor(object):
         def print_help(self, new):
             """Print a little editing help"""
             if new:
-                help = _(u'Please fill the following fields. To leave a '
-                         u'field empty, just press ENTER without entering '
-                         u'something.')
+                help = _('Please fill the following fields. To leave a '
+                         'field empty, just press ENTER without entering '
+                         'something.')
                 print textwrap.fill(help, 79)
             else:
-                help = _(u'Please fill the following fields. The current '
-                         u'value is shown in square brackets. NOTE: The '
-                         u'current value is not preserved. You have to '
-                         u're-enter every value!')
+                help = _('Please fill the following fields. The current '
+                         'value is shown in square brackets. NOTE: The '
+                         'current value is not preserved. You have to '
+                         're-enter every value!')
                 print textwrap.fill(help, 79)
 
         def get_input(self, field, oldvalue, new):
@@ -146,62 +149,70 @@ class ConsoleEntryEditor(object):
             :param oldvalue: The old value of the field
             :param new: Whether the entry is new"""
             if new:
-                prompt = u'%s: ' % phonebook.translate_field(field)
+                prompt = '%s: ' % phonebook.translate_field(field)
             else:
-                prompt = u'%s [%s]: '
+                prompt = '%s [%s]: '
                 prompt = prompt % (phonebook.translate_field(field),
                                    oldvalue)
             return raw_input(prompt)
             
+
+# output and utility functions
+def print_short_list(entries):
+    """Prints all `entries` in a short format."""
+    print
+    for entry in entries:
+        print entry
+
+def print_long_list(entries):
+    """Prints every single entry in `entries` in full detail.
+    :param sortby: The field to sort by
+    :param asc: True, if sorting order is descending"""
+    for entry in entries:
+        print '-'*20
+        print entry.prettify()
+
+def print_table(entries, fields):
+    """Prints `entries` as a table.
+    :param fields: Fields to include in the table"""
+    print
+    # this is the head line of the table
+    headline = map(phonebook.translate_field, fields)
+    table_body = []
+    # widths for each column
+    column_widths = map(len, headline)
+    for entry in entries:
+        # create and add a row for each entry
+        row = [unicode(entry[field]) for field in fields]
+        table_body.append(row)
+        # correct the column width, if an entry is too width
+        column_widths = map(max, map(len, row), column_widths)
+    # print the headline
+    headline = itertools.imap(unicode.center, headline, column_widths)
+    headline = u'| %s |' % u' | '.join(headline)
+    separator = (u'-'*(width+2) for width in column_widths)
+    separator = u'|%s|' % u'+'.join(separator)
+    print headline
+    print separator
+    for row in table_body:
+        row = itertools.imap(unicode.ljust, row, column_widths)
+        row = u'| %s |' % u' | '.join(row)
+        print row
+
+def yes_no_question(question):
+    """Asks `question` as a yes/no question. Returns True, if the user
+    answered yes, otherwise False."""
+    promt = _('%(question)s [%(yes)s,%(no)s]') % {'question': question,
+                                                  'yes': _('y'),
+                                                  'no': _('n')}
+    return (raw_input(promt).lower() == _('y'))
+
 
 class ConsoleIFace(object):
     """Provides a console interface to Tel"""
 
     def __init__(self):
         self.phonebook = None
-
-    # INTERACTION FUNCTIONS
-
-    def print_short_list(self, entries):
-        """Prints all `entries` in a short format."""
-        print
-        for entry in entries:
-            print entry
-
-    def print_long_list(self, entries):
-        """Prints every single entry in `entries` in full detail.
-        :param sortby: The field to sort by
-        :param asc: True, if sorting order is descending"""
-        for entry in entries:
-            print '-'*20
-            print entry.prettify()
-
-    def print_table(self, entries, fields):
-        """Prints `entries` as a table.
-        :param fields: Fields to include in the table"""
-        print
-        # this is the head line of the table
-        headline = map(phonebook.translate_field, fields)
-        table_body = []
-        # widths for each column
-        column_widths = map(len, headline)
-        for entry in entries:
-            # create and add a row for each entry
-            row = [unicode(entry[field]) for field in fields]
-            table_body.append(row)
-            # correct the column width, if an entry is too width
-            column_widths = map(max, map(len, row), column_widths)
-        # print the headline
-        headline = itertools.imap(unicode.center, headline, column_widths)
-        headline = u'| %s |' % u' | '.join(headline)
-        separator = ('-'*(width+2) for width in column_widths)
-        separator = u'|%s|' % u'+'.join(separator)
-        print headline
-        print separator
-        for row in table_body:
-            row = itertools.imap(unicode.ljust, row, column_widths)
-            row = u'| %s |' % u' | '.join(row)
-            print row
 
     def edit_entry(self, entry):
         """Allows interactive editing of entries. If `new` is True, `entry`
@@ -211,9 +222,8 @@ class ConsoleIFace(object):
         entry = editor.edit(entry)
         # check if the user wants to add an empty entry
         if not entry:
-            msg = _('Do you really want to save an emtpy entry? ')
-            resp = raw_input(msg).lower()
-            if resp != 'y':
+            question = _('Do you really want to save an emtpy entry?')
+            if not yes_no_question(question):
                 # abort without saving
                 print _('The entry is not saved')
                 return
@@ -233,7 +243,8 @@ class ConsoleIFace(object):
             for pat in patterns:
                 entries.extend(self.phonebook.find_all(self, pat,
                                                        *options.fields))
-        return entries
+        # remove double entries
+        return set(entries)
 
     def _get_entries_from_options(self, options, *args):
         """Analyzes arguments and options, and returns a list of entries
@@ -337,23 +348,6 @@ class ConsoleIFace(object):
         entries = self._get_entries_from_options(options, *args)
         self.print_long_list(entries)
 
-##     def _cmd_search(self, options, *args):
-##         """Search the phone book for `pattern`"""
-##         found = []
-##         for pattern in args:
-##             entries = self.phonebook.search(pattern, options.ignore_case,
-##                                             options.regexp, options.fields)
-##             # add all entries which aren't already in found. This avoids
-##             # printing entries twice, which are matched by more than one
-##             # pattern
-##             new = filter(lambda entry: entry not in found, entries)
-##             found += new
-##         entries = phonebook.sort_entries_by_field(found,
-##                                                   options.sortby[0],
-##                                                   options.sortby[1],
-##                                                   options.ignore_case)
-##         self.print_table(found, options.output)
-
     def _cmd_create(self, options, *args):
         """Interactivly create a new entry"""
         number = 1
@@ -403,6 +397,7 @@ class ConsoleIFace(object):
         }
 
     global_options = [
+        # These options tune the behaviour of all commands
         make_option('-f', '--file', action='store', dest='file',
                     metavar=_('file'), help=_('use FILE as phone book'))]
 
@@ -420,11 +415,6 @@ class ConsoleIFace(object):
                     options=['--sort-by', '--ignore-case', '--regexp',
                              '--fields'],
                     help=_('show the specified entries')),
-        ## make_option('--search', action='command', args='required',
-        ##             help=_('search the phonebook for the specified '
-        ##                    'patterns'), metavar=_('patterns'),
-        ##             options=['--regexp, --output', '--fields',
-        ##                      '--ignore-case', '--sort-by']),
         make_option('--create', action='command', metavar=_('number'),
                     help=_('create the specified number of new entries')),
         make_option('--edit', action='command', args='required',
@@ -438,18 +428,13 @@ class ConsoleIFace(object):
                     help=_('import all specified phone books'),
                     metavar=_('files'))]
 
-    local_options = [
+    search_options = [
+        # These options tune the searching behaviour
         make_option('-r', '--regexp', action='store_true', dest='regexp',
                     help=_('enable regular expressions. tel uses the '
                            'Python-syntax. You can find an overview at the '
                            'following URL: '
                            'http://docs.python.org/lib/re-syntax.html')),
-        make_option('-o', '--output', action='store', dest='output',
-                    type='field_list', metavar=_('fields'), 
-                    help=_('specify the fields to show. Takes a '
-                           'comma-separated list of internal names as '
-                           'printed by --help-fields. Fields prefixed '
-                           'with "-" are hidden.')),
         make_option('-i', '--ignore-case', action='store_true',
                     dest='ignore_case',
                     help=_('ignore case, when searching or sorting. The '
@@ -457,15 +442,26 @@ class ConsoleIFace(object):
         # FIXME: someone knows a good short options for --fields?
         make_option('--fields', action='store', dest='fields',
                     type='field_list', metavar=_('fields'),
-                    help=_('specify a list of fields to search in. '
-                    'Accepts the same syntax as the --output option')),
+                    help=_('specify a list of fields to search in. Takes a '
+                           'comma-separated list of internal names as '
+                           'printed by --help-fields. Fields prefixed with '
+                           '"-" are hidden.'))
+        ]
+
+    local_options = [
+        # these options tune the behaviour of some commands
         make_option('-s', '--sort-by', type='field', dest='sortby',
                     metavar=_('field'),
                     help=_('sort output. Specify a field name as printed '
                            'by --help-fields. If prefixed with +, sorting '
                            'order is ascending, if prefixed with a -, '
                            'sorting order is descending. The default is '
-                           'ascending, if no prefix is used.'))]
+                           'ascending, if no prefix is used.')),
+        make_option('-o', '--output', action='store', dest='output',
+                    type='field_list', metavar=_('fields'), 
+                    help=_('specify the fields to show. '
+                           'See --search option for syntax'))
+        ]
 
     def _parse_args(self):
         """Parses command line arguments"""
@@ -477,12 +473,18 @@ class ConsoleIFace(object):
                                      license=config.license,
                                      copyright=config.copyright)
         # command options
-        desc = _('Commands to modify the phone book and to search or print '
-                 'entries. Only one of these options may be specified. '
-                 'Commands, which accept indices, recognize range '
-                 'specifications like 4-6.')
+        desc = _('Commands to modify the phone book and to search or '
+                 'print entries. Only one of these options may be '
+                 'specified.\n'
+                 'Entries are specified through searching patterns. '
+                 'See searching options for details')
         group = parser.add_option_group(_('Commands'), desc)
         group.add_options(self.command_options)
+        # searching options
+        desc = _('These options apply to every command, that deals with '
+                 'entries. They tune the search of entries')
+        group = parser.add_option_group(_('Searching options'), desc)
+        group.add_options(self.search_options)
         # global options
         desc = _('These options are valid with every command')
         group = parser.add_option_group(_('Global options'), desc)
