@@ -18,7 +18,7 @@
 <title>tel</title>
 <?php
     if $_GET['stylesheet'] == "new" {
-        echo '<link rel"stylesheet" type="text/css" href="stylesheet_new.css"></link>'
+        echo '<link rel="stylesheet" type="text/css" href="stylesheet_new.css"></link>'
     }
     else {
         echo '<link rel="stylesheet" type="text/css" href="stylesheet.css"></link>'
