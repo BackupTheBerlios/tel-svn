@@ -17,7 +17,7 @@
 <head>
 <title>tel</title>
 <?php
-    if $_GET['stylesheet'] == "new" {
+    if (isset($_GET['stylesheet'] && $_GET['stylesheet'] == "new")) {
         echo '<link rel="stylesheet" type="text/css" href="stylesheet_new.css"></link>'
     }
     else {
