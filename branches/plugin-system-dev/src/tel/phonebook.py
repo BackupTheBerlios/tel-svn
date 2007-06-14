@@ -150,22 +150,7 @@ class Phonebook(object):
         # if fields are empty raise ValueError
         if not fields:
             raise ValueError(u'No fields specified')
-        
-        entries = []
-        if isinstance(pattern, basestring):
-            for entry in self:
-                for field in fields:
-                    if pattern in entry[field]:
-                        entries.append(entry)
-                        break
-        else:
-            # assume pattern is a regular expression
-            for entry in self:
-                for field in fields:
-                    if pattern.match(entry[field]):
-                        entries.append(entry)
-                        break
-        return entries
+        return [entry for entry in self if entry.matches(pattern, *fields)]
 
     def supported_fields(self):
         """Returns a list of all supported fields
@@ -250,6 +235,31 @@ class Entry(object, UserDict.DictMixin):
     def iteritems(self):
         """Returns an iterator over key, value pairs"""
         return ((field, self[field]) for field in self)
+
+    def matches(self, pattern, *fields):
+        """Returns True, if any of `fields` matches the specified pattern.
+        If pattern is a callable object, it will be invoked for every field
+        with two arguments given: fieldname and content. If it returns True,
+        the entries is seen as matched. Note, that the function is not
+        garanteed to be invoked for every field. If a match occurs,
+        execution will be aborted.
+
+        If pattern is a plain string, it will be compared using the in
+        operator. If pattern is a compiled regular expression, it will be
+        matched against the contents of all fields."""
+        if callable(pattern):
+            return any((pattern(field) for field in fields))
+
+        # if fields are empty raise ValueError
+        if not fields:
+            raise ValueError(u'No fields specified')
+
+        if isinstance(pattern, basestring):
+            return any((pattern in unicode(content) for content in
+                        self.itervalues()))
+        else:
+            return any((pattern.match(content) for content in
+                        self.itervalues()))
     
 
 class URI(object):  
