@@ -21,14 +21,14 @@
 # DEALINGS IN THE SOFTWARE.
 
 
+from __future__ import with_statement
+
+
 __revision__ = '$Id$'
 
 
 import os
 import csv
-
-
-from __future__ import with_statement
 
 from tel.phonebook import Entry, Phonebook
 
