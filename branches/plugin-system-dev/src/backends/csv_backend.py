@@ -62,7 +62,7 @@ class CsvPhonebook(Phonebook):
         """Save entries."""
         with open(self.uri.location, 'wb') as stream:
             writer = csv.writer(stream)
-            writer.writerow(backend.FIELDS)
+            writer.writerow(self.supported_fields())
             for entry in self:
                 row = [unicode(entry[field]).encode('utf-8') for field in
                        self.supported_fields()]

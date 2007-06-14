@@ -195,7 +195,8 @@ class Entry(object, UserDict.DictMixin):
     __str__ = __unicode__
 
     def __repr__(self):
-        return '%(firstname)s %(lastname)s' % self
+        return '%s %s %s' % (self.__class__.__name__,
+                             self['firstname'], self['lastname'])
 
     def prettify(self):
         """Returns a pretty representation of this entry"""
@@ -217,7 +218,7 @@ class Entry(object, UserDict.DictMixin):
         self.fields[field] = ''
 
     def __nonzero__(self):
-        return any((field != '' for field in self))
+        return any((self[field] != '' for field in self))
 
     def setdefault(self, field, default=None):
         """Sets field to `value`, if field is empty"""
@@ -345,7 +346,7 @@ def sort_by_field(entries, field, descending=False, ignore_case=False):
         if isinstance(value, basestring) and ignore_case:
             return value.lower()
         return value
-    return sorted(self, key=keyfunc, reverse=descending)
+    return sorted(entries, key=keyfunc, reverse=descending)
 
 
 # functions to query field information
