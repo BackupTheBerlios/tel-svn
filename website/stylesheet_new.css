@@ -24,6 +24,7 @@ img {
 	margin: 0;
     border: 0;
     padding: 0;
+    bottom: 0;
     text-align: center;
 }
 
@@ -32,7 +33,9 @@ img {
     border-top: 1px solid black;
     border-bottom: 1px solid black;
     text-align: left;
-    padding: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 2px;
 }
 
 #ihv a {
@@ -41,18 +44,36 @@ img {
     border-right: 1px solid black;
     border-left: 1px solid black;
     vertical-align: middle;
+    text-decoration: none;
+    color: black
+}
+
+#ihv a:hover {
+    background-image: url('images/menu_background_invert.png');
 }
 
 #header {
 }
 
-#content {
-}
 
 #index {
+    text-align: left;
     margin-left: 20px;
     margin-top: 10px;
     width: 55%;
+    margin-right: 20px;
+    float: left;
+}
+
+#notices {
+    float: left;
+    width: auto;
+    height: auto;
+    background-color: orange;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    top: 10px;
 }
 
 #banner {

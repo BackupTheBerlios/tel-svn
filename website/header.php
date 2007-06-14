@@ -16,14 +16,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
 <head>
 <title>tel</title>
-<?php
-    if (isset($_GET['stylesheet'])) {
-        echo '<link rel="stylesheet" type="text/css" href="stylesheet_new.css"></link>';
-    }
-    else {
-        echo '<link rel="stylesheet" type="text/css" href="stylesheet.css"></link>';
-    }
-?>
+<link title="Standart Style" rel="stylesheet" type="text/css" href="stylesheet.css"></link>
+<link title="New Style" rel="alternate stylesheet" type="text/css" href="stylesheet_new.css"></link>
 
 </head>
 
