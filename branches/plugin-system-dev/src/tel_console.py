@@ -52,7 +52,15 @@ class ConsoleEntryEditor(object):
 
     EDIT_MSG = _('Editing entry "%s"...')
     NEW_MSG = _('Creating a new entry...')
-         
+
+    def __init__(self, fields, new=False):
+        """`fields` is a list of fields to be edited by this editor.
+        Set `new` to True, if you are mainly editing new entries.
+        This only affects the printed help, ConsoleEntryEditor detects
+        automatically, if a single entry is new"""
+        self.print_help(new)
+        self.fields = fields
+        
     def edit(self, entry):
         """Edits `entry`.
         :returns: The edited `entry`"""
@@ -61,11 +69,10 @@ class ConsoleEntryEditor(object):
             # entry is new
             print self.NEW_MSG
         else:
-            print self.EDIT_MSG % entry.prettify()
+            print self.EDIT_MSG % entry
 
-        self.initialize_editor(new)
-        self.print_help(new)
-        for field in phonebook.FIELDS[1:]:
+        self.initialize_editor()
+        for field in self.fields:
             oldvalue = entry[field]
             while True:
                 value = self.get_input(field, oldvalue, new)
@@ -86,18 +93,11 @@ class ConsoleEntryEditor(object):
 
         # input methods supporting readline
         def print_help(self, new):
-            if new:
-                help = _('Please fill the following fields. To leave a '
-                         'field empty, just press ENTER without entering '
-                         'something.')
-                print textwrap.fill(help, 79)
-            else:
-                print _('Please fill the following fields.')
+            print _('Please fill the following fields.')
 
-        def initialize_editor(self, new):
+        def initialize_editor(self):
             """Initialize the editor"""
-            if not new:
-                readline.set_pre_input_hook(self._input_hook)
+            readline.set_pre_input_hook(self._input_hook)
 
         def finalize_editor(self):
             readline.set_pre_input_hook(None)
@@ -124,17 +124,14 @@ class ConsoleEntryEditor(object):
     except NameError:
 
         # don't do anything
-        def initialize_editor(self, *args, **kwargs):
+        def initialize_editor(self):
             pass
         finalize_editor = initialize_editor
         
         def print_help(self, new):
             """Print a little editing help"""
             if new:
-                help = _('Please fill the following fields. To leave a '
-                         'field empty, just press ENTER without entering '
-                         'something.')
-                print textwrap.fill(help, 79)
+                help = _('Please fill the following fields.')
             else:
                 help = _('Please fill the following fields. The current '
                          'value is shown in square brackets. NOTE: The '
@@ -164,6 +161,7 @@ def print_short_list(entries):
     for entry in entries:
         print entry
 
+
 def print_long_list(entries):
     """Prints every single entry in `entries` in full detail.
     :param sortby: The field to sort by
@@ -171,6 +169,7 @@ def print_long_list(entries):
     for entry in entries:
         print '-'*20
         print entry.prettify()
+
 
 def print_table(entries, fields):
     """Prints `entries` as a table.
@@ -199,12 +198,13 @@ def print_table(entries, fields):
         row = u'| %s |' % u' | '.join(row)
         print row
 
+
 def yes_no_question(question):
     """Asks `question` as a yes/no question. Returns True, if the user
     answered yes, otherwise False."""
-    promt = _('%(question)s [%(yes)s,%(no)s]') % {'question': question,
-                                                  'yes': _('y'),
-                                                  'no': _('n')}
+    promt = _('%(question)s [%(yes)s,%(no)s] ') % {'question': question,
+                                                   'yes': _('y'),
+                                                   'no': _('n')}
     return (raw_input(promt).lower() == _('y'))
 
 
@@ -214,23 +214,24 @@ class ConsoleIFace(object):
     def __init__(self):
         self.phonebook = None
 
-    def edit_entry(self, entry):
+    def edit_entries(self, entries):
         """Allows interactive editing of entries. If `new` is True, `entry`
         is identified as new entry"""
-        print
-        editor = ConsoleEntryEditor()
-        entry = editor.edit(entry)
-        # check if the user wants to add an empty entry
-        if not entry:
-            question = _('Do you really want to save an emtpy entry?')
-            if not yes_no_question(question):
-                # abort without saving
-                print _('The entry is not saved')
-                return
-        if entry.parent is not None:
-            self.phonebook.append(entry)
-        self.phonebook.save()
-        print 'The entry was saved'
+        editor = ConsoleEntryEditor(self.phonebook.supported_fields(),
+                                    bool(entries[0].parent))
+        for entry in entries:
+            entry = editor.edit(entry)
+            # check if the user wants to add an empty entry
+            if not entry:
+                question = _('Do you really want to save an emtpy entry?')
+                if not yes_no_question(question):
+                    # abort without saving
+                    print _('The entry is not saved')
+                    return
+            if entry.parent is None:
+                self.phonebook.add(entry)
+            self.phonebook.save()
+            print _('The entry was saved')
 
     def _find_entries(self, options, *args):
         """Finds entries according to command line arguments"""
@@ -238,13 +239,17 @@ class ConsoleIFace(object):
         if args:
             patterns = args
             if options.regexp:
-                patterns = (re.compile(pat) for pat in patterns)
+                flags = re.UNICODE
+                if options.ignore_case:
+                    flags |= re.IGNORECASE
+                patterns = (re.compile(pat, flags) for pat in patterns)
+            # FIXME: implement options.ignore_case for non-re patterns
             entries = []
             for pat in patterns:
-                entries.extend(self.phonebook.find_all(self, pat,
+                entries.extend(self.phonebook.find_all(pat,
                                                        *options.fields))
         # remove double entries
-        return set(entries)
+        return list(set(entries))
 
     def _get_entries_from_options(self, options, *args):
         """Analyzes arguments and options, and returns a list of entries
@@ -336,17 +341,17 @@ class ConsoleIFace(object):
     def _cmd_table(self, options, *args):
         """Print a table"""
         entries = self._get_entries_from_options(options, *args)
-        self.print_table(entries, options.output)
+        print_table(entries, options.output)
 
     def _cmd_list(self, options, *args):
         """Print a short list of entries"""
         entries = self._get_entries_from_options(options, *args)
-        self.print_short_list(entries)
+        print_short_list(entries)
 
     def _cmd_show(self, options, *args):
         """Shows entries"""
         entries = self._get_entries_from_options(options, *args)
-        self.print_long_list(entries)
+        print_long_list(entries)
 
     def _cmd_create(self, options, *args):
         """Interactivly create a new entry"""
@@ -358,15 +363,16 @@ class ConsoleIFace(object):
                 sys.exit(_('--create needs a number'))
         if len(args) > 1:
             sys.exit(_('--create accepts only one argument'))
-        for func in itertools.repeat(self.edit_entry, number):
-            entry = phonebook.Entry()
-            func(entry, True)
+        entries = [Entry() for Entry in itertools.repeat(phonebook.Entry,
+                                                         number)]
+        self.edit_entries(entries)
 
     def _cmd_edit(self, options, *args):
         """Interactivly edit entries"""
         entries = self._find_entries(options, *args)
-        for entry in entries:
-            self.edit_entry(entry, False)
+        if not entries:
+            sys.exit(_('No entries found for given patterns'))
+        self.edit_entries(entries)
 
     def _cmd_remove(self, options, *args):
         for entry in self._find_entries(options, *args):
