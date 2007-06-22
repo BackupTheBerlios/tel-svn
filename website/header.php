@@ -16,8 +16,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
 <head>
 <title>tel</title>
-<link title="Standart Style" rel="stylesheet" type="text/css" href="stylesheet.css"></link>
-<link title="New Style" rel="alternate stylesheet" type="text/css" href="stylesheet_new.css"></link>
+<link title="Green" rel="stylesheet" type="text/css" href="green.css"></link>
+<link title="Blue" rel="alternate stylesheet" type="text/css" href="blue.css"></link>
 
 </head>
 
