@@ -71,6 +71,12 @@ h1 {
     float: left;
 }
 
+#w3cimages {
+    clear: both;
+    position: absolute;
+    bottom: 0;
+}
+
 #footer {
     background-color: red;
     bottom: 0;
