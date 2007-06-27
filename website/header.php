@@ -16,8 +16,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
 <head>
 <title>tel</title>
-<link title="Green" rel="stylesheet" type="text/css" href="green.css"></link>
-<link title="Blue" rel="alternate stylesheet" type="text/css" href="blue.css"></link>
+<link rel="stylesheet" type="text/css" href="stylesheet.css"></link>
 
 </head>
 
