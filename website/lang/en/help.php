@@ -13,5 +13,5 @@
 </ul>
 
 <p>
-There are lots of ways to to help and only few require programming knowledge. If you have questions or problems or want to participate, just <a href="index.php?to=contact">contact us</a> or write on our <a href="http://lists.berlios.de/mailman/listinfo/tel-users">mailing list.</a>.
+There are lots of ways to help and only few require programming knowledge. If you have questions or problems or want to participate, just <a href="index.php?to=contact">contact us</a> or write on our <a href="http://lists.berlios.de/mailman/listinfo/tel-users">mailing list</a>.
 </p>

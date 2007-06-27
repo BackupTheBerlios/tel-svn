@@ -10,12 +10,28 @@ body
 	background-color: #b6d57d;
 }
 
+#index a {
+    color: #336600;
+    font-weight: bold;
+    text-decoration: none;
+}
+
 img {
     border: 0;
 }
 
 .banner {
     width: 120px;
+}
+
+p {
+    margin-top: 7px;
+    margin-bottom: 7px;
+}
+
+li {
+    margin-left: 20px;
+    margin-bottom: 3px;
 }
 
 h1 {
@@ -73,7 +89,7 @@ h1 {
 
 #w3cimages {
     clear: both;
-    position: absolute;
+    position: relative;
     bottom: 0;
 }
 
