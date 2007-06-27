@@ -16,6 +16,18 @@ body
     text-decoration: none;
 }
 
+#notices a {
+    color: #336600;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+#notices h1 {
+    text-align: center;
+    margin: auto;
+    margin-top: 4px;
+}
+
 img {
     border: 0;
 }
@@ -107,14 +119,17 @@ hr {
 }
 
 #notices {
+    text-align: left;
     float: left;
     width: auto;
     height: auto;
-    background-color: orange;
+    background-color:  #CCCC66;
+    border-left: 1px solid black;
+    border-bottom: 1px solid black;
     position: absolute;
-    bottom: 0;
     right: 0;
-    top: 10px;
+    width: 400px;
+    padding: 5px;
 }
 
 #banner {
