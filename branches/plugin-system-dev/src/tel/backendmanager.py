@@ -64,7 +64,7 @@ class BackendManager(DictMixin):
     Backends don't need to be loaded explicitly. Just use the provided
     dictionary interface to access backends by name. Loading will happen
     automatically."""
-    
+
     def __init__(self):
         """Creates a new backend manager."""
         self._loaded_cache = {}

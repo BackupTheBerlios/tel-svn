@@ -257,7 +257,7 @@ class Entry(object, UserDict.DictMixin):
             raise ValueError(u'No fields specified')
 
         if isinstance(pattern, basestring):
-            return any((pattern in unicode(content) for content in
+            return any((pattern == unicode(content) for content in
                         self.itervalues()))
         else:
             return any((pattern.search(content) for content in

@@ -80,11 +80,11 @@ def raw_input(prompt=''):
     to stdin_encoding"""
     value = _no_encoding_raw_input(prompt)
     return value.decode(stdin_encoding)
-    
+
 
 def redirect_std_streams(replace_raw_input=True):
     """Redirects output stream.
-    
+
     **Note**: sys.stdin isn't currently redirected, as this breaks with
     raw_input. As a workaround you can set `replace_raw_input` to True,
     which will replace raw_input with an implementation, that returns
@@ -102,6 +102,4 @@ def redirect_std_streams(replace_raw_input=True):
         if replace_raw_input:
             import __builtin__
             __builtin__.__dict__['raw_input'] = raw_input
-            
 
-        

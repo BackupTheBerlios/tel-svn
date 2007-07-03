@@ -52,7 +52,7 @@ class email(unicode):
 
 class phone_number(unicode):
     """Represents a phone number.
-    
+
     :ivar pattern: regular expression used to verify phone numbers"""
     # simple pattern to match phone numbers
     pattern = re.compile(r'^[-()/\d\s\W]+$')
@@ -62,4 +62,4 @@ class phone_number(unicode):
         if args and not self.pattern.match(args[0]):
             raise ValueError('Invalid literal for phone number: %s'
                              % self)
-                
+
