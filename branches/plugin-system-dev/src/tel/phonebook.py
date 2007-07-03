@@ -79,7 +79,7 @@ class Phonebook(object):
     # defaults to FIELDS
     # overwrite to change the list of supported fields
     fields = None
-    
+
     def __init__(self, uri):
         self.uri = uri
         self._entries = []
@@ -104,7 +104,7 @@ class Phonebook(object):
         return self._entries[index]
 
     def __setitem__(self, index, entry):
-        if isinstance(index, slice):    
+        if isinstance(index, slice):
             for e in entry:
                 e.parent = self
         else:
@@ -166,7 +166,7 @@ class Entry(object, UserDict.DictMixin):
 
     :ivar parent: The phonebook, which contains this entry, or None, if this
     entry has not been added to a phonebook"""
-          
+
     def __init__(self, entry=None, **kwargs):
         """If `entry` is given, copy all fields from `entry`.
         Any keyword arguments are regarded as field values, and are stored
@@ -195,8 +195,9 @@ class Entry(object, UserDict.DictMixin):
     __str__ = __unicode__
 
     def __repr__(self):
-        return '%s %s %s' % (self.__class__.__name__,
-                             self['firstname'], self['lastname'])
+        return '%s "%s %s" at %s' % (self.__class__.__name__,
+                                     self['firstname'], self['lastname'],
+                                     id(self))
 
     def prettify(self):
         """Returns a pretty representation of this entry"""
@@ -261,9 +262,9 @@ class Entry(object, UserDict.DictMixin):
         else:
             return any((pattern.match(content) for content in
                         self.itervalues()))
-    
 
-class URI(object):  
+
+class URI(object):
     """Encapsulates a phonebook uri.
 
     An uri is separated in the scheme and the location part.
@@ -271,11 +272,11 @@ class URI(object):
     location. Both parts a separated by the usual url separator ://.
     See uri_pattern for the regular expression which is used to extract
     the parts from an uri string."""
-    
+
     # regular expression to extract single parts from an uri
     uri_pattern = re.compile(r'((?P<scheme>\w*)://)?(?P<location>.*)',
                              re.DOTALL | re.UNICODE)
-    
+
     def __init__(self, *args):
         """Accepts one or two arguments. If there is only one argument,
         it is parsed according to `uri_pattern`, if there are two arguments,
@@ -350,7 +351,7 @@ def sort_by_field(entries, field, descending=False, ignore_case=False):
 
 
 # functions to query field information
-def translate_field(field):  
+def translate_field(field):
     """:returns: A translation for `field`
     :raises ValueError: If `field` is not known"""
     try:
