@@ -260,7 +260,7 @@ class Entry(object, UserDict.DictMixin):
             return any((pattern in unicode(content) for content in
                         self.itervalues()))
         else:
-            return any((pattern.match(content) for content in
+            return any((pattern.search(content) for content in
                         self.itervalues()))
 
 
