@@ -60,7 +60,7 @@ class ConsoleEntryEditor(object):
         automatically, if a single entry is new"""
         self.print_help(new)
         self.fields = fields
-        
+
     def edit(self, entry):
         """Edits `entry`.
         :returns: The edited `entry`"""
@@ -86,7 +86,7 @@ class ConsoleEntryEditor(object):
         self.finalize_editor()
         return entry
 
-        
+
     try:
         # force raising a NameError if readline isn't present
         readline
@@ -114,20 +114,20 @@ class ConsoleEntryEditor(object):
                 self.oldvalue = None
             prompt = u'%s: ' % phonebook.translate_field(field)
             return raw_input(prompt)
-            
+
         def _input_hook(self):
             """displays the current value in the input line"""
             if self.oldvalue:
                 readline.insert_text(self.oldvalue)
                 readline.redisplay()
-        
+
     except NameError:
 
         # don't do anything
         def initialize_editor(self):
             pass
         finalize_editor = initialize_editor
-        
+
         def print_help(self, new):
             """Print a little editing help"""
             if new:
@@ -152,7 +152,7 @@ class ConsoleEntryEditor(object):
                 prompt = prompt % (phonebook.translate_field(field),
                                    oldvalue)
             return raw_input(prompt)
-            
+
 
 # output and utility functions
 def print_short_list(entries):
@@ -161,7 +161,6 @@ def print_short_list(entries):
     for entry in entries:
         print entry
 
-
 def print_long_list(entries):
     """Prints every single entry in `entries` in full detail.
     :param sortby: The field to sort by
@@ -169,7 +168,6 @@ def print_long_list(entries):
     for entry in entries:
         print '-'*20
         print entry.prettify()
-
 
 def print_table(entries, fields):
     """Prints `entries` as a table.
@@ -236,18 +234,17 @@ class ConsoleIFace(object):
     def _find_entries(self, options, *args):
         """Finds entries according to command line arguments"""
         entries = self.phonebook
-        if args:
-            patterns = args
-            if options.regexp:
-                flags = re.UNICODE
-                if options.ignore_case:
-                    flags |= re.IGNORECASE
-                patterns = (re.compile(pat, flags) for pat in patterns)
-            # FIXME: implement options.ignore_case for non-re patterns
-            entries = []
-            for pat in patterns:
-                entries.extend(self.phonebook.find_all(pat,
-                                                       *options.fields))
+        if not args:
+            return entries
+
+        patterns = args
+        flags = re.UNICODE
+        if options.ignore_case:
+            flags |= re.IGNORECASE
+        patterns = (re.compile(pat, flags) for pat in patterns)
+        entries = []
+        for pat in patterns:
+            entries.extend(self.phonebook.find_all(pat, *options.fields))
         # remove double entries
         return list(set(entries))
 
@@ -259,9 +256,9 @@ class ConsoleIFace(object):
                                         # the field to sort by
                                        options.sortby[0],
                                        # ascending or descending
-                                       options.sortby[1], 
+                                       options.sortby[1],
                                        options.ignore_case)
-        
+
 
     ## COMMAND FUNCTIONS
 
@@ -279,7 +276,7 @@ class ConsoleIFace(object):
     #   If --foo requires arguments, set the keyword argument 'args' to
     #   'required'. If it must not have any arguments, set it to 'no'.
     #   The default is 'optional'. Command options *must* always invoke the
-    #   callback cb_cmd_opt! 
+    #   callback cb_cmd_opt!
     # - If --foo should support options, add the options to the
     #   local_options list. To make these options appear along with the
     #   command help, add the keyword argument "options" to the command
@@ -336,7 +333,7 @@ class ConsoleIFace(object):
 ##                     # enable auto-generation of index
 ##                     entry.index = None
 ##                     self.phonebook.add(entry)
-##         self.phonebook.save()      
+##         self.phonebook.save()
 
     def _cmd_table(self, options, *args):
         """Print a table"""
@@ -380,7 +377,7 @@ class ConsoleIFace(object):
             if resp.lower() == 'y':
                 self.phonebook.remove(entry)
         self.phonebook.save()
-        
+
     ## COMMAND SUPPORT FUNCTIONS
 
     def _get_cmd_function(self, arg):
@@ -410,16 +407,14 @@ class ConsoleIFace(object):
     command_options = [
         # command options
         make_option('--list', action='command',
-                    options=['--sort-by', '--ignore-case', '--regexp',
-                             '--fields'],
+                    options=('--sort-by', '--ignore-case', '--fields'),
                     help=_('print a short list of the specified entries')),
         make_option('--table', action='command',
                     help=_('print a table with the specified entries.'),
-                    options=['--output', '--sort-by', '--ignore-case',
-                             '--regexp', '--fields']),
+                    options=('--output', '--sort-by', '--ignore-case',
+                             '--fields')),
         make_option('--show', action='command',
-                    options=['--sort-by', '--ignore-case', '--regexp',
-                             '--fields'],
+                    options=('--sort-by', '--ignore-case', '--fields'),
                     help=_('show the specified entries')),
         make_option('--create', action='command', metavar=_('number'),
                     help=_('create the specified number of new entries')),
@@ -435,12 +430,6 @@ class ConsoleIFace(object):
                     metavar=_('files'))]
 
     search_options = [
-        # These options tune the searching behaviour
-        make_option('-r', '--regexp', action='store_true', dest='regexp',
-                    help=_('enable regular expressions. tel uses the '
-                           'Python-syntax. You can find an overview at the '
-                           'following URL: '
-                           'http://docs.python.org/lib/re-syntax.html')),
         make_option('-i', '--ignore-case', action='store_true',
                     dest='ignore_case',
                     help=_('ignore case, when searching or sorting. The '
@@ -464,7 +453,7 @@ class ConsoleIFace(object):
                            'sorting order is descending. The default is '
                            'ascending, if no prefix is used.')),
         make_option('-o', '--output', action='store', dest='output',
-                    type='field_list', metavar=_('fields'), 
+                    type='field_list', metavar=_('fields'),
                     help=_('specify the fields to show. '
                            'See --search option for syntax'))
         ]
@@ -499,20 +488,20 @@ class ConsoleIFace(object):
                  'you use them with other commands, they are just ignored.')
         group = parser.add_option_group(_('Special options'), desc)
         group.add_options(self.local_options)
-            
+
         parser.set_defaults(**self.defaults)
         (options, args) = parser.parse_args()
 
         if not hasattr(options, 'command'):
             parser.error(_('Please specify a command'))
-        
+
         if options.args == 'required' and not args:
             msg = _('The command %s need arguments')
             parser.error(msg % options.command)
         elif options.args == 'no' and args:
             msg = _('The command %s doesn\'t take any arguments')
             parser.error(msg % options.command)
-        
+
         # get the command function
         options.command_function = self._get_cmd_function(options.command)
         return (options, args)
