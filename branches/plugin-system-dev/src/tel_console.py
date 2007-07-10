@@ -169,7 +169,7 @@ def print_long_list(entries):
         print '-'*20
         print entry.prettify()
 
-def print_table(entries, fields):
+def print_entries_table(entries, fields):
     """Prints `entries` as a table.
     :param fields: Fields to include in the table"""
     print
@@ -195,6 +195,21 @@ def print_table(entries, fields):
         row = itertools.imap(unicode.ljust, row, column_widths)
         row = u'| %s |' % u' | '.join(row)
         print row
+
+
+def print_simple_table(headline, items):
+    """Prints a simple table with `headline` and `items`"""
+    column_widths = map(len, headline)
+    for item in items:
+        column_widths = map(max, map(len, item), column_widths)
+    headline = itertools.imap(unicode.center, headline, column_widths)
+    headline = ' %s' % u' - '.join(headline)
+    print headline
+    # a separator
+    print u'-' * (column_widths[0] + column_widths[1] + 5)
+    for item in items:
+        item = itertools.imap(unicode.ljust, item, column_widths)
+        print ' %s' % u' - '.join(item)
 
 
 def yes_no_question(question):
@@ -338,7 +353,7 @@ class ConsoleIFace(object):
     def _cmd_table(self, options, *args):
         """Print a table"""
         entries = self._get_entries_from_options(options, *args)
-        print_table(entries, options.output)
+        print_entries_table(entries, options.output)
 
     def _cmd_list(self, options, *args):
         """Print a short list of entries"""
@@ -378,6 +393,54 @@ class ConsoleIFace(object):
                 self.phonebook.remove(entry)
         self.phonebook.save()
 
+    def _cmd_help_fields(self, options, *args):
+        if not args:
+            args = phonebook.FIELDS
+        try:
+            items = [(phonebook.translate_field(field), unicode(field))
+                     for field in args]
+        except phonebook.NoSuchField, e:
+            sys.exit(_('There is no field %s') % e.field)
+
+        headline = [_('Field'), _('Internal name')]
+        print_simple_table(headline, items)
+
+    def _cmd_help_backends(self, options, *args):
+        if len(args) > 1:
+            sys.exit(_('Please specifiy only one backend'))
+        from tel import backendmanager
+        manager = backendmanager.manager()
+        if not args:
+            items = [(unicode(backend.__name__),
+                      backend.__short_description__)
+                     for backend in manager.itervalues()]
+            headline = [_('Backend name'), _('Description')]
+            print_simple_table(headline, items)
+        else:
+            try:
+                # print complete description for a single backend
+                backend = manager[args[0]]
+            except KeyError, e:
+                sys.exit(e)
+            fields = backend.__phonebook_class__.supported_fields()
+            wrap = textwrap.TextWrapper(79)
+            info = {'name': backend.__name__,
+                    'shortdesc': wrap.fill(backend.__short_description__),
+                    'longdesc': wrap.fill(backend.__long_description__),
+                    'fields': wrap.fill(', '.join(fields))
+                    }
+            print _("""
+%(name)s - %(shortdesc)s
+------------
+
+Supported fields:
+%(fields)s
+
+------------
+
+%(longdesc)s""") % info
+
+
     ## COMMAND SUPPORT FUNCTIONS
 
     def _get_cmd_function(self, arg):
@@ -402,7 +465,8 @@ class ConsoleIFace(object):
     global_options = [
         # These options tune the behaviour of all commands
         make_option('-f', '--file', action='store', dest='file',
-                    metavar=_('file'), help=_('use FILE as phone book'))]
+                    metavar=_('file'), help=_('use FILE as phone book')),
+        ]
 
     command_options = [
         # command options
@@ -467,6 +531,10 @@ class ConsoleIFace(object):
                                      authors=config.authors,
                                      license=config.license,
                                      copyright=config.copyright)
+        parser.add_option('--help-backends', action='command',
+                          args='optional', metavar=_('backends'))
+        parser.add_option('--help-fields', action='command',
+                          args='optional', metavar=_('fields'))
         # command options
         desc = _('Commands to modify the phone book and to search or '
                  'print entries. Only one of these options may be '
@@ -510,6 +578,7 @@ class ConsoleIFace(object):
         """Starts the interface"""
         try:
             (options, args) = self._parse_args()
+            args = [arg.decode(sys.getfilesystemencoding()) for arg in args]
             self.phonebook = phonebook.phonebook_open(options.file)
             self.phonebook.load()
             options.command_function(options, *args)
