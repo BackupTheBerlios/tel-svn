@@ -66,6 +66,13 @@ _field_information = {
 }
 
 
+class NoSuchField(Exception):
+    """Raised on access to invalid fields"""
+    def __init__(self, field):
+        self.field = field
+        super(Exception, self).__init__(_('No such field: %s') % field)
+
+
 class Phonebook(object):
     """Base class for all phonebook classes defined by backends.
 
@@ -109,7 +116,7 @@ class Phonebook(object):
                 e.parent = self
         else:
             entry.parent = self
-        self._entries[key] = entry
+        self._entries[index] = entry
 
     def __contains__(self, entry):
         return entry in self._entries
@@ -152,12 +159,16 @@ class Phonebook(object):
             raise ValueError(u'No fields specified')
         return [entry for entry in self if entry.matches(pattern, *fields)]
 
-    def supported_fields(self):
+    @classmethod
+    def supported_fields(cls):
         """Returns a list of all supported fields
 
         Basically it just inteprets the fields attribute.
-        If this attribute is None, then it returns FIELDS"""
-        return self.fields or FIELDS
+        If this attribute is None, then it returns FIELDS.
+
+        This is a classmethod, as this information is shared
+        across all instances of this class."""
+        return cls.fields or FIELDS
 
 
 class Entry(object, UserDict.DictMixin):
@@ -186,7 +197,7 @@ class Entry(object, UserDict.DictMixin):
 
     def __getitem__(self, field):
         if field not in FIELDS:
-            raise KeyError(u'Invalid field %s' % field)
+            raise NoSuchField(field)
         return self.fields[field]
 
     def __unicode__(self):
@@ -250,7 +261,7 @@ class Entry(object, UserDict.DictMixin):
         operator. If pattern is a compiled regular expression, it will be
         matched against the contents of all fields."""
         if callable(pattern):
-            return any((pattern(field) for field in fields))
+            return any((pattern(field, self[field]) for field in fields))
 
         # if fields are empty raise ValueError
         if not fields:
@@ -339,8 +350,10 @@ def phonebook_open(uri):
         raise IOError(_(u'Unknown backend %s') % uri.scheme)
     return backend.__phonebook_class__(uri)
 
-# sorting shortcut
-def sort_by_field(entries, field, descending=False, ignore_case=False):
+
+# shortcut to sort entry iterables by a certain field
+# it's just an easy wrapper around the sorted builtin, no big thing
+def sort_by_field(print_entries_table, field, descending=False, ignore_case=False):
     """Returns a sorted list of entries in this phonebook"""
     def keyfunc(entry):
         value = entry[field]
@@ -357,7 +370,7 @@ def translate_field(field):
     try:
         return _field_information[field][0]
     except KeyError:
-        raise ValueError(u'There is no field %s' % field)
+        raise NoSuchField(field)
 
 
 def field_type(field):
@@ -366,7 +379,4 @@ def field_type(field):
     try:
         return _field_information[field][1]
     except KeyError:
-        raise ValueError(u'There is no field %s' % field)
-
-
-
+        raise NoSuchField(field)
