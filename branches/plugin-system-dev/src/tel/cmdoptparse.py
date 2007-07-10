@@ -99,8 +99,7 @@ class CommandOption(Option):
     TYPES = Option.TYPES[:]
     TYPES += ('field_list', 'field')
     ATTRS += ['args', 'options']
-    ACTIONS += ('copyright', 'authors', 'license', 'command',
-                'print_fields')
+    ACTIONS += ('copyright', 'authors', 'license', 'command')
 
     def _check_attrs(self):
         if self.action == 'command':
@@ -168,9 +167,6 @@ class CommandOption(Option):
         elif action == 'authors':
             parser.print_authors()
             parser.exit()
-        elif action == 'print_fields':
-            parser.print_fields()
-            parser.exit()
         elif action == 'command':
             if hasattr(parser.values, 'command'):
                 # raise error if two exlusive commands appeared
@@ -222,8 +218,6 @@ class CommandOptionParser(OptionParser):
         if self.copyright:
             self.add_option('--copyright', action='copyright',
                             help=_('show copyright information and exit'))
-        self.add_option('--print-fields', action='print_fields',
-                        help=_('print fields and exit'))
 
     def error(self, msg):
         """Print a usage message incorporating 'msg' to stderr and exit."""
@@ -254,23 +248,6 @@ class CommandOptionParser(OptionParser):
         else:
             return ''
 
-    def get_fields(self):
-        """Return a table of field names"""
-        items = [(phonebook.translate_field(field), field) for field in
-                 phonebook.FIELDS]
-        headline = [_('Field'), _('Internal name')]
-        column_widths = map(len, headline)
-        for item in items:
-            column_widths = map(max, map(len, item), column_widths)
-        headline = itertools.imap(unicode.center, headline, column_widths)
-        headline = u' - '.join(headline)
-        separator = u'-' * (column_widths[0] + column_widths[1] + 5)
-        table = [u' '+headline, separator]
-        for item in items:
-            item = itertools.imap(unicode.ljust, item, column_widths)
-            table.append(' '+u' - '.join(item))
-        return '\n'.join(table)
-
     def add_option_group(self, *args, **kwargs):
         if isinstance(args[0], basestring):
             group = OptionGroup(self, *args, **kwargs)
@@ -292,8 +269,4 @@ class CommandOptionParser(OptionParser):
         """Print copyright information to `stream`"""
         if self.copyright:
             print >> stream, self.get_copyright()
-
-    def print_fields(self, stream=None):
-        """Print field information to `stream`"""
-        print >> stream, self.get_fields()
 
