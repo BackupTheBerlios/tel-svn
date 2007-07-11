@@ -26,12 +26,13 @@ DEALINGS IN THE SOFTWARE."""
 """executable script, which also contains global configuration"""
 
 __revision__ = '$Id$'
-__version__ = '0.1.7'
+__version__ = '0.1.7.1'
 __authors__ = ['Sebastian Wiesner <basti.wiesner@gmx.net>',
                'Remo Wenger <potrmwn@gmail.com>']
 
 import os
 import sys
+import gettext
 
 
 class _Config:
@@ -43,6 +44,9 @@ class _Config:
     CONFIG_DIR = os.path.expanduser(os.path.join('~', '.tel'))
     # the default phonebook
     DEF_FILENAME = os.path.join(CONFIG_DIR, 'phonebook.csv')
+    TRANSLATION = gettext.translation('tel', MESSAGES, fallback=True)
+    STDOUT_ENCODING = sys.stdout.encoding or sys.getfilesystemencoding()
+    STDIN_ENCODING = sys.stdout.encoding or sys.getfilesystemencoding()
 
 
 CONFIG = _Config()
