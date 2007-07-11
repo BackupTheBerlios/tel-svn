@@ -31,6 +31,17 @@ import os
 import csv
 
 from tel.phonebook import Entry, Phonebook
+from tel import config
+
+
+_ = config.translation.ugettext
+
+
+__long_description__ = _("""\
+A simple backend, which uses classic excel-style csv (comma separated
+values) files to store entries.
+""")
+__short_description__ = _('A csv-based backend')
 
 
 # Modules, that don't define this function are never loaded for
