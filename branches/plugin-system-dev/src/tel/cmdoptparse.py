@@ -41,6 +41,9 @@ from optparse import (Option, OptionError, OptionParser, OptionValueError,
 from tel import phonebook
 from tel import config
 
+# encoding aware standard stream
+from tel.encodinghelper import stdout, stderr
+
 # make optparse use our improved gettext ;)
 optparse._ = _ = config.translation.ugettext
 
@@ -159,13 +162,16 @@ class CommandOption(Option):
     def take_action(self, action, dest, opt, value, values, parser):
         """Executes `action`"""
         if action == 'license':
-            parser.print_license()
+            parser.print_license(stdout)
             parser.exit()
         elif action == 'copyright':
-            parser.print_copyright()
+            parser.print_copyright(stdout)
             parser.exit()
         elif action == 'authors':
-            parser.print_authors()
+            parser.print_authors(stdout)
+            parser.exit()
+        elif action == 'help':
+            parser.print_help(stdout)
             parser.exit()
         elif action == 'command':
             if hasattr(parser.values, 'command'):
@@ -184,7 +190,7 @@ class CommandOption(Option):
 make_option = CommandOption
 
 
-# FIXME: could verify options and args keyword for commands
+# FIXME: we could verify options and args keyword for commands
 
 class CommandOptionParser(OptionParser):
     """An option parser, which supports things like command options"""
@@ -222,7 +228,7 @@ class CommandOptionParser(OptionParser):
     def error(self, msg):
         """Print a usage message incorporating 'msg' to stderr and exit."""
         # from OptionParser, 'cause i18n is missing for message
-        self.print_usage(sys.stderr)
+        self.print_usage(stderr)
         pattern = _('%(prog)s: error: %(message)s\n')
         self.exit(2, pattern % {'prog': self.get_prog_name(),
                                 'message': msg})
@@ -269,4 +275,3 @@ class CommandOptionParser(OptionParser):
         """Print copyright information to `stream`"""
         if self.copyright:
             print >> stream, self.get_copyright()
-

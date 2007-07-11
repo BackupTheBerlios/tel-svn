@@ -30,19 +30,22 @@ import itertools
 import textwrap
 import re
 
+# tel modules
+from tel import phonebook, config
+from tel.cmdoptparse import CommandOptionParser, make_option
+# standard streams and builtins, which handle encodings transparently
+from tel.encodinghelper import stdout, stderr, raw_input
+from tel.encodinghelper import stdout_encoding
+
+_ = config.translation.ugettext
+
+
 try:
-    # more comfortable line editing
     import readline
 except ImportError:
-    pass
-
-# tel modules
-from tel import phonebook, encodinghelper, config
-from tel.cmdoptparse import CommandOptionParser, make_option
-
-
-encodinghelper.redirect_std_streams(True)
-_ = config.translation.ugettext
+    msg = _('readline wasn\'t found, text editing will be rather '
+            'uncomfortable')
+    print >> stderr, msg
 
 
 class ConsoleEntryEditor(object):
@@ -67,9 +70,9 @@ class ConsoleEntryEditor(object):
         new = entry.parent is None
         if new:
             # entry is new
-            print self.NEW_MSG
+            print >> stdout, self.NEW_MSG
         else:
-            print self.EDIT_MSG % entry
+            print >> stdout, self.EDIT_MSG % entry
 
         self.initialize_editor()
         for field in self.fields:
@@ -82,7 +85,7 @@ class ConsoleEntryEditor(object):
                 except ValueError:
                     msg = _('You entered an invalid value for the field'
                             '"%s"!')
-                    print msg % phonebook.translate_field(field)
+                    print >> stdout, msg % phonebook.translate_field(field)
         self.finalize_editor()
         return entry
 
@@ -93,7 +96,7 @@ class ConsoleEntryEditor(object):
 
         # input methods supporting readline
         def print_help(self, new):
-            print _('Please fill the following fields.')
+            print >> stdout, _('Please fill the following fields.')
 
         def initialize_editor(self):
             """Initialize the editor"""
@@ -118,12 +121,13 @@ class ConsoleEntryEditor(object):
         def _input_hook(self):
             """displays the current value in the input line"""
             if self.oldvalue:
-                readline.insert_text(self.oldvalue)
+                text = self.oldvalue.encode(stdout_encoding)
+                readline.insert_text(text)
                 readline.redisplay()
 
     except NameError:
-
         # don't do anything
+
         def initialize_editor(self):
             pass
         finalize_editor = initialize_editor
@@ -137,7 +141,7 @@ class ConsoleEntryEditor(object):
                          'value is shown in square brackets. NOTE: The '
                          'current value is not preserved. You have to '
                          're-enter every value!')
-                print textwrap.fill(help, 79)
+            print >> stdout, textwrap.fill(help, 79)
 
         def get_input(self, field, oldvalue, new):
             """Gets a value from command line input.
@@ -159,15 +163,15 @@ def print_short_list(entries):
     """Prints all `entries` in a short format."""
     print
     for entry in entries:
-        print entry
+        print >> stdout, entry
 
 def print_long_list(entries):
     """Prints every single entry in `entries` in full detail.
     :param sortby: The field to sort by
     :param asc: True, if sorting order is descending"""
     for entry in entries:
-        print '-'*20
-        print entry.prettify()
+        print >> stdout, '-'*20
+        print >> stdout, entry.prettify()
 
 def print_entries_table(entries, fields):
     """Prints `entries` as a table.
@@ -189,12 +193,12 @@ def print_entries_table(entries, fields):
     headline = u'| %s |' % u' | '.join(headline)
     separator = (u'-'*(width+2) for width in column_widths)
     separator = u'|%s|' % u'+'.join(separator)
-    print headline
-    print separator
+    print >> stdout, headline
+    print >> stdout, separator
     for row in table_body:
         row = itertools.imap(unicode.ljust, row, column_widths)
         row = u'| %s |' % u' | '.join(row)
-        print row
+        print >> stdout, row
 
 
 def print_simple_table(headline, items):
@@ -204,12 +208,12 @@ def print_simple_table(headline, items):
         column_widths = map(max, map(len, item), column_widths)
     headline = itertools.imap(unicode.center, headline, column_widths)
     headline = ' %s' % u' - '.join(headline)
-    print headline
+    print >> stdout, headline
     # a separator
-    print u'-' * (column_widths[0] + column_widths[1] + 5)
+    print >> stdout, u'-' * (column_widths[0] + column_widths[1] + 5)
     for item in items:
         item = itertools.imap(unicode.ljust, item, column_widths)
-        print ' %s' % u' - '.join(item)
+        print >> stdout, ' %s' % u' - '.join(item)
 
 
 def yes_no_question(question):
@@ -239,12 +243,12 @@ class ConsoleIFace(object):
                 question = _('Do you really want to save an emtpy entry?')
                 if not yes_no_question(question):
                     # abort without saving
-                    print _('The entry is not saved')
+                    print >> stdout, _('The entry is not saved')
                     return
             if entry.parent is None:
                 self.phonebook.add(entry)
             self.phonebook.save()
-            print _('The entry was saved')
+            print >> stdout, _('The entry was saved')
 
     def _find_entries(self, options, *args):
         """Finds entries according to command line arguments"""
@@ -429,7 +433,7 @@ class ConsoleIFace(object):
                     'longdesc': wrap.fill(backend.__long_description__),
                     'fields': wrap.fill(', '.join(fields))
                     }
-            print _("""
+            print >> stdout, _("""
 %(name)s - %(shortdesc)s
 ------------
 

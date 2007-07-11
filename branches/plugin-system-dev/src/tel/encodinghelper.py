@@ -73,35 +73,16 @@ stdout_encoding = _get_encoding(sys.stdout)
 stderr_encoding = _get_encoding(sys.stderr)
 stdin_encoding = _get_encoding(sys.stdin)
 
+stdout = codecs.getwriter(stdout_encoding)(sys.stdout)
+stderr = codecs.getwriter(stderr_encoding)(sys.stderr)
+stdin = codecs.getreader(stdin_encoding)(sys.stdin)
 
-_no_encoding_raw_input = raw_input
+# preserve old raw_input in this module namespace
+no_encoding_raw_input = raw_input
 
-def raw_input(prompt=''):
-    """A raw input function, that returns unicode objects decoded according
-    to stdin_encoding"""
-    value = _no_encoding_raw_input(prompt)
-    return value.decode(stdin_encoding)
-
-
-def redirect_std_streams(replace_raw_input=True):
-    """Redirects output stream.
-
-    **Note**: sys.stdin isn't currently redirected, as this breaks with
-    raw_input. As a workaround you can set `replace_raw_input` to True,
-    which will replace raw_input with an implementation, that returns
-    unicode strings.
-
-    The original raw_input function will still be available from this module
-    as _no_encoding_raw_input"""
-    # Only execute _outside_ idle
-    if "idlelib" not in sys.modules:
-        # redirect standard output stream
-        if stdout_encoding:
-            sys.stdout = codecs.getwriter(stdout_encoding)(sys.stdout)
-        if stderr_encoding:
-            sys.stderr = codecs.getwriter(stderr_encoding)(sys.stderr)
-        ## if stdin_encoding:
-        ##     sys.stdin = codecs.getreader(stdin_encoding)(sys.stdin)
-        if replace_raw_input:
-            import __builtin__
-            __builtin__.__dict__['raw_input'] = raw_input
+def raw_input(prompt=None):
+    """A raw_input variant, which is encoding aware"""
+    if prompt:
+        prompt = prompt.encode(stdout_encoding)
+    retval = no_encoding_raw_input(prompt)
+    return retval.decode(stdin_encoding)
