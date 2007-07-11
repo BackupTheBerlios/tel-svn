@@ -141,7 +141,7 @@ class Messages(Command):
         target = os.path.join(PO_DIRECTORY, name)
         cmd = [self.xgettext_exe, '-o', target]
         cmd.extend(self.distribution.po)
-        self.spawn(cmd) 
+        self.spawn(cmd)
 
         for po_file in glob(os.path.join(PO_DIRECTORY, '*.po')):
             cmd = [self.msgmerge_exe, '-q', '-o', po_file, po_file, target]
@@ -166,7 +166,7 @@ class BuildMessages(Command):
     def run(self):
         self.announce('Building po catalogs...')
         self.mkpath(self.build_dir)
-        
+
         po_files = os.path.join('po', '*.po')
         po_files = glob(po_files)
         for po_file in po_files:
@@ -206,7 +206,7 @@ class Configure(Command):
         stream.write(substituted)
         stream.close()
 
-    
+
     def run(self):
         self.announce('Configuring files...')
         self.mkpath(self.build_dir)
@@ -219,7 +219,7 @@ class Configure(Command):
             template = self.read_template(fso)
             self.write_substituted(target, template, vars(install))
             self.announce('%s configured' % fso)
-            
+
 
 class AppBuild(build):
     user_options = build.user_options[:]
@@ -232,7 +232,7 @@ class AppBuild(build):
     sub_commands.extend([
         ('build_messages', has_messages),
         ('configure', is_configurable)])
-                         
+
     def initialize_options(self):
         self.build_messages = None
         self.build_configure = None
@@ -243,18 +243,18 @@ class AppBuild(build):
         if self.build_messages is None:
             self.build_messages = os.path.join(self.build_base,
                                                'po')
-            
+
         if self.build_configure is None:
             self.build_configure = os.path.join(self.build_base,
                                                 'config')
-            
+
         if self.msgfmt_exe is None:
             self.announce('Searching msgfmt...')
             self.msgfmt_exe = spawn.find_executable('msgfmt')
             if self.msgfmt_exe is None:
                 raise SystemExit('Couldn\'t find "msgfmt".')
             self.announce('  ...msgfmt found at %s' % self.msgfmt_exe)
-            
+
         build.finalize_options(self)
 
 
@@ -262,7 +262,7 @@ class InstallStuff(install_misc):
     """Base class for some install commands"""
     def mkpath (self, name, mode=0777):
         return dir_util.mkpath(name, mode, dry_run=self.dry_run)
-            
+
 
 class InstallMessages(InstallStuff):
     description = 'Installs message catalogs'
@@ -303,7 +303,7 @@ class InstallMessages(InstallStuff):
 
 class InstallAppModules(install_lib):
     description = 'Install python modules'
-    
+
     def finalize_options(self):
         self.set_undefined_options('install',
                                    ('install_app_modules', 'install_dir'))
@@ -329,7 +329,7 @@ class InstallAppModules(install_lib):
                 files.extend(filelist.findall(item))
             else:
                 self.warn('Unable to find %s...' % item)
-                
+
         self.byte_compile(self.outfiles)
         self.outfiles.extend(self._bytecode_filenames(self.outfiles))
 
@@ -338,11 +338,11 @@ class InstallAppModules(install_lib):
 
     def mkpath (self, name, mode=0777):
         return dir_util.mkpath(name, mode, dry_run=self.dry_run)
-    
+
 
 class InstallAppData(install_data):
     description = 'Install application data'
-    
+
     def initialize_options(self):
         install_data.initialize_options(self)
 
@@ -376,7 +376,7 @@ class InstallAppData(install_data):
                     target_dir = util.change_root(self.root, target_dir)
                 else:
                     target_dir = os.path.join(self.install_dir, target_dir)
-            
+
                 for fso in item[1]:
                     if os.path.isdir(fso):
                         files = self.copy_tree(fso, target_dir)
@@ -399,7 +399,7 @@ class InstallLinks(InstallStuff):
 
     def finalize_options(self):
         self._install_dir_from('install_links')
-    
+
     def run(self):
         appmodules = self.get_finalized_command('install_app_modules')
 
@@ -421,7 +421,7 @@ class InstallLinks(InstallStuff):
                     os.remove(dest)
                 os.symlink(target, dest)
                 self.outfiles.append(dest)
-                           
+
 
 class AppInstall(install):
     user_options = install.user_options[:]
@@ -462,7 +462,7 @@ class AppInstall(install):
         if self.install_app_modules is None:
             self.install_app_modules = os.path.join(self.install_data,
                                                     'lib', name)
-                                                    
+
 
         if self.install_links is None:
             self.install_links = self.install_scripts
@@ -500,7 +500,7 @@ class Uninstall(Command):
         # the files
         files.sort()
         files.reverse()
-        
+
         for fso in files:
             fso = fso.strip()
             self.announce('Removing %s...')
@@ -537,6 +537,6 @@ class AppClean(clean):
                 if os.path.exists(directory):
                     dir_util.remove_tree(directory)
             else:
-                self.warn("'%s' does not exist -- can't clean it",
-                          self.directory)
+                self.warn("'%s' does not exist -- can't clean it" %
+                          directory)
         clean.run(self)
