@@ -70,6 +70,7 @@ def _get_encoding(outputstream):
 
 
 stdout_encoding = _get_encoding(sys.stdout)
+stderr_encoding = _get_encoding(sys.stderr)
 stdin_encoding = _get_encoding(sys.stdin)
 
 
@@ -97,9 +98,10 @@ def redirect_std_streams(replace_raw_input=True):
         # redirect standard output stream
         if stdout_encoding:
             sys.stdout = codecs.getwriter(stdout_encoding)(sys.stdout)
+        if stderr_encoding:
+            sys.stderr = codecs.getwriter(stderr_encoding)(sys.stderr)
         ## if stdin_encoding:
         ##     sys.stdin = codecs.getreader(stdin_encoding)(sys.stdin)
         if replace_raw_input:
             import __builtin__
             __builtin__.__dict__['raw_input'] = raw_input
-
