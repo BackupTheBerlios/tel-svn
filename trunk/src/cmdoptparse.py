@@ -40,15 +40,10 @@ import tel
 import phonebook
 
 
-_STDOUT_ENCODING = sys.stdout.encoding or sys.getfilesystemencoding()
 
-try:
-    _TRANSLATION = gettext.translation('tel', tel.CONFIG.MESSAGES)
-    def _(msg):
-        return _TRANSLATION.ugettext(msg).encode(_STDOUT_ENCODING)
-except IOError:
-    def _(msg):
-        return unicode(msg).encode(_STDOUT_ENCODING)
+def _(msg):
+    msg = tel.CONFIG.TRANSLATION.ugettext(msg)
+    return msg.encode(tel.CONFIG.STDOUT_ENCODING)
 
 # make optparse use our improved gettext ;)
 optparse._ = _
@@ -68,7 +63,7 @@ class CommandHelpFormatter(IndentedHelpFormatter):
             # make sure we have the correct length
             # (and are not counting unicode double-bytes twice, which would
             # break length calculation e.g. for german umlauts
-            msg_len = len(msg.decode(_STDOUT_ENCODING))
+            msg_len = len(msg.decode(tel.CONFIG.STDOUT_ENCODING))
             # build the complete options string and wrap it to width of the
             # help
             opt_str = ''.join([msg, options])
@@ -80,8 +75,8 @@ class CommandHelpFormatter(IndentedHelpFormatter):
                                     subsequent_indent=subsequent_indent)
             result += opt_str + '\n'
         return result
-        
-    
+
+
     def format_option_strings(self, option):
         """Extend option string formatting to support arguments for
         commands"""
@@ -94,7 +89,7 @@ class CommandHelpFormatter(IndentedHelpFormatter):
             return ', '.join(lopts)
         else:
             return IndentedHelpFormatter.format_option_strings(self, option)
-    
+
 
 class CommandOption(Option):
     """This class supported two additional option attributes
@@ -165,7 +160,7 @@ class CommandOption(Option):
             raise OptionValueError('There is no field %s' % fieldname)
         else:
             return (fieldname, value.startswith('-'))
-            
+
     CHECK_METHODS += [_check_attrs, _check_options]
     TYPE_CHECKER['field_list'] = _check_field_list
     TYPE_CHECKER['field'] = _check_field
@@ -199,7 +194,7 @@ class CommandOption(Option):
 
 
 make_option = CommandOption
-    
+
 
 #FIXME: we could verify options and args keyword for commands
 
@@ -215,15 +210,15 @@ class CommandOptionParser(OptionParser):
         :param authors: list or tuple of authors"""
         if not formatter:
             formatter = CommandHelpFormatter()
-            
+
         self.authors = authors
         self.license = license
         self.copyright = copyright
-        
+
         OptionParser.__init__(self, usage, option_list, option_class,
                               version, conflict_handler, description,
                               formatter, add_help_option, prog)
-        
+
     def _populate_option_list(self, option_list, add_help=True):
         OptionParser._populate_option_list(self, option_list, add_help)
         if self.authors:
@@ -303,4 +298,8 @@ class CommandOptionParser(OptionParser):
     def print_fields(self, stream=None):
         """Print field information to `stream`"""
         print >> stream, self.get_fields()
-                   
+
+    def print_help(self, stream=None):
+        """Print help information to `stream`"""
+        # ugly fix to come around encoding issues in 2.5
+        print >> stream, self.format_help()
