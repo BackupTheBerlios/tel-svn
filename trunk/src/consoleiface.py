@@ -41,30 +41,22 @@ import phonebook
 from cmdoptparse import CommandOptionParser, make_option
 
 
-_STDOUT_ENCODING = sys.stdout.encoding or sys.getfilesystemencoding()
-_STDIN_ENCODING = sys.stdin.encoding or sys.getfilesystemencoding()
 
-
-try:
-    _TRANSLATION = gettext.translation('tel', tel.CONFIG.MESSAGES)
-    def _(msg):
-        return _TRANSLATION.ugettext(msg).encode(_STDOUT_ENCODING)
-except IOError:
-    def _(msg):
-        return unicode(msg).encode(_STDOUT_ENCODING)
-
+def _(msg):
+    msg = tel.CONFIG.TRANSLATION.ugettext(msg)
+    return msg.encode(tel.CONFIG.STDOUT_ENCODING)
 
 def entry_repr(entry):
     """Returns a short representation of `entry` in appropriate encoding for
     console output"""
     msg = _('[%(index)s] %(firstname)s %(lastname)s') % entry
-    return msg.encode(_STDOUT_ENCODING)
+    return msg.encode(tel.CONFIG.STDOUT_ENCODING)
 
 
 def enc_tr_field(field):
     """Returns translation for `field` in appropriate encoding for console
     output. Should only be used, where absolutly necessary."""
-    return phonebook.translate_field(field).encode(_STDOUT_ENCODING)
+    return phonebook.translate_field(field).encode(tel.CONFIG.STDOUT_ENCODING)
 
 
 class ConsoleEntryEditor:
@@ -74,7 +66,7 @@ class ConsoleEntryEditor:
 
     EDIT_MSG = _('Editing entry "%s"...')
     NEW_MSG = _('Creating a new entry...')
-         
+
     def edit(self, entry=None):
         """Edits `entry`. If `entry` is none, a new entry is created.
         This method supports readline, if available.
@@ -94,7 +86,7 @@ class ConsoleEntryEditor:
             while True:
                 value = self.get_input(field, oldvalue, new)
                 value = value.strip()
-                value = value.decode(_STDIN_ENCODING)
+                value = value.decode(tel.CONFIG.STDIN_ENCODING)
                 try:
                     entry[field] = value
                     break
@@ -105,7 +97,7 @@ class ConsoleEntryEditor:
         self.finalize_editor()
         return entry
 
-        
+
     try:
         # force raising a NameError if readline isn't present
         readline
@@ -139,22 +131,23 @@ class ConsoleEntryEditor:
             else:
                 self.oldvalue = None
             prompt = '%s: ' % phonebook.translate_field(field)
-            prompt = prompt.encode(_STDOUT_ENCODING)
+            prompt = prompt.encode(tel.CONFIG.STDOUT_ENCODING)
             return raw_input(prompt)
-            
+
         def _input_hook(self):
             """displays the current value in the input line"""
             if self.oldvalue:
-                readline.insert_text(self.oldvalue.encode(_STDOUT_ENCODING))
+                text = self.oldvalue.encode(tel.CONFIG.STDOUT_ENCODING)
+                readline.insert_text(text)
                 readline.redisplay()
-        
+
     except NameError:
 
         # don't do anything
         def initialize_editor(*args, **kwargs):
             pass
         finalize_editor = initialize_editor
-        
+
         def print_help(self, new):
             """Print a little editing help"""
             if new:
@@ -181,9 +174,9 @@ class ConsoleEntryEditor:
                 prompt = '%s [%s]: '
                 prompt = prompt % (phonebook.translate_field(field),
                                    oldvalue)
-            prompt = prompt.encode(_STDOUT_ENCODING)
+            prompt = prompt.encode(tel.CONFIG.STDOUT_ENCODING)
             return raw_input(prompt)
-            
+
 
 class ConsoleIFace:
     """Provides a console interface to Tel"""
@@ -205,7 +198,7 @@ class ConsoleIFace:
         :param asc: True, if sorting order is descending"""
         for entry in entries:
             print '-'*20
-            print unicode(entry).encode(_STDOUT_ENCODING)
+            print unicode(entry).encode(tel.CONFIG.STDOUT_ENCODING)
 
     def print_table(self, entries, fields):
         """Prints `entries` as a table.
@@ -228,13 +221,13 @@ class ConsoleIFace:
         separator = map(lambda width: '-' * (width+2), column_widths)
         separator = '|%s|' % '|'.join(separator)
         # this adds two spaces add begin and and of the row
-        print headline.encode(_STDOUT_ENCODING)
-        print separator.encode(_STDOUT_ENCODING)
+        print headline.encode(tel.CONFIG.STDOUT_ENCODING)
+        print separator.encode(tel.CONFIG.STDOUT_ENCODING)
         for row in table_body:
             # FIXME: index should be right-justified
             row = map(unicode.ljust, row, column_widths)
             row = '| %s |' % ' | '.join(row)
-            print row.encode(_STDOUT_ENCODING)
+            print row.encode(tel.CONFIG.STDOUT_ENCODING)
 
     def edit_entry(self, entry=None):
         """Allows interactive editing of entries. If `entry` is None, a new
@@ -286,7 +279,7 @@ class ConsoleIFace:
                             # silenty ignore non-existing keys here
                             # this avoids page-long listings for typing
                             # mistakes like 5-100 instead of 5-10
-                            pass 
+                            pass
                 else:
                     index = int(arg)
                     try:
@@ -317,7 +310,7 @@ class ConsoleIFace:
     #   If --foo requires arguments, set the keyword argument 'args' to
     #   'required'. If it must not have any arguments, set it to 'no'.
     #   The default is 'optional'. Command options *must* always invoke the
-    #   callback cb_cmd_opt! 
+    #   callback cb_cmd_opt!
     # - If --foo should support options, add the options to the
     #   local_options list. To make these options appear along with the
     #   command help, add the keyword argument "options" to the command
@@ -403,7 +396,7 @@ class ConsoleIFace:
     def _cmd_show(self, options, *args):
         """Show a single entry"""
         if args:
-            entries = self.parse_indices(*args)            
+            entries = self.parse_indices(*args)
         else:
             entries = self.phonebook
         entries = phonebook.sort_entries_by_field(entries,
@@ -455,7 +448,7 @@ class ConsoleIFace:
             if resp.lower() == 'y':
                 self.phonebook.remove(entry)
         self.phonebook.save()
-        
+
     ## COMMAND SUPPORT FUNCTIONS
 
     def _get_cmd_function(self, arg):
@@ -517,7 +510,7 @@ class ConsoleIFace:
                            'following URL: '
                            'http://docs.python.org/lib/re-syntax.html')),
         make_option('-o', '--output', action='store', dest='output',
-                    type='field_list', metavar=_('fields'), 
+                    type='field_list', metavar=_('fields'),
                     help=_('specify the fields to show. Takes a '
                            'comma-separated list of internal names as '
                            'printed by --help-fields. Fields prefixed '
@@ -564,20 +557,20 @@ class ConsoleIFace:
                  'you use them with other commands, they are just ignored.')
         group = parser.add_option_group(_('Special options'), desc)
         group.add_options(self.local_options)
-            
+
         parser.set_defaults(**self.defaults)
         (options, args) = parser.parse_args()
 
         if not hasattr(options, 'command'):
             parser.error(_('Please specify a command'))
-        
+
         if options.args == 'required' and not args:
             msg = _('The command %s need arguments')
             parser.error(msg % options.command)
         elif options.args == 'no' and args:
             msg = _('The command %s doesn\'t take any arguments')
             parser.error(msg % options.command)
-        
+
         # get the command function
         options.command_function = self._get_cmd_function(options.command)
         return (options, args)

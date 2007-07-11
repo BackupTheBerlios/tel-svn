@@ -39,11 +39,8 @@ import UserDict
 
 import tel
 
-try:
-    _ = gettext.translation('tel', tel.CONFIG.MESSAGES).ugettext
-except IOError:
-    def _(msg):
-        return unicode(msg)
+
+_ = tel.CONFIG.TRANSLATION.ugettext
 
 
 # mainly important for table printing and field specifications
@@ -82,7 +79,7 @@ class Entry(UserDict.DictMixin):
 
     def _check_unicode(self, value):
         return unicode(value)
-        
+
     def _check_int(self, value):
         return int(value)
 
@@ -146,7 +143,7 @@ class Entry(UserDict.DictMixin):
             raise KeyError('Invalid field %s' % key)
         delattr(self, key)
 
-    # rest of mapping methods defined by DictMixin        
+    # rest of mapping methods defined by DictMixin
 
     def __setattr__(self, name, value):
         if name in FIELDS:
@@ -370,7 +367,7 @@ def sort_entries_by_field(entries, field, descending=False,
         if isinstance(value, basestring) and ignore_case:
             return value.lower()
         return value
-            
+
     return sorted(entries, key=keyfunc, reverse=descending)
 
 
@@ -381,4 +378,3 @@ def translate_field(field):
         return _TRANSLATIONS[field]
     except KeyError:
         raise ValueError('There is no field %s' % field)
-        
