@@ -353,7 +353,7 @@ def phonebook_open(uri):
 
 # shortcut to sort entry iterables by a certain field
 # it's just an easy wrapper around the sorted builtin, no big thing
-def sort_by_field(print_entries_table, field, descending=False, ignore_case=False):
+def sort_by_field(entries, field, descending=False, ignore_case=False):
     """Returns a sorted list of entries in this phonebook"""
     def keyfunc(entry):
         value = entry[field]
