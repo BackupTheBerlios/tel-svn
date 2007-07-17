@@ -49,7 +49,7 @@ FIELDS = ('title', 'firstname', 'lastname', 'street', 'postcode',
 # field, the second the type of the field
 # NOTE: You should never use this mapping directly. Instead use the
 # functions provided by this module
-_field_information = {
+_FIELD_INFORMATION = {
     'title': (_(u'Title'), unicode),
     'firstname': (_(u'First name'), unicode),
     'lastname': (_(u'Last name'), unicode),
@@ -70,7 +70,7 @@ class NoSuchField(Exception):
     """Raised on access to invalid fields"""
     def __init__(self, field):
         self.field = field
-        super(Exception, self).__init__(_('No such field: %s') % field)
+        Exception.__init__(self, _('No such field: %s') % field)
 
 
 class Phonebook(object):
@@ -153,11 +153,23 @@ class Phonebook(object):
 
         If the last form of invocation is used, *fields is ignored."""
         if callable(pattern):
-            return [entry for entry in self._entries if pattern(entry)]
+            return [entry for entry in self if pattern(entry)]
         # if fields are empty raise ValueError
         if not fields:
             raise ValueError(u'No fields specified')
-        return [entry for entry in self if entry.matches(pattern, *fields)]
+
+        entries = []
+        if isinstance(pattern, basestring):
+            # plain text comparison
+            for entry in self:
+                if any((unicode(entry[f]) == pattern for f in fields)):
+                    entries.append(entry)
+        else:
+            # regular expression search
+            for entry in self:
+                if any((pattern.search(unicode(entry[f])) for f in fields)):
+                    entries.append(entry)
+        return entries
 
     @classmethod
     def supported_fields(cls):
@@ -249,31 +261,6 @@ class Entry(object, UserDict.DictMixin):
         """Returns an iterator over key, value pairs"""
         return ((field, self[field]) for field in self)
 
-    def matches(self, pattern, *fields):
-        """Returns True, if any of `fields` matches the specified pattern.
-        If pattern is a callable object, it will be invoked for every field
-        with two arguments given: fieldname and content. If it returns True,
-        the entries is seen as matched. Note, that the function is not
-        garanteed to be invoked for every field. If a match occurs,
-        execution will be aborted.
-
-        If pattern is a plain string, it will be compared using the in
-        operator. If pattern is a compiled regular expression, it will be
-        matched against the contents of all fields."""
-        if callable(pattern):
-            return any((pattern(field, self[field]) for field in fields))
-
-        # if fields are empty raise ValueError
-        if not fields:
-            raise ValueError(u'No fields specified')
-
-        if isinstance(pattern, basestring):
-            return any((pattern == unicode(content) for content in
-                        self.itervalues()))
-        else:
-            return any((pattern.search(content) for content in
-                        self.itervalues()))
-
 
 class URI(object):
     """Encapsulates a phonebook uri.
@@ -355,12 +342,10 @@ def phonebook_open(uri):
 # it's just an easy wrapper around the sorted builtin, no big thing
 def sort_by_field(entries, field, descending=False, ignore_case=False):
     """Returns a sorted list of entries in this phonebook"""
-    def keyfunc(entry):
-        value = entry[field]
-        if isinstance(value, basestring) and ignore_case:
-            return value.lower()
-        return value
-    return sorted(entries, key=keyfunc, reverse=descending)
+    def field_getter(entry):
+        value = unicode(entry[field])
+        return value.lower() if ignore_case else value
+    return sorted(entries, key=field_getter, reverse=descending)
 
 
 # functions to query field information
@@ -368,7 +353,7 @@ def translate_field(field):
     """:returns: A translation for `field`
     :raises ValueError: If `field` is not known"""
     try:
-        return _field_information[field][0]
+        return _FIELD_INFORMATION[field][0]
     except KeyError:
         raise NoSuchField(field)
 
@@ -377,6 +362,6 @@ def field_type(field):
     """Returns the type of `field`
     :raises ValueError: If `field` is not known"""
     try:
-        return _field_information[field][1]
+        return _FIELD_INFORMATION[field][1]
     except KeyError:
         raise NoSuchField(field)
