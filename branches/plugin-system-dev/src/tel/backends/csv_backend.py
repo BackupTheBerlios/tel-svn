@@ -29,6 +29,7 @@ __revision__ = '$Id$'
 
 import os
 import csv
+import errno
 
 from tel.phonebook import Entry, Phonebook
 from tel import config
@@ -58,17 +59,22 @@ class CsvPhonebook(Phonebook):
     def load(self):
         """Load entries."""
         self.clear()
-        with open(self.uri.location, 'rb') as stream:
-            self.reader = csv.DictReader(stream)
-            for row in self.reader:
-                entry = Entry()
-                for k in row:
-                    val = row[k].decode('utf-8')
-                    try:
-                        entry[k] = val
-                    except KeyError:
-                        pass
-                self.add(entry)
+        try:
+            with open(self.uri.location, 'rb') as stream:
+                self.reader = csv.DictReader(stream)
+                for row in self.reader:
+                    entry = Entry()
+                    for k in row:
+                        val = row[k].decode('utf-8')
+                        try:
+                            entry[k] = val
+                        except KeyError:
+                            pass
+                    self.add(entry)
+        except IOError, exc:
+            # no file, nothing to read, but no reason for an error
+            if exc.errno != errno.ENOENT:
+                raise
 
     def save(self):
         """Save entries."""
