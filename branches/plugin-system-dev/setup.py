@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# tel install script
 # Copyright (c) 2007 Sebastian Wiesner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -21,19 +20,16 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE."""
 
-import appdistutils
+import os
+import sys
+import optparse
 
-def get_version():
-    filename = 'src/tel.py'
-    stream = open(filename)
-    for line in stream:
-        if line.startswith('__version__'):
-            stream.close()
-            exec line
-            return __version__
-        elif line.startswith('import'):
-            raise SystemExit('Couldn\'t extract version information')
-        
+from distutils.filelist import FileList
+from appdistutils import setup
+
+sys.path.insert(0, os.path.abspath('./src'))
+from tel import config
+
 
 long_description = """\
 tel is a little console-based phone book program. It allows adding,
@@ -44,31 +40,30 @@ common spread sheet applications like Microsoft Excel or OpenOffice.org
 Calc."""
 
 
-import optparse
-# get the real source file, not the compiled one
+# gettext source file for i18n
 optparse_source = optparse.__file__.rstrip('c')
 
-
-tel_sources = ['src/tel.py',
-               'src/backendmanager.py',
-               'src/phonebook.py',
-               'src/consoleiface.py',
-               'src/teltypes.py',
-               'src/cmdoptparse.py',
-               'src/backend.py',
-               'src/backends/']
+# collect all python sources for i18n
+tel_sources = FileList()
+tel_sources.findall('./src')
+tel_sources.include_pattern('*.py', anchor=False)
 
 
-appdistutils.setup(name='tel',
-                   version=get_version(),
-                   description='A little terminal phone book',
-                   long_description=long_description,
-                   author='Sebastian \'lunar\' Wiesner',
-                   author_email='basti.wiesner@gmx.net',
-                   url='http://tel.berlios.de',
-                   license='MIT/X11',
-                   links=[('tel', 'tel.py')],
-                   configurable=['src/tel.py'],
-                   appmodules=tel_sources,
-                   po=tel_sources + [optparse_source],
-                   )
+setup(name='tel',
+      version=config.version,
+      description='A little terminal phone book',
+      long_description=long_description,
+      author='Sebastian Wiesner',
+      author_email='basti.wiesner@gmx.net',
+      url='http://tel.berlios.de',
+      license='MIT/X11',
+      # list packages
+      packages=['tel'],
+      package_dir={'': 'src'},
+      package_data={'tel': ['backends/*.py']},
+      # scripts
+      scripts=[('src/tel_console.py', 'tel')],
+      # i18n
+      po_dir='po',
+      po={'tel': tel_sources.files + [optparse_source]},
+      )

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# application distutils
 # Copyright (c) 2007 Sebastian Wiesner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,31 +20,38 @@
 # DEALINGS IN THE SOFTWARE."""
 
 """Distutils extension to install applications, including support for
-gettext catalogs, application data and manpages"""
+gettext catalogs"""
 
+from __future__ import with_statement
 
 import os
+import sys
 from glob import glob
-from string import Template
 
 from distutils import core
-from distutils import dist
-from distutils import dir_util
-from distutils import spawn
 from distutils import util
-from distutils import filelist
+from distutils import spawn
+from distutils import log
+from distutils import dep_util
 
 from distutils.dist import Distribution
 from distutils.cmd import Command, install_misc
+from distutils.command import build_scripts
 from distutils.command.build import build
-from distutils.command.install import install
-from distutils.command.clean import clean
-from distutils.command.install_data import install_data
+from distutils.command.install import install, INSTALL_SCHEMES
 from distutils.command.install_lib import install_lib
 
 
-PO_DIRECTORY = 'po'
+
+# Tell distutils to put the data_files in platform-specific installation
+# locations. See here for an explanation:
+# http://groups.google.com/group/comp.lang.python/browse_thread/thread/35ec7b2fed36eaec/2105ee4d9e8042cb
+for scheme in INSTALL_SCHEMES.values():
+    scheme['data'] = scheme['purelib']
+
+
 INSTALL_LOG = 'installed_files'
+
 
 def setup(**kwargs):
     if 'cmdclass' not in kwargs:
@@ -55,17 +60,14 @@ def setup(**kwargs):
     cmdclasses = {
         'messages': Messages,
         'build_messages': BuildMessages,
+        'build_scripts': BuildScripts,
 #        'build_manpages': BuildManPages,
         'build': AppBuild,
-        'install_links': InstallLinks,
-        'install_app_modules': InstallAppModules,
-        'install_app_data': InstallAppData,
-        'install_messages': InstallMessages,
 #        'install_manpages': InstallManPages,
-        'configure': Configure,
+        'install_lib': InstallLib,
         'install': AppInstall,
         'uninstall': Uninstall,
-        'clean': AppClean
+
         }
 
     for key in cmdclasses:
@@ -80,30 +82,10 @@ def has_messages(self):
     return bool(self.distribution.po)
 
 
-def has_app_data(self):
-    return bool(self.distribution.appdata)
-
-
-def has_app_modules(self):
-    return bool(self.distribution.appmodules)
-
-
-def has_links(self):
-    return bool(self.distribution.links)
-
-
-def is_configurable(self):
-    return bool(self.distribution.configurable)
-
-
 class AppDistribution(Distribution):
-    """:ivar po: A list of all source files, which contains messages"""
     def __init__(self, attrs):
         self.po = None
-        self.appdata = None
-        self.appmodules = None
-        self.links = None
-        self.configurable = None
+        self.po_dir = None
         Distribution.__init__(self, attrs)
 
 
@@ -135,107 +117,171 @@ class Messages(Command):
             self.announce('  ...msgmerge found at %s' % self.msgmerge_exe)
 
     def run(self):
-        if not os.path.exists(PO_DIRECTORY):
-            os.mkdir(PO_DIRECTORY)
-        name = self.distribution.get_name() + '.pot'
-        target = os.path.join(PO_DIRECTORY, name)
-        cmd = [self.xgettext_exe, '-o', target]
-        cmd.extend(self.distribution.po)
-        self.spawn(cmd) 
-
-        for po_file in glob(os.path.join(PO_DIRECTORY, '*.po')):
-            cmd = [self.msgmerge_exe, '-q', '-o', po_file, po_file, target]
+        for name in self.distribution.po:
+            target_dir = os.path.join(self.distribution.po_dir, name)
+            self.mkpath(target_dir)
+            catalog_file = os.path.join(target_dir, name + '.pot')
+            cmd = [self.xgettext_exe, '-o', catalog_file]
+            cmd.extend(self.distribution.po[name])
             self.spawn(cmd)
+            for po_file in glob(os.path.join(target_dir, '*.po')):
+                cmd = [self.msgmerge_exe, '-q', '-o', po_file, po_file,
+                       catalog_file]
+                self.spawn(cmd)
 
 
 class BuildMessages(Command):
     description = 'Compile message catalogs'
 
-    user_options = [('build-dir=', 'd',
+    user_options = [('build-lib=', 'd',
                      'directory to build message catalogs in'),
                     ('msgfmt-exe=', None, 'Path to the msgfmt executable')]
 
     def initialize_options(self):
-        self.build_dir = None
+        self.build_lib = None
         self.msgfmt_exe = None
 
     def finalize_options(self):
+        # locale data is installed as package data, so we have to use the
+        # build_lib directory.
+        # This way installation is done automatically by install_lib,
+        # we just have to build the message files in the right place.
         self.set_undefined_options('build', ('msgfmt_exe', 'msgfmt_exe'),
-                                   ('build_messages', 'build_dir'))
+                                   ('build_lib', 'build_lib'))
 
-    def run(self):
-        self.announce('Building po catalogs...')
-        self.mkpath(self.build_dir)
-        
-        po_files = os.path.join('po', '*.po')
-        po_files = glob(po_files)
+    def _po_packages(self):
+        for name in self.distribution.po:
+            source_dir = os.path.join(self.distribution.po_dir, name)
+            build_dir = os.path.join(self.build_lib, name, 'locale')
+            pkg = {'name': name,
+                   'source_dir': source_dir,
+                   'build_dir': build_dir}
+            yield pkg
+
+    def _po_package_contents(self, package):
+        po_files = glob(os.path.join(package['source_dir'], '*.po'))
         for po_file in po_files:
             language = os.path.splitext(os.path.basename(po_file))[0]
-            self.announce('Building catalog %s...' % language)
-            target = os.path.join(self.build_dir, language + '.gmo')
-            cmd = [self.msgfmt_exe, '-o', target, po_file]
-            self.spawn(cmd)
+            lang_dir = os.path.join(package['build_dir'], language)
+            msg_dir = os.path.join(lang_dir, 'LC_MESSAGES')
+            mo_file = os.path.join(msg_dir, package['name'] + '.mo')
+            yield {'language': language,
+                   'lang_dir': lang_dir,
+                   'msg_dir': msg_dir,
+                   'mo_file': mo_file,
+                   'po_file': po_file}
+
+    def run(self):
+        self.announce('Building message files...')
+        for pkg in self._po_packages():
+            self.announce('Building message files for "%(name)s" package...' %
+                          pkg)
+            for item in self._po_package_contents(pkg):
+                self.announce('Building %(language)s...' % item)
+                self.mkpath(item['msg_dir'])
+                cmd = (self.msgfmt_exe, '-o', item['mo_file'],
+                       item['po_file'])
+                self.spawn(cmd)
         self.announce('Done building message catalogs.')
 
+    def get_outputs(self):
+        outputs = []
+        for pkg in self._po_packages():
+            outputs.append(pkg['build_dir'])
+            for item in self._po_package_contents(pkg):
+                outputs.append(item['lang_dir'])
+                outputs.append(item['msg_dir'])
+                outputs.append(item['mo_file'])
+        return outputs
 
-class Configure(Command):
-    description = 'Configure files'
 
-    user_options = [('build-dir=', 'd',
-                     'directory to put configured files in')]
+class BuildScripts(build_scripts.build_scripts):
+    """Improved install_scripts implementation, which can install scripts
+    under different names"""
 
-    def initialize_options(self):
-        self.build_dir = None
-
-    def finalize_options(self):
-        self.set_undefined_options('build',
-                                   ('build_configure', 'build_dir'))
-
-    def read_template(self, fso):
-        """Reads template from `fso`"""
-        stream = open(fso)
-        template = Template(stream.read())
-        stream.close()
-        return template
-
-    def write_substituted(self, target, template, mapping=None, **kwargs):
-        """Substitudes `template` with `**kwargs` and `mapping` and writes
-        it to `target`"""
-        substituted = template.safe_substitute(mapping, **kwargs)
-        stream = open(target, 'w')
-        stream.write(substituted)
-        stream.close()
-
-    
-    def run(self):
-        self.announce('Configuring files...')
+    def copy_scripts (self):
+        """Copy each script listed in 'self.scripts'; if it's marked as a
+        Python script in the Unix way (first line matches 'first_line_re',
+        ie. starts with "\#!" and contains "python"), then adjust the first
+        line to refer to the current Python interpreter as we copy.
+        """
         self.mkpath(self.build_dir)
-        install = self.get_finalized_command('install')
+        outfiles = []
+        for source, scriptname in self.scripts:
+            script = util.convert_path(source)
+            # skip empty files
+            if not os.path.getsize(script):
+                self.warn("%s is an empty file (skipping)" % script)
+                continue
 
-        for fso in self.distribution.configurable:
-            target = os.path.join(self.build_dir, fso)
-            target_dir = os.path.dirname(target)
-            self.mkpath(target_dir)
-            template = self.read_template(fso)
-            self.write_substituted(target, template, vars(install))
-            self.announce('%s configured' % fso)
-            
+            if os.name != 'posix' and not scriptname.endswith('.py'):
+                # add py extensions on systems, which don't understand
+                # shebangs
+                scriptname += '.py'
+            outfile = os.path.join(self.build_dir, scriptname)
+            outfiles.append(outfile)
+
+            if not self.force and not dep_util.newer(script, outfile):
+                log.debug("not copying %s (up-to-date)", script)
+                continue
+
+            if not self._adjust_shebang(script, outfile):
+                # just copy script, if there was no sheband to adjust
+                self.copy_file(script, outfile)
+
+    def _adjust_shebang(self, script, outfile):
+        """Adjust shebands of `script` and write the adjusted script to
+        `outfile`"""
+        # Always open the file, but ignore failures in dry-run mode --
+        # that way, we'll get accurate feedback if we can read the
+        # script.
+        try:
+            with open(script, "r") as stream:
+                firstline = stream.readline()
+                match = build_scripts.first_line_re.match(firstline)
+                if match:
+                    post_interp = match.group(1) or ''
+                    log.info("copying and adjusting %s -> %s", script,
+                             self.build_dir)
+                    if not self.dry_run:
+                        with open(outfile, "w") as outstream:
+                            # write script to target file
+                            outstream.write("#!%s%s\n" %  (self.executable,
+                                                           post_interp))
+                            outstream.write(stream.read())
+                    return True
+        except IOError:
+            if not self.dry_run:
+                raise
+            return False
+
+    def _correct_file_mode(self):
+        """Correct file modes of all scripts"""
+        if os.name != 'posix':
+            return
+        for outfile in self.outfiles:
+            if self.dry_run:
+                log.info("changing mode of %s", outfile)
+            else:
+                oldmode = os.stat(outfile).st_mode & 07777
+                newmode = (oldmode | 0555) & 07777
+                if newmode != oldmode:
+                    log.info("changing mode of %s from %o to %o",
+                             outfile, oldmode, newmode)
+                    os.chmod(outfile, newmode)
+
 
 class AppBuild(build):
     user_options = build.user_options[:]
     user_options.extend([
         ('build-messages=', None, 'Build directory for messages'),
-        ('build-configure=', None, 'Directory for configured files'),
         ('msgfmt-exe=', None, 'Path to the msgfmt executable')])
 
     sub_commands = build.sub_commands[:]
-    sub_commands.extend([
-        ('build_messages', has_messages),
-        ('configure', is_configurable)])
-                         
+    sub_commands.append(('build_messages', has_messages))
+
     def initialize_options(self):
         self.build_messages = None
-        self.build_configure = None
         self.msgfmt_exe = None
         build.initialize_options(self)
 
@@ -243,247 +289,39 @@ class AppBuild(build):
         if self.build_messages is None:
             self.build_messages = os.path.join(self.build_base,
                                                'po')
-            
-        if self.build_configure is None:
-            self.build_configure = os.path.join(self.build_base,
-                                                'config')
-            
+
         if self.msgfmt_exe is None:
             self.announce('Searching msgfmt...')
             self.msgfmt_exe = spawn.find_executable('msgfmt')
             if self.msgfmt_exe is None:
                 raise SystemExit('Couldn\'t find "msgfmt".')
             self.announce('  ...msgfmt found at %s' % self.msgfmt_exe)
-            
+
         build.finalize_options(self)
 
 
 class InstallStuff(install_misc):
     """Base class for some install commands"""
     def mkpath (self, name, mode=0777):
-        return dir_util.mkpath(name, mode, dry_run=self.dry_run)
-            
+        return install_misc.mkpath(self, name, mode)
 
-class InstallMessages(InstallStuff):
-    description = 'Installs message catalogs'
 
-    user_options = install_misc.user_options[:]
-    user_options.append(('build-dir=', 'b',
-                         'build directory (where to install from)'))
-    user_options.append(('skip-build', None, "skip the build steps"))
-
-    boolean_options = ['skip-build']
-
-    def initialize_options(self):
-        self.install_dir = None
-        self.build_dir = None
-        self.skip_build = None
-        install_misc.initialize_options(self)
-
-    def finalize_options(self):
-        self._install_dir_from('install_messages')
-        self.set_undefined_options('build', ('build_messages', 'build_dir'))
-        self.set_undefined_options('install', ('skip_build', 'skip_build'))
-
-    def run(self):
+class InstallLib(install_lib):
+    """message files aware install_lib implementation"""
+    def build(self):
+        install_lib.build(self)
         if not self.skip_build:
             self.run_command('build_messages')
-        self.announce('Installing message catalogs...')
-        po_files = glob(os.path.join(self.build_dir, '*.gmo'))
-        for po_file in po_files:
-            language = os.path.splitext(os.path.basename(po_file))[0]
-            target_dir = os.path.join(self.install_dir, language,
-                                      'LC_MESSAGES')
-            self.outfiles.extend(self.mkpath(target_dir))
-            target = os.path.join(target_dir,
-                                  self.distribution.get_name() + '.mo')
-            self.copy_file(po_file, target)
-            self.outfiles.append(target)
 
+    def get_outputs (self):
+        outputs = install_lib.get_outputs(self)
+        msg_outputs = self._mutate_outputs(has_messages(self),
+                                           'build_messages', 'build_lib',
+                                           self.install_dir)
+        return msg_outputs + outputs
 
-class InstallAppModules(install_lib):
-    description = 'Install python modules'
-    
-    def finalize_options(self):
-        self.set_undefined_options('install',
-                                   ('install_app_modules', 'install_dir'))
-        install_lib.finalize_options(self)
-        self.modules = self.distribution.appmodules
-        self.configurable = self.distribution.configurable
-        self.outfiles = []
-
-    def run(self):
-        if not os.path.exists(self.install_dir):
-            self.outfiles.extend(self.mkpath(self.install_dir))
-
-        build = self.get_finalized_command('build')
-        build_configure = build.build_configure
-        for item in self.modules:
-            if os.path.isfile(item):
-                if item in self.configurable:
-                    item = os.path.join(build_configure, item)
-                target, copied = self.copy_file(item, self.install_dir)
-                self.outfiles.append(target)
-            elif os.path.isdir(item):
-                for dirpath, directories, files in os.walk(item):
-                    files = filter(lambda f: f.endswith('.py'), files)
-                    if not files:
-                        continue
-
-                    # create target directory
-                    dirname = os.path.basename(os.path.dirname(dirpath))
-                    target = os.path.join(self.install_dir, dirname)
-                    if not os.path.exists(target):
-                        self.outfiles.extend(self.mkpath(target))
-                    
-                    for fso in files:
-                        # get full path
-                        fso = os.path.join(dirpath, fso)
-                        # respect configured files
-                        if fso in self.configurable:
-                            fso = os.path.join(build_configure, fso)
-                        self.outfiles.append(self.copy_file(fso, target)[0])
-            else:
-                self.warn('Unable to find %s...' % item)
-                
-        self.byte_compile(self.outfiles)
-        self.outfiles.extend(self._bytecode_filenames(self.outfiles))
-
-    def get_outputs(self):
-        return self.outfiles
-
-    def mkpath (self, name, mode=0777):
-        return dir_util.mkpath(name, mode, dry_run=self.dry_run)
-    
-
-class InstallAppData(install_data):
-    description = 'Install application data'
-    
-    def initialize_options(self):
-        install_data.initialize_options(self)
-
-    def finalize_options(self):
-        self.set_undefined_options('install',
-                                   ('install_app_data', 'install_dir'))
-        install_data.finalize_options(self)
-        self.appdata = self.distribution.appdata
-
-    def run(self):
-        if not os.path.exists(self.install_dir):
-            self.outfiles.extend(self.mkpath(self.install_dir))
-
-        for item in self.appdata:
-            if isinstance(item, basestring):
-                # put it right into the installation directory
-                if os.path.isfile(item):
-                    (f, copied) = self.copy_file(item, self.install_dir)
-                    self.outfiles.append(f)
-                elif os.path.isdir(item):
-                    target =  os.path.join(self.install_dir, item)
-                    files = self.copy_tree(item, target)
-                    self.outfiles.extend(files)
-                else:
-                    self.warn('Unable to find %s...' % item)
-            else:
-                # assume we have a tupel-like thing here. target directory
-                # relative to install_dir is in first element
-                target_dir = item[0]
-                if self.root:
-                    target_dir = util.change_root(self.root, target_dir)
-                else:
-                    target_dir = os.path.join(self.install_dir, target_dir)
-            
-                for fso in item[1]:
-                    if os.path.isdir(fso):
-                        files = self.copy_tree(fso, target_dir)
-                        self.outfiles.extend(files)
-                    elif os.path.isfile(fso):
-                        (f, copied) = self.copy_file(fso, target_dir)
-                        self.outfiles.append(f)
-                    else:
-                        self.warn('Unable to find %s...' % fso)
-
-    def mkpath (self, name, mode=0777):
-        return dir_util.mkpath(name, mode, dry_run=self.dry_run)
-
-
-class InstallLinks(InstallStuff):
-    description = ('Installs executable links to scripts in application '
-                   'lib directory')
-
-    user_options = install_misc.user_options[:]
-
-    def finalize_options(self):
-        self._install_dir_from('install_links')
-    
-    def run(self):
-        appmodules = self.get_finalized_command('install_app_modules')
-
-        target_directory = appmodules.install_dir
-
-        if not os.path.exists(self.install_dir):
-            self.outfiles.extend(self.mkpath(self.install_dir))
-
-        for link in self.distribution.links:
-            dest = os.path.join(self.install_dir, link[0])
-
-            target = os.path.join(target_directory, link[1])
-            # make sure, target is executable (link would be vain otherwise)
-            mode = int('755', 8)
-            self.announce('Changing mode of %s to %o' % (target, mode))
-            os.chmod(target, mode)
-            self.announce('linking %s to %s' % (dest, target))
-            if not self.dry_run:
-                if os.path.islink(dest):
-                    os.remove(dest)
-                os.symlink(target, dest)
-                self.outfiles.append(dest)
-                           
 
 class AppInstall(install):
-    user_options = install.user_options[:]
-    user_options.extend([
-        ('install-messages=', None,
-         'Installation directory of message catalogs'),
-        ('install-app-data=', None,
-         'Installation directory for application data'),
-        ('install-app-modules=', None,
-         'Installation directory for application modules'),
-        ('install-links=', None,
-         'Installation directory for executable links')])
-
-    sub_commands = install.sub_commands[:]
-    sub_commands.extend([
-        ('install_messages', has_messages),
-        ('install_app_data', has_app_data),
-        ('install_app_modules', has_app_modules),
-        ('install_links', has_links)])
-
-    def initialize_options(self):
-        self.install_messages = None
-        self.install_app_data = None
-        self.install_app_modules = None
-        self.install_links = None
-        install.initialize_options(self)
-
-    def finalize_options(self):
-        install.finalize_options(self)
-        name = self.distribution.get_name()
-        if self.install_messages is None:
-            self.install_messages = os.path.join(self.install_data, 'share',
-                                                 'locale')
-        if self.install_app_data is None:
-            self.install_app_data = os.path.join(self.install_data, 'share',
-                                                 name)
-
-        if self.install_app_modules is None:
-            self.install_app_modules = os.path.join(self.install_data,
-                                                    'lib', name)
-                                                    
-
-        if self.install_links is None:
-            self.install_links = self.install_scripts
-
     def run(self):
         install.run(self)
         stream = open(INSTALL_LOG, 'w')
@@ -507,7 +345,7 @@ class Uninstall(Command):
     def run(self):
         if not os.path.isfile(INSTALL_LOG):
             msg = 'Cannot find the list file "%s".' % INSTALL_LOG
-            raise SystemExit(msg)
+            sys.exit(msg)
 
         stream = open(INSTALL_LOG)
         files = stream.read().splitlines()
@@ -517,7 +355,7 @@ class Uninstall(Command):
         # the files
         files.sort()
         files.reverse()
-        
+
         for fso in files:
             fso = fso.strip()
             self.announce('Removing %s...')
@@ -529,31 +367,3 @@ class Uninstall(Command):
                         os.rmdir(fso)
             except OSError, e:
                 self.warn('Could not remove %s: %s' % (fso, e))
-
-
-class AppClean(clean):
-    user_options = clean.user_options[:]
-    user_options.extend([
-        ('build-messages=', None, 'Build directory for messages'),
-        ('build-configure=', None, 'Directory for configured files')])
-
-    def initialize_options(self):
-        self.build_messages = None
-        self.build_configure = None
-        clean.initialize_options(self)
-
-    def finalize_options(self):
-        self.set_undefined_options('build',
-                                   ('build_messages', 'build_messages'),
-                                   ('build_configure', 'build_configure'))
-        clean.finalize_options(self)
-
-    def run(self):
-        if self.all:
-            for directory in (self.build_configure, self.build_messages):
-                if os.path.exists(directory):
-                    dir_util.remove_tree(directory)
-            else:
-                self.warn("'%s' does not exist -- can't clean it",
-                          self.directory)
-        clean.run(self)
