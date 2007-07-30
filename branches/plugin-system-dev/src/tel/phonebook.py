@@ -287,7 +287,7 @@ class URI(object):
         if len(args) == 1:
             match = self.uri_pattern.match(args[0])
             if not match:
-                raise ValueError(_(u'%s is no valid URI'))
+                raise ValueError(_(u'%s is not a valid URI.'))
             self.__dict__.update(match.groupdict())
         elif len(args) == 2:
             self.scheme, self.location = args
@@ -330,11 +330,11 @@ def phonebook_open(uri):
     # guess backend, if uri was not absolute (= no scheme was given)
     uri.absolutize()
     if uri.scheme is None:
-        raise IOError(_(u'Couldn\'t find a backend for %s') % uri)
+        raise IOError(_(u'Couldn\'t find a backend for %s.') % uri)
     try:
         backend = backendmanager.manager()[uri.scheme]
     except KeyError:
-        raise IOError(_(u'Unknown backend %s') % uri.scheme)
+        raise IOError(_(u'Unknown backend %s.') % uri.scheme)
     return backend.__phonebook_class__(uri)
 
 

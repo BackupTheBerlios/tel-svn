@@ -134,7 +134,7 @@ class CommandOption(Option):
         for item in items:
             fieldname = item.lstrip('-')
             if fieldname not in phonebook.FIELDS:
-                raise OptionValueError('There is no field %s' % fieldname)
+                raise OptionValueError('There is no field %s.' % fieldname)
             if item.startswith('-'):
                 fields_to_hide.append(fieldname)
             else:
@@ -151,7 +151,7 @@ class CommandOption(Option):
         the sorting order (True if descending) in the second field"""
         fieldname = value.lstrip('+-')
         if not fieldname in phonebook.FIELDS:
-            raise OptionValueError('There is no field %s' % fieldname)
+            raise OptionValueError('There is no field %s.' % fieldname)
         else:
             return (fieldname, value.startswith('-'))
 
@@ -176,7 +176,7 @@ class CommandOption(Option):
         elif action == 'command':
             if hasattr(parser.values, 'command'):
                 # raise error if two exlusive commands appeared
-                msg = _('Please specify only one command option')
+                msg = _('Please specify only one command option!')
                 raise OptionValueError(msg)
             values.command = opt.lstrip('-').replace('-', '_')
             values.command_values = value
@@ -217,13 +217,13 @@ class CommandOptionParser(OptionParser):
         OptionParser._populate_option_list(self, option_list, add_help)
         if self.authors:
             self.add_option('--authors', action='authors',
-                            help=_('show author information and exit'))
+                            help=_('show author information and exit.'))
         if self.license:
             self.add_option('--license', '--licence', action='license',
-                            help=_('show program\'s license and exit'))
+                            help=_('show program\'s license and exit.'))
         if self.copyright:
             self.add_option('--copyright', action='copyright',
-                            help=_('show copyright information and exit'))
+                            help=_('show copyright information and exit.'))
 
     def error(self, msg):
         """Print a usage message incorporating 'msg' to stderr and exit."""

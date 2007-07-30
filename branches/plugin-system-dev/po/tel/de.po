@@ -1,0 +1,557 @@
+# german translation of tel
+# Copyright (C) 2007 Sebastian Wiesner
+# This file is distributed under the same license as the tel package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: de\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-07-30 19:00+0200\n"
+"PO-Revision-Date: 2007-07-30 19:01+0200\n"
+"Last-Translator: Sebastian Wiesner <basti.wiesner@gmx.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: emacs 23 with po-mode\n"
+
+#: src/tel_console.py:46
+msgid "readline wasn't found, text editing capabilities are restricted."
+msgstr ""
+"readline wurde nicht gefunden, die Möglichkeiten zur Bearbeitung von Text "
+"sind limitiert."
+
+#: src/tel_console.py:56
+#, python-format
+msgid "Editing entry \"%s\" ..."
+msgstr "Bearbeite Eintrag \"%s\" ..."
+
+#: src/tel_console.py:57
+msgid "Creating a new entry ..."
+msgstr "Erzeuge einen neuen Eintrag ..."
+
+#: src/tel_console.py:86
+#, python-format
+msgid "You entered an invalid value for the field\"%s\"!"
+msgstr "Sie haben einen ungültigen Wert für das Feld \"%s\" angegeben!"
+
+#: src/tel_console.py:99 src/tel_console.py:138
+msgid "Please fill the following fields!"
+msgstr "Bitte füllen Sie die folgenden Felder aus!"
+
+#: src/tel_console.py:140
+msgid ""
+"Please fill the following fields! The current value is shown in square "
+"brackets. NOTE: The current value is not preserved. You have to re-enter "
+"every value!"
+msgstr ""
+"Bitte füllen Sie die folgenden Felder aus! Der aktuelle Wert wird in eckigen "
+"Klammern angezeigt. HINWEIS: Der aktuelle Wert wird nicht übernommen. Sie "
+"müssen ihn erneut eingeben!"
+
+#: src/tel_console.py:222
+#, python-format
+msgid "%(question)s [%(yes)s,%(no)s] "
+msgstr "$(question)s {%(yes)s,%(no)s] "
+
+#: src/tel_console.py:223 src/tel_console.py:225
+msgid "y"
+msgstr "j"
+
+#: src/tel_console.py:224
+msgid "n"
+msgstr "n"
+
+#: src/tel_console.py:243
+msgid "Do you really want to save an emtpy entry?"
+msgstr "Möchten Sie wirklich einen leeren Eintrag speichern? "
+
+#: src/tel_console.py:246
+msgid "The entry is not saved."
+msgstr "Der Eintrag wird nicht gespeichert."
+
+#: src/tel_console.py:251
+msgid "The entry was saved."
+msgstr "Der Eintrag wurde gespeichert."
+
+#: src/tel_console.py:379
+msgid "--create needs a number."
+msgstr "--create benötigt eine Nummer."
+
+#: src/tel_console.py:381
+msgid "--create only accepts one argument."
+msgstr "--create akzeptiert nur ein Argument."
+
+#: src/tel_console.py:390
+msgid "No entries found for given patterns."
+msgstr "Keine Einträge entsprechen den angegebenen Suchmustern."
+
+#: src/tel_console.py:395
+#, python-format
+msgid "Really delete entry \"%s\"?"
+msgstr "Möchten Sie den Eintrag \"%s\" wirklich löschen?"
+
+#: src/tel_console.py:406
+#, python-format
+msgid "There is no field %s."
+msgstr "Das Feld %s existiert nicht."
+
+#: src/tel_console.py:408
+msgid "Field"
+msgstr "Feld"
+
+#: src/tel_console.py:408
+msgid "Internal name"
+msgstr "Interner Name"
+
+#: src/tel_console.py:413
+msgid "Please specifiy only one backend!"
+msgstr "Bitte geben Sie nur ein Backend an!"
+
+#: src/tel_console.py:420
+msgid "Backend name"
+msgstr "Name des Backends"
+
+#: src/tel_console.py:420
+msgid "Description"
+msgstr "Beschreibung"
+
+#: src/tel_console.py:435
+#, python-format
+msgid ""
+"\n"
+"%(name)s - %(shortdesc)s\n"
+"------------\n"
+"\n"
+"Supported fields:\n"
+"%(fields)s\n"
+"\n"
+"------------\n"
+"\n"
+"%(longdesc)s"
+msgstr ""
+"\n"
+"%(name)s - %(shortdesc)s\n"
+"------------\n"
+"\n"
+"Unterstützte Felder:\n"
+"%(fields)s\n"
+"\n"
+"------------\n"
+"\n"
+"%(longdesc)s"
+
+#: src/tel_console.py:455
+msgid "%prog [options] command [arguments]"
+msgstr "%prog [Optionen] Kommando [Argumente]"
+
+#: src/tel_console.py:457
+msgid "tel is a little address book program for your terminal."
+msgstr "tel ist ein kleines Adressbuch für dein Terminal."
+
+#: src/tel_console.py:472
+msgid "file"
+msgstr "Datei"
+
+#: src/tel_console.py:472
+msgid "use FILE as phone book."
+msgstr "DATEI als Telefonbuch verwenden."
+
+#: src/tel_console.py:479
+msgid "print a short list of the specified entries."
+msgstr "gibt eine kurze Liste aller angegebenen Einträge aus."
+
+#: src/tel_console.py:481
+msgid "print a table with the specified entries."
+msgstr "gibt eine Tabelle mit den angegebenen Einträgen aus."
+
+#: src/tel_console.py:486
+msgid "show the specified entries."
+msgstr "zeigt die angegebenen Einträge an."
+
+#: src/tel_console.py:487
+msgid "number"
+msgstr "Anzahl"
+
+#: src/tel_console.py:488
+msgid "create the specified number of new entries."
+msgstr "erzeugt die angegebene Anzahl an Einträgen."
+
+#: src/tel_console.py:490
+msgid "edit the specified entries."
+msgstr "zeigt die angegebenen Einträge an."
+
+#: src/tel_console.py:492
+msgid "remove the entries at the specified indices."
+msgstr "Entfernt die angegebenen Einträge."
+
+#: src/tel_console.py:494
+msgid "export phone book to all specified locations."
+msgstr "exportiert das Telefonbuch an die angegebenen Pfade."
+
+#: src/tel_console.py:495
+msgid "targets"
+msgstr "Ziele "
+
+#: src/tel_console.py:497
+msgid "import all specified phone books."
+msgstr "importiert die angegebenen Telefonbücher."
+
+#: src/tel_console.py:498
+msgid "files"
+msgstr "Dateien"
+
+#: src/tel_console.py:503
+msgid ""
+"ignore case, when searching or sorting. The default is not to ignore case."
+msgstr ""
+"Groß- und Kleinschreibung beim Suchen oder Sortieren ignorieren. "
+"Standardmäßig wird Groß- und Kleinschreibung beachtet."
+
+#: src/tel_console.py:507 src/tel_console.py:524 src/tel_console.py:541
+msgid "fields"
+msgstr "Felder"
+
+#: src/tel_console.py:508
+msgid ""
+"specify a list of fields to search in. Takes a comma-separated list of "
+"internal names as printed by --help-fields. Fields prefixed with \"-\" are "
+"not searched."
+msgstr ""
+"gibt die Liste der zu durchsuchenden Felder an. Akzeptiert eine Komma-"
+"getrennte Liste interner Feldnamen, wie sie von --print-fields ausgegeben "
+"werden. Felder mit dem Prefix \"-\" werden nicht durchsucht."
+
+#: src/tel_console.py:517
+msgid "field"
+msgstr "Feld"
+
+#: src/tel_console.py:518
+msgid ""
+"sort output. Specify a field name as printed by --help-fields. If prefixed "
+"with +, sorting order is ascending, if prefixed with a -, sorting order is "
+"descending. The default is ascending, if no prefix is used."
+msgstr ""
+"die Ausgabe sortieren. Akzeptiert interne Feldnamen, wie sie von --print-"
+"fields ausgegeben werden. Wenn dem Feldname ein - vorangestellt ist, wird "
+"absteigend sortiert. Fehlt das Prefix oder lautet es +, wird aufsteigend "
+"sortiert."
+
+#: src/tel_console.py:525
+msgid ""
+"specify the fields to show. Uses the same syntax as the --fields option."
+msgstr ""
+"gibt die anzuzeigenden Felder an. Verwendet die gleiche Syntax wie --fields."
+
+#: src/tel_console.py:539
+msgid "backends"
+msgstr "Backends"
+
+#: src/tel_console.py:543
+msgid ""
+"Commands to modify the phone book and to search or print entries. Only one "
+"of these options may be specified.\n"
+"Entries are specified through regular expressions. See http://docs.python."
+"org/lib/re-syntax.html for a description of regular expression syntax."
+msgstr ""
+"Kommandos, um das Telefonbuch zu verändern, Einträge zu suchen oder "
+"auszugeben. Es darf nur ein Kommando zur gleichen Zeit angegeben werden. \n"
+"Entries werden über reguläre Ausdrücke angegeben. Für eine Beschreibung der "
+"Syntax regulärer Ausdrücke siehe http://docs.python.org/lib/re-syntax.html."
+
+#: src/tel_console.py:549
+msgid "Commands"
+msgstr "Kommandos"
+
+#: src/tel_console.py:552
+msgid ""
+"These options apply to every command, that deals with entries. They tune the "
+"search for entries."
+msgstr ""
+"Diese Optionen sind für jedes Kommando gültig, welches auf Einträgen "
+"arbeitet. Sie konfigurieren die Suche nach Einträgen."
+
+#: src/tel_console.py:554
+msgid "Searching options"
+msgstr "Suchoptionen"
+
+#: src/tel_console.py:557
+msgid "These options are valid with every command."
+msgstr "Diese Optionen sind mit jedem Kommando gültig."
+
+#: src/tel_console.py:558
+msgid "Global options"
+msgstr "Globale Optionen"
+
+#: src/tel_console.py:560
+msgid ""
+"These options are only supported by certain commands. If you use them with "
+"other commands, they are just ignored."
+msgstr ""
+"Diese Optionen werden nur von bestimmten Kommandos unterstützt. Bei anderen "
+"Kommandos werden sie einfach ignoriert."
+
+#: src/tel_console.py:562
+msgid "Special options"
+msgstr "Spezielle Optionen"
+
+#: src/tel_console.py:569
+msgid "Please specify a command!"
+msgstr "Bitte geben Sie ein Kommando an!"
+
+#: src/tel_console.py:572
+#, python-format
+msgid "The command %s need arguments."
+msgstr "Das Kommando %s benötigt Argumente."
+
+#: src/tel_console.py:575
+#, python-format
+msgid "The command %s doesn't take any arguments."
+msgstr "Das Kommando %s akzeptiert keine Argumente."
+
+#: src/tel_console.py:591
+msgid "Dying peacefully ..."
+msgstr "Sterbe glücklich ..."
+
+#: src/tel/backendmanager.py:95
+#, python-format
+msgid "Invalid backend %s."
+msgstr "Ungültiges Backend %s."
+
+#: src/tel/backendmanager.py:112
+#, python-format
+msgid "No backend \"%s\" found."
+msgstr "Das Backend \"%s\" wurde nicht gefunden."
+
+#: src/tel/phonebook.py:53
+msgid "Title"
+msgstr "Titel"
+
+#: src/tel/phonebook.py:54
+msgid "First name"
+msgstr "Vorname"
+
+#: src/tel/phonebook.py:55
+msgid "Last name"
+msgstr "Nachname"
+
+#: src/tel/phonebook.py:56
+msgid "Street and number"
+msgstr "Straße und Hausnummer"
+
+#: src/tel/phonebook.py:57
+msgid "Postal code"
+msgstr "Postleitzahl"
+
+#: src/tel/phonebook.py:58
+msgid "Town"
+msgstr "Stadt"
+
+#: src/tel/phonebook.py:59
+msgid "Country"
+msgstr "Land"
+
+#: src/tel/phonebook.py:60
+msgid "Post office box"
+msgstr "Postfach"
+
+#: src/tel/phonebook.py:61
+msgid "Mobile"
+msgstr "Mobil"
+
+#: src/tel/phonebook.py:62
+msgid "Phone"
+msgstr "Festnetz"
+
+#: src/tel/phonebook.py:63
+msgid "eMail"
+msgstr "E-Mail"
+
+#: src/tel/phonebook.py:64
+msgid "Date of birth"
+msgstr "Geburtsdatum"
+
+#: src/tel/phonebook.py:65
+msgid "Tags"
+msgstr "Tags"
+
+#: src/tel/phonebook.py:73
+#, python-format
+msgid "No such field: %s"
+msgstr "Das Feld %s existiert nicht"
+
+#: src/tel/phonebook.py:290
+#, python-format
+msgid "%s is not a valid URI."
+msgstr "%s ist keine gültige URI."
+
+#: src/tel/phonebook.py:333
+#, python-format
+msgid "Couldn't find a backend for %s."
+msgstr "Es konnte kein Backend für %s gefunden werden."
+
+#: src/tel/phonebook.py:337
+#, python-format
+msgid "Unknown backend %s."
+msgstr "Das Backend %s ist nicht bekannt."
+
+#: src/tel/configuration.py:99
+#, python-format
+msgid ""
+"Name:           %(title)s %(firstname)s %(lastname)s\n"
+"Address:        %(street)s\n"
+"                %(country)s, %(postcode)s %(town)s\n"
+"POB:            %(postbox)s\n"
+"E-Mail:         %(email)s\n"
+"Phone:          %(phone)s\n"
+"Mobile:         %(mobile)s\n"
+"Date of birth:  %(birthdate)s\n"
+"Tags:           %(tags)s\n"
+msgstr ""
+"Name:           %(title)s %(firstname)s %(lastname)s\n"
+"Adresse:        %(street)s\n"
+"                %(country)s, %(postcode)s %(town)s\n"
+"Postfach:       %(postbox)s\n"
+"E-Mail:         %(email)s\n"
+"Telefon:        %(phone)s\n"
+"Mobil:          %(mobile)s\n"
+"Geburtsdatum:   %(birthdate)s\n"
+"Tags:           %(tags)s\n"
+
+#: src/tel/configuration.py:115
+#, python-format
+msgid "%(firstname)s %(lastname)s"
+msgstr "%(firstname)s %(lastname)s"
+
+#: src/tel/cmdoptparse.py:61
+msgid "Supported options: "
+msgstr "Unterstützte Optionen: "
+
+#: src/tel/cmdoptparse.py:79
+msgid "pattern"
+msgstr "Muster"
+
+#: src/tel/cmdoptparse.py:179
+msgid "Please specify only one command option!"
+msgstr "Bitte geben Sie nur eine Kommandooption an!"
+
+#: src/tel/cmdoptparse.py:220
+msgid "show author information and exit."
+msgstr "zeigt Autoren-Informationen an und beendet das Programm."
+
+#: src/tel/cmdoptparse.py:223
+msgid "show program's license and exit."
+msgstr "zeigt die Lizenz an und beendet das Programm."
+
+#: src/tel/cmdoptparse.py:226
+msgid "show copyright information and exit."
+msgstr "zeigt Copyright-Informationen an und beendet das Programm."
+
+#: src/tel/cmdoptparse.py:232
+#, python-format
+msgid "%(prog)s: error: %(message)s\n"
+msgstr "%(prog)s: Fehler: %(message)s\n"
+
+#: src/tel/backends/csv_backend.py:40
+msgid ""
+"A simple backend, which uses utf-8 encoded csv (comma separated values)\n"
+"files to store entries. These files are understood by spreadsheet\n"
+"applications like Excel or OpenOffice.org Calc.\n"
+msgstr ""
+"Ein einfaches Backend, welches UTF-8 codierte CSV (comma separated values) "
+"Dateien zum Speichern der Einträge verwendet. Diese Dateien können in "
+"Tabellenkalkulationsprogrammen wie Excel oder OpenOffice.org Calc bearbeitet "
+"werden."
+
+#: src/tel/backends/csv_backend.py:45
+msgid "A csv-based backend"
+msgstr "Ein CSV-basiertes Backend"
+
+#: /usr/lib/python2.5/optparse.py:134
+#, python-format
+msgid "no such option: %s"
+msgstr "Option %s existiert nicht"
+
+#: /usr/lib/python2.5/optparse.py:145
+#, python-format
+msgid "ambiguous option: %s (%s?)"
+msgstr "Mehrdeutige Option: %s (%s)?"
+
+#: /usr/lib/python2.5/optparse.py:368
+#, python-format
+msgid "Usage: %s\n"
+msgstr "Benutzung: %s\n"
+
+#: /usr/lib/python2.5/optparse.py:387
+msgid "Usage"
+msgstr "Benutzung"
+
+#: /usr/lib/python2.5/optparse.py:412
+msgid "integer"
+msgstr "Ganzzahl"
+
+#: /usr/lib/python2.5/optparse.py:413
+msgid "long integer"
+msgstr "große Ganzzahl"
+
+#: /usr/lib/python2.5/optparse.py:414
+msgid "floating-point"
+msgstr "Fließkommazahl"
+
+#: /usr/lib/python2.5/optparse.py:415
+msgid "complex"
+msgstr "komplexe Zahl"
+
+#: /usr/lib/python2.5/optparse.py:423
+#, python-format
+msgid "option %s: invalid %s value: %r"
+msgstr "Option %s: ungültiger Wert für eine %s: %r"
+
+#: /usr/lib/python2.5/optparse.py:431
+#, python-format
+msgid "option %s: invalid choice: %r (choose from %s)"
+msgstr "Option %s: ungültige Auswahl: %s (bitte aus %s wählen)"
+
+#: /usr/lib/python2.5/optparse.py:1239
+msgid "show this help message and exit"
+msgstr "diese Hilfe anzeigen und beenden"
+
+#: /usr/lib/python2.5/optparse.py:1244
+msgid "show program's version number and exit"
+msgstr "die Versionsnummer des Programms anzeigen und beenden"
+
+#: /usr/lib/python2.5/optparse.py:1267
+msgid "%prog [options]"
+msgstr "%prog [Optionen]"
+
+#: /usr/lib/python2.5/optparse.py:1477 /usr/lib/python2.5/optparse.py:1516
+#, python-format
+msgid "%s option requires an argument"
+msgstr "Option %s benötigt ein Argument"
+
+#: /usr/lib/python2.5/optparse.py:1479 /usr/lib/python2.5/optparse.py:1518
+#, python-format
+msgid "%s option requires %d arguments"
+msgstr "Option %s benötigt %d Argumente"
+
+#: /usr/lib/python2.5/optparse.py:1488
+#, python-format
+msgid "%s option does not take a value"
+msgstr "Option %s akzeptiert keine Argumente"
+
+#: /usr/lib/python2.5/optparse.py:1605
+msgid "Options"
+msgstr "Optionen"
+
+#~ msgid "edit the entries at the specified indices."
+#~ msgstr "bearbeitet die angegebenen Einträge."
+
+#~ msgid "Please fill the following fields."
+#~ msgstr "Bitte füllen Sie die folgenden Felder aus!"
+
+#~ msgid ""
+#~ "A simple backend, which uses classic excel-style csv (comma separated\n"
+#~ "values) files to store entries.\n"
+#~ msgstr ""
+#~ "Ein einfaches Backend, welches CSV (comma separated values) Dateien "
+#~ "verwendet, um Einträge zu speichern. Tabellenkalkulationsprogramme wie "
+#~ "Excel oder Calc können diese Dateien lesen."

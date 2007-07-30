@@ -92,7 +92,7 @@ class BackendManager(DictMixin):
                 # close the file object opened by find_module
                 desc[0].close()
             if not self._check_module(module):
-                raise ImportError(_(u'Invalid backend %s') % backend)
+                raise ImportError(_(u'Invalid backend %s.') % backend)
             else:
                 self._loaded_cache[backend] = module
                 # set the module name
@@ -109,7 +109,7 @@ class BackendManager(DictMixin):
         try:
             return self._load_backend(name)
         except ImportError:
-            raise KeyError(_(u'No backend "%s" found') % name)
+            raise KeyError(_(u'No backend "%s" found.') % name)
 
     def __iter__(self):
         return iter(self._find_backends())

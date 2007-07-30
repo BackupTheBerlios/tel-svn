@@ -1,0 +1,499 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-07-30 19:00+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/tel_console.py:46
+msgid "readline wasn't found, text editing capabilities are restricted."
+msgstr ""
+
+#: src/tel_console.py:56
+#, python-format
+msgid "Editing entry \"%s\" ..."
+msgstr ""
+
+#: src/tel_console.py:57
+msgid "Creating a new entry ..."
+msgstr ""
+
+#: src/tel_console.py:86
+#, python-format
+msgid "You entered an invalid value for the field\"%s\"!"
+msgstr ""
+
+#: src/tel_console.py:99 src/tel_console.py:138
+msgid "Please fill the following fields!"
+msgstr ""
+
+#: src/tel_console.py:140
+msgid ""
+"Please fill the following fields! The current value is shown in square "
+"brackets. NOTE: The current value is not preserved. You have to re-enter "
+"every value!"
+msgstr ""
+
+#: src/tel_console.py:222
+#, python-format
+msgid "%(question)s [%(yes)s,%(no)s] "
+msgstr ""
+
+#: src/tel_console.py:223 src/tel_console.py:225
+msgid "y"
+msgstr ""
+
+#: src/tel_console.py:224
+msgid "n"
+msgstr ""
+
+#: src/tel_console.py:243
+msgid "Do you really want to save an emtpy entry?"
+msgstr ""
+
+#: src/tel_console.py:246
+msgid "The entry is not saved."
+msgstr ""
+
+#: src/tel_console.py:251
+msgid "The entry was saved."
+msgstr ""
+
+#: src/tel_console.py:379
+msgid "--create needs a number."
+msgstr ""
+
+#: src/tel_console.py:381
+msgid "--create only accepts one argument."
+msgstr ""
+
+#: src/tel_console.py:390
+msgid "No entries found for given patterns."
+msgstr ""
+
+#: src/tel_console.py:395
+#, python-format
+msgid "Really delete entry \"%s\"?"
+msgstr ""
+
+#: src/tel_console.py:406
+#, python-format
+msgid "There is no field %s."
+msgstr ""
+
+#: src/tel_console.py:408
+msgid "Field"
+msgstr ""
+
+#: src/tel_console.py:408
+msgid "Internal name"
+msgstr ""
+
+#: src/tel_console.py:413
+msgid "Please specifiy only one backend!"
+msgstr ""
+
+#: src/tel_console.py:420
+msgid "Backend name"
+msgstr ""
+
+#: src/tel_console.py:420
+msgid "Description"
+msgstr ""
+
+#: src/tel_console.py:435
+#, python-format
+msgid ""
+"\n"
+"%(name)s - %(shortdesc)s\n"
+"------------\n"
+"\n"
+"Supported fields:\n"
+"%(fields)s\n"
+"\n"
+"------------\n"
+"\n"
+"%(longdesc)s"
+msgstr ""
+
+#: src/tel_console.py:455
+msgid "%prog [options] command [arguments]"
+msgstr ""
+
+#: src/tel_console.py:457
+msgid "tel is a little address book program for your terminal."
+msgstr ""
+
+#: src/tel_console.py:472
+msgid "file"
+msgstr ""
+
+#: src/tel_console.py:472
+msgid "use FILE as phone book."
+msgstr ""
+
+#: src/tel_console.py:479
+msgid "print a short list of the specified entries."
+msgstr ""
+
+#: src/tel_console.py:481
+msgid "print a table with the specified entries."
+msgstr ""
+
+#: src/tel_console.py:486
+msgid "show the specified entries."
+msgstr ""
+
+#: src/tel_console.py:487
+msgid "number"
+msgstr ""
+
+#: src/tel_console.py:488
+msgid "create the specified number of new entries."
+msgstr ""
+
+#: src/tel_console.py:490
+msgid "edit the specified entries."
+msgstr ""
+
+#: src/tel_console.py:492
+msgid "remove the entries at the specified indices."
+msgstr ""
+
+#: src/tel_console.py:494
+msgid "export phone book to all specified locations."
+msgstr ""
+
+#: src/tel_console.py:495
+msgid "targets"
+msgstr ""
+
+#: src/tel_console.py:497
+msgid "import all specified phone books."
+msgstr ""
+
+#: src/tel_console.py:498
+msgid "files"
+msgstr ""
+
+#: src/tel_console.py:503
+msgid ""
+"ignore case, when searching or sorting. The default is not to ignore case."
+msgstr ""
+
+#: src/tel_console.py:507 src/tel_console.py:524 src/tel_console.py:541
+msgid "fields"
+msgstr ""
+
+#: src/tel_console.py:508
+msgid ""
+"specify a list of fields to search in. Takes a comma-separated list of "
+"internal names as printed by --help-fields. Fields prefixed with \"-\" are "
+"not searched."
+msgstr ""
+
+#: src/tel_console.py:517
+msgid "field"
+msgstr ""
+
+#: src/tel_console.py:518
+msgid ""
+"sort output. Specify a field name as printed by --help-fields. If prefixed "
+"with +, sorting order is ascending, if prefixed with a -, sorting order is "
+"descending. The default is ascending, if no prefix is used."
+msgstr ""
+
+#: src/tel_console.py:525
+msgid ""
+"specify the fields to show. Uses the same syntax as the --fields option."
+msgstr ""
+
+#: src/tel_console.py:539
+msgid "backends"
+msgstr ""
+
+#: src/tel_console.py:543
+msgid ""
+"Commands to modify the phone book and to search or print entries. Only one "
+"of these options may be specified.\n"
+"Entries are specified through regular expressions. See http://docs.python."
+"org/lib/re-syntax.html for a description of regular expression syntax."
+msgstr ""
+
+#: src/tel_console.py:549
+msgid "Commands"
+msgstr ""
+
+#: src/tel_console.py:552
+msgid ""
+"These options apply to every command, that deals with entries. They tune the "
+"search for entries."
+msgstr ""
+
+#: src/tel_console.py:554
+msgid "Searching options"
+msgstr ""
+
+#: src/tel_console.py:557
+msgid "These options are valid with every command."
+msgstr ""
+
+#: src/tel_console.py:558
+msgid "Global options"
+msgstr ""
+
+#: src/tel_console.py:560
+msgid ""
+"These options are only supported by certain commands. If you use them with "
+"other commands, they are just ignored."
+msgstr ""
+
+#: src/tel_console.py:562
+msgid "Special options"
+msgstr ""
+
+#: src/tel_console.py:569
+msgid "Please specify a command!"
+msgstr ""
+
+#: src/tel_console.py:572
+#, python-format
+msgid "The command %s need arguments."
+msgstr ""
+
+#: src/tel_console.py:575
+#, python-format
+msgid "The command %s doesn't take any arguments."
+msgstr ""
+
+#: src/tel_console.py:591
+msgid "Dying peacefully ..."
+msgstr ""
+
+#: src/tel/backendmanager.py:95
+#, python-format
+msgid "Invalid backend %s."
+msgstr ""
+
+#: src/tel/backendmanager.py:112
+#, python-format
+msgid "No backend \"%s\" found."
+msgstr ""
+
+#: src/tel/phonebook.py:53
+msgid "Title"
+msgstr ""
+
+#: src/tel/phonebook.py:54
+msgid "First name"
+msgstr ""
+
+#: src/tel/phonebook.py:55
+msgid "Last name"
+msgstr ""
+
+#: src/tel/phonebook.py:56
+msgid "Street and number"
+msgstr ""
+
+#: src/tel/phonebook.py:57
+msgid "Postal code"
+msgstr ""
+
+#: src/tel/phonebook.py:58
+msgid "Town"
+msgstr ""
+
+#: src/tel/phonebook.py:59
+msgid "Country"
+msgstr ""
+
+#: src/tel/phonebook.py:60
+msgid "Post office box"
+msgstr ""
+
+#: src/tel/phonebook.py:61
+msgid "Mobile"
+msgstr ""
+
+#: src/tel/phonebook.py:62
+msgid "Phone"
+msgstr ""
+
+#: src/tel/phonebook.py:63
+msgid "eMail"
+msgstr ""
+
+#: src/tel/phonebook.py:64
+msgid "Date of birth"
+msgstr ""
+
+#: src/tel/phonebook.py:65
+msgid "Tags"
+msgstr ""
+
+#: src/tel/phonebook.py:73
+#, python-format
+msgid "No such field: %s"
+msgstr ""
+
+#: src/tel/phonebook.py:290
+#, python-format
+msgid "%s is not a valid URI."
+msgstr ""
+
+#: src/tel/phonebook.py:333
+#, python-format
+msgid "Couldn't find a backend for %s."
+msgstr ""
+
+#: src/tel/phonebook.py:337
+#, python-format
+msgid "Unknown backend %s."
+msgstr ""
+
+#: src/tel/configuration.py:99
+#, python-format
+msgid ""
+"Name:           %(title)s %(firstname)s %(lastname)s\n"
+"Address:        %(street)s\n"
+"                %(country)s, %(postcode)s %(town)s\n"
+"POB:            %(postbox)s\n"
+"E-Mail:         %(email)s\n"
+"Phone:          %(phone)s\n"
+"Mobile:         %(mobile)s\n"
+"Date of birth:  %(birthdate)s\n"
+"Tags:           %(tags)s\n"
+msgstr ""
+
+#: src/tel/configuration.py:115
+#, python-format
+msgid "%(firstname)s %(lastname)s"
+msgstr ""
+
+#: src/tel/cmdoptparse.py:61
+msgid "Supported options: "
+msgstr ""
+
+#: src/tel/cmdoptparse.py:79
+msgid "pattern"
+msgstr ""
+
+#: src/tel/cmdoptparse.py:179
+msgid "Please specify only one command option!"
+msgstr ""
+
+#: src/tel/cmdoptparse.py:220
+msgid "show author information and exit."
+msgstr ""
+
+#: src/tel/cmdoptparse.py:223
+msgid "show program's license and exit."
+msgstr ""
+
+#: src/tel/cmdoptparse.py:226
+msgid "show copyright information and exit."
+msgstr ""
+
+#: src/tel/cmdoptparse.py:232
+#, python-format
+msgid "%(prog)s: error: %(message)s\n"
+msgstr ""
+
+#: src/tel/backends/csv_backend.py:40
+msgid ""
+"A simple backend, which uses utf-8 encoded csv (comma separated values)\n"
+"files to store entries. These files are understood by spreadsheet\n"
+"applications like Excel or OpenOffice.org Calc.\n"
+msgstr ""
+
+#: src/tel/backends/csv_backend.py:45
+msgid "A csv-based backend"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:134
+#, python-format
+msgid "no such option: %s"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:145
+#, python-format
+msgid "ambiguous option: %s (%s?)"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:368
+#, python-format
+msgid "Usage: %s\n"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:387
+msgid "Usage"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:412
+msgid "integer"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:413
+msgid "long integer"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:414
+msgid "floating-point"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:415
+msgid "complex"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:423
+#, python-format
+msgid "option %s: invalid %s value: %r"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:431
+#, python-format
+msgid "option %s: invalid choice: %r (choose from %s)"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:1239
+msgid "show this help message and exit"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:1244
+msgid "show program's version number and exit"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:1267
+msgid "%prog [options]"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:1477 /usr/lib/python2.5/optparse.py:1516
+#, python-format
+msgid "%s option requires an argument"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:1479 /usr/lib/python2.5/optparse.py:1518
+#, python-format
+msgid "%s option requires %d arguments"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:1488
+#, python-format
+msgid "%s option does not take a value"
+msgstr ""
+
+#: /usr/lib/python2.5/optparse.py:1605
+msgid "Options"
+msgstr ""

@@ -43,8 +43,8 @@ _ = config.translation.ugettext
 try:
     import readline
 except ImportError:
-    msg = _('readline wasn\'t found, text editing will be rather '
-            'uncomfortable')
+    msg = _('readline wasn\'t found, text editing capabilities are '
+            'restricted.')
     print >> stderr, msg
 
 
@@ -53,8 +53,8 @@ class ConsoleEntryEditor(object):
 
     :ivar current_field: The name of the currently edited field"""
 
-    EDIT_MSG = _('Editing entry "%s"...')
-    NEW_MSG = _('Creating a new entry...')
+    EDIT_MSG = _('Editing entry "%s" ...')
+    NEW_MSG = _('Creating a new entry ...')
 
     def __init__(self, fields, new=False):
         """`fields` is a list of fields to be edited by this editor.
@@ -96,7 +96,7 @@ class ConsoleEntryEditor(object):
 
         # input methods supporting readline
         def print_help(self, new):
-            print >> stdout, _('Please fill the following fields.')
+            print >> stdout, _('Please fill the following fields!')
 
         def initialize_editor(self):
             """Initialize the editor"""
@@ -135,9 +135,9 @@ class ConsoleEntryEditor(object):
         def print_help(self, new):
             """Print a little editing help"""
             if new:
-                help = _('Please fill the following fields.')
+                help = _('Please fill the following fields!')
             else:
-                help = _('Please fill the following fields. The current '
+                help = _('Please fill the following fields! The current '
                          'value is shown in square brackets. NOTE: The '
                          'current value is not preserved. You have to '
                          're-enter every value!')
@@ -243,12 +243,12 @@ class ConsoleIFace(object):
                 question = _('Do you really want to save an emtpy entry?')
                 if not yes_no_question(question):
                     # abort without saving
-                    print >> stdout, _('The entry is not saved')
+                    print >> stdout, _('The entry is not saved.')
                     return
             if entry.parent is None:
                 self.phonebook.add(entry)
             self.phonebook.save()
-            print >> stdout, _('The entry was saved')
+            print >> stdout, _('The entry was saved.')
 
     def _find_entries(self, options, *args):
         """Finds entries according to command line arguments"""
@@ -376,9 +376,9 @@ class ConsoleIFace(object):
             try:
                 number = int(args[0])
             except ValueError:
-                sys.exit(_('--create needs a number'))
+                sys.exit(_('--create needs a number.'))
         if len(args) > 1:
-            sys.exit(_('--create accepts only one argument'))
+            sys.exit(_('--create only accepts one argument.'))
         entries = [Entry() for Entry in itertools.repeat(phonebook.Entry,
                                                          number)]
         self.edit_entries(entries)
@@ -387,13 +387,12 @@ class ConsoleIFace(object):
         """Interactivly edit entries"""
         entries = self._find_entries(options, *args)
         if not entries:
-            sys.exit(_('No entries found for given patterns'))
+            sys.exit(_('No entries found for given patterns.'))
         self.edit_entries(entries)
 
     def _cmd_remove(self, options, *args):
         for entry in self._find_entries(options, *args):
-            resp = raw_input(_('Really delete entry "%s"? ') % entry)
-            if resp.lower() == 'y':
+            if yes_no_question(_('Really delete entry "%s"?') % entry):
                 self.phonebook.remove(entry)
         self.phonebook.save()
 
@@ -404,14 +403,14 @@ class ConsoleIFace(object):
             items = [(phonebook.translate_field(field), unicode(field))
                      for field in args]
         except phonebook.NoSuchField, e:
-            sys.exit(_('There is no field %s') % e.field)
+            sys.exit(_('There is no field %s.') % e.field)
 
         headline = [_('Field'), _('Internal name')]
         print_simple_table(headline, items)
 
     def _cmd_help_backends(self, options, *args):
         if len(args) > 1:
-            sys.exit(_('Please specifiy only one backend'))
+            sys.exit(_('Please specifiy only one backend!'))
         from tel import backendmanager
         manager = backendmanager.manager()
         if not args:
@@ -459,7 +458,8 @@ Supported fields:
                     'terminal.')
 
     defaults = {
-        'file': os.path.join(config.user_directory, 'phonebook.csv'),
+        'file': 'csv://' + os.path.join(config.user_directory,
+                                        'phonebook.csv'),
         'output': phonebook.FIELDS,
         'ignore_case': False,
         'sortby': ('lastname', False),
@@ -469,32 +469,32 @@ Supported fields:
     global_options = [
         # These options tune the behaviour of all commands
         make_option('-f', '--file', action='store', dest='file',
-                    metavar=_('file'), help=_('use FILE as phone book')),
+                    metavar=_('file'), help=_('use FILE as phone book.')),
         ]
 
     command_options = [
         # command options
         make_option('--list', action='command',
                     options=('--sort-by', '--ignore-case', '--fields'),
-                    help=_('print a short list of the specified entries')),
+                    help=_('print a short list of the specified entries.')),
         make_option('--table', action='command',
                     help=_('print a table with the specified entries.'),
                     options=('--output', '--sort-by', '--ignore-case',
                              '--fields')),
         make_option('--show', action='command',
                     options=('--sort-by', '--ignore-case', '--fields'),
-                    help=_('show the specified entries')),
+                    help=_('show the specified entries.')),
         make_option('--create', action='command', metavar=_('number'),
-                    help=_('create the specified number of new entries')),
+                    help=_('create the specified number of new entries.')),
         make_option('--edit', action='command', args='required',
-                    help=_('edit the entries at the specified indices')),
+                    help=_('edit the specified entries.')),
         make_option('--remove', action='command', args='required',
-                    help=_('remove the entries at the specified indices')),
+                    help=_('remove the entries at the specified indices.')),
         make_option('--export', action='command', args='required',
-                    help=_('export phone book to all specified locations'),
+                    help=_('export phone book to all specified locations.'),
                     metavar=_('targets')),
         make_option('--import', action='command', args='required',
-                    help=_('import all specified phone books'),
+                    help=_('import all specified phone books.'),
                     metavar=_('files'))]
 
     search_options = [
@@ -508,7 +508,7 @@ Supported fields:
                     help=_('specify a list of fields to search in. Takes a '
                            'comma-separated list of internal names as '
                            'printed by --help-fields. Fields prefixed with '
-                           '"-" are hidden.'))
+                           '"-" are not searched.'))
         ]
 
     local_options = [
@@ -522,8 +522,8 @@ Supported fields:
                            'ascending, if no prefix is used.')),
         make_option('-o', '--output', action='store', dest='output',
                     type='field_list', metavar=_('fields'),
-                    help=_('specify the fields to show. '
-                           'See --search option for syntax'))
+                    help=_('specify the fields to show. Uses the same '
+                           'syntax as the --fields option.'))
         ]
 
     def _parse_args(self):
@@ -543,17 +543,18 @@ Supported fields:
         desc = _('Commands to modify the phone book and to search or '
                  'print entries. Only one of these options may be '
                  'specified.\n'
-                 'Entries are specified through searching patterns. '
-                 'See searching options for details')
+                 'Entries are specified through regular expressions. '
+                 'See http://docs.python.org/lib/re-syntax.html for a '
+                 'description of regular expression syntax.')
         group = parser.add_option_group(_('Commands'), desc)
         group.add_options(self.command_options)
         # searching options
         desc = _('These options apply to every command, that deals with '
-                 'entries. They tune the search of entries')
+                 'entries. They tune the search for entries.')
         group = parser.add_option_group(_('Searching options'), desc)
         group.add_options(self.search_options)
         # global options
-        desc = _('These options are valid with every command')
+        desc = _('These options are valid with every command.')
         group = parser.add_option_group(_('Global options'), desc)
         group.add_options(self.global_options)
         desc = _('These options are only supported by certain commands. If '
@@ -565,13 +566,13 @@ Supported fields:
         (options, args) = parser.parse_args()
 
         if not hasattr(options, 'command'):
-            parser.error(_('Please specify a command'))
+            parser.error(_('Please specify a command!'))
 
         if options.args == 'required' and not args:
-            msg = _('The command %s need arguments')
+            msg = _('The command %s need arguments.')
             parser.error(msg % options.command)
         elif options.args == 'no' and args:
-            msg = _('The command %s doesn\'t take any arguments')
+            msg = _('The command %s doesn\'t take any arguments.')
             parser.error(msg % options.command)
 
         # get the command function

@@ -38,8 +38,9 @@ _ = config.translation.ugettext
 
 
 __long_description__ = _("""\
-A simple backend, which uses classic excel-style csv (comma separated
-values) files to store entries.
+A simple backend, which uses utf-8 encoded csv (comma separated values)
+files to store entries. These files are understood by spreadsheet
+applications like Excel or OpenOffice.org Calc.
 """)
 __short_description__ = _('A csv-based backend')
 
