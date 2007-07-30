@@ -62,6 +62,7 @@ class ConsoleEntryEditor(object):
         This only affects the printed help, ConsoleEntryEditor detects
         automatically, if a single entry is new"""
         self.print_help(new)
+        print
         self.fields = fields
 
     def edit(self, entry):
@@ -303,57 +304,6 @@ class ConsoleIFace(object):
     #   These options can be queried trough the options argument of the
     #   command function
 
-##     def _cmd_export(self, options, *args):
-##         """Exports phone book"""
-##         for path in args:
-##             if not os.path.exists(path) and not os.path.basename(path):
-##                 # create non-existing directories here, if the user wants it
-##                 msg = _('Directory %s does not exist. Create it? ')
-##                 resp = raw_input(msg % path)
-##                 if resp.lower() == 'y':
-##                     os.makedirs(path)
-##                 else:
-##                     # do not export
-##                     continue
-##             if os.path.isdir(path):
-##                 # if path is a directory, create the export target by
-##                 # joining the filename of the phone book with the path
-##                 filename = os.path.basename(self.phonebook.path)
-##                 path = os.path.join(path, filename)
-##             if os.path.isfile(path):
-##                 # now check, if the file denoted by path already exists
-##                 msg = _('%s already exists. Overwrite it? ')
-##                 resp = raw_input(msg % path)
-##                 if resp.lower() != 'y':
-##                     continue
-##             try:
-##                 shutil.copyfile(self.phonebook.path, path)
-##             except IOError, e:
-##                 if e.errno == 13:
-##                     msg = _('Error: Permission denied for %s') % path
-##                 else:
-##                     msg = e
-##                 print >> sys.stderr, msg
-
-##     def _cmd_import(self, options, *args):
-##         """Import phone books"""
-##         for path in args:
-##             # import all specified phone books
-##             if os.path.exists(path):
-##                 if (os.path.abspath(path) ==
-##                     os.path.abspath(self.phonebook.path)):
-##                     resp = raw_input(_('Do you really want to import the '
-##                                        'phone book you\'re just using? '))
-##                     if resp.lower() != 'y':
-##                         print _('Not importing %s...') % path
-##                         continue
-##                 import_book = phonebook.PhoneBook(path)
-##                 for entry in import_book:
-##                     # enable auto-generation of index
-##                     entry.index = None
-##                     self.phonebook.add(entry)
-##         self.phonebook.save()
-
     def _cmd_table(self, options, *args):
         """Print a table"""
         entries = self._get_entries_from_options(options, *args)
@@ -458,7 +408,7 @@ Supported fields:
                     'terminal.')
 
     defaults = {
-        'file': 'csv://' + os.path.join(config.user_directory,
+        'uri': 'csv://' + os.path.join(config.user_directory,
                                         'phonebook.csv'),
         'output': phonebook.FIELDS,
         'ignore_case': False,
@@ -468,8 +418,8 @@ Supported fields:
 
     global_options = [
         # These options tune the behaviour of all commands
-        make_option('-f', '--file', action='store', dest='file',
-                    metavar=_('file'), help=_('use FILE as phone book.')),
+        make_option('-u', '--uri', action='store', dest='uri',
+                    metavar=_('uri'), help=_('load phonebook from URI.')),
         ]
 
     command_options = [
@@ -490,12 +440,13 @@ Supported fields:
                     help=_('edit the specified entries.')),
         make_option('--remove', action='command', args='required',
                     help=_('remove the entries at the specified indices.')),
-        make_option('--export', action='command', args='required',
-                    help=_('export phone book to all specified locations.'),
-                    metavar=_('targets')),
-        make_option('--import', action='command', args='required',
-                    help=_('import all specified phone books.'),
-                    metavar=_('files'))]
+        ## make_option('--export', action='command', args='required',
+        ##             help=_('export phone book to all specified locations.'),
+        ##             metavar=_('targets')),
+        ## make_option('--import', action='command', args='required',
+        ##             help=_('import all specified phone books.'),
+        ##             metavar=_('files'))
+        ]
 
     search_options = [
         make_option('-i', '--ignore-case', action='store_true',
@@ -503,7 +454,7 @@ Supported fields:
                     help=_('ignore case, when searching or sorting. The '
                            'default is not to ignore case.')),
         # FIXME: someone knows a good short options for --fields?
-        make_option('--fields', action='store', dest='fields',
+        make_option('-f', '--fields', action='store', dest='fields',
                     type='field_list', metavar=_('fields'),
                     help=_('specify a list of fields to search in. Takes a '
                            'comma-separated list of internal names as '
@@ -584,7 +535,7 @@ Supported fields:
         try:
             (options, args) = self._parse_args()
             args = [arg.decode(sys.getfilesystemencoding()) for arg in args]
-            self.phonebook = phonebook.phonebook_open(options.file)
+            self.phonebook = phonebook.phonebook_open(options.uri)
             self.phonebook.load()
             options.command_function(options, *args)
         except KeyboardInterrupt:
