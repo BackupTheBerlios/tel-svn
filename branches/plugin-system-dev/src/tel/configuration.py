@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
 import os
+import sys
 import gettext
 
 # make global stuff like license and copyright available
@@ -14,8 +14,6 @@ class Configuration(object):
     Currently it only knows about hard-coded installation paths, which are
     replaced during the installation process."""
 
-    _messages = '${install_messages}'
-    _appmodules = '${install_app_modules}'
     _user_directory = None
     _copyright = None
     _translation = None
@@ -28,17 +26,8 @@ class Configuration(object):
         """Installation directory of gettext messsage catalogs"""
         # make sure, that configuration is useable, even if placeholders
         # were not replaced
-        if os.path.isdir(self._messages):
-            return self._messages
-        return None
-
-    @property
-    def appmodules(self):
-        """Installation directory of tel modules"""
-        if os.path.isdir(self._appmodules):
-            return self._appmodules
-        else:
-            return os.getcwd()
+        messages = os.path.join(self.package, 'locale')
+        return (messages if os.path.isdir(messages) else None)
 
     @property
     def user_directory(self):
@@ -51,6 +40,11 @@ class Configuration(object):
         if not os.path.isdir(self._user_directory):
             os.mkdir(self._user_directory)
         return self._user_directory
+
+    @property
+    def package(self):
+        """The directory of the tel package"""
+        return os.path.dirname(__file__)
 
     @property
     def version(self):
@@ -92,7 +86,7 @@ class Configuration(object):
         """Directories which are searched for storage backends"""
         if self._backend_directories is None:
             # default directory
-            def_dirs = [os.path.join(self.appmodules, 'backends'),
+            def_dirs = [os.path.join(self.package, 'backends'),
                         os.path.join(self.user_directory, 'backends')]
             self._backend_directories = def_dirs
         return self._backend_directories
@@ -121,5 +115,3 @@ class Configuration(object):
             msg = _('%(firstname)s %(lastname)s')
             self._short_entry_format = msg
         return self._short_entry_format
-
-

@@ -57,7 +57,3 @@ from configuration import Configuration
 
 # create a global configuration object
 config = Configuration()
-
-
-# adjust sys.path to include the tel package
-sys.path.insert(0, config.appmodules)
