@@ -29,6 +29,7 @@ import sys
 import itertools
 import textwrap
 import re
+import locale
 
 # tel modules
 from tel import phonebook, config
@@ -538,6 +539,7 @@ Supported fields:
     def start(self):
         """Starts the interface"""
         try:
+            locale.setlocale(locale.LC_ALL, '')
             (options, args) = self._parse_args()
             args = [arg.decode(sys.getfilesystemencoding()) for arg in args]
             try:
