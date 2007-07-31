@@ -37,16 +37,18 @@ from tel.cmdoptparse import CommandOptionParser, make_option
 from tel.encodinghelper import stdout, stderr, raw_input
 from tel.encodinghelper import stdout_encoding
 
+
 _ = config.translation.ugettext
 
 
 try:
     import readline
+    have_readline = True
 except ImportError:
     msg = _('readline wasn\'t found, text editing capabilities are '
             'restricted.')
     print >> stderr, msg
-
+    have_readline = False
 
 class ConsoleEntryEditor(object):
     """This class provides a simple console-based entry editor.
@@ -91,10 +93,7 @@ class ConsoleEntryEditor(object):
         return entry
 
 
-    try:
-        # force raising a NameError if readline isn't present
-        readline
-
+    if have_readline:
         # input methods supporting readline
         def print_help(self, new):
             print >> stdout, _('Please fill the following fields!')
@@ -126,7 +125,7 @@ class ConsoleEntryEditor(object):
                 readline.insert_text(text)
                 readline.redisplay()
 
-    except NameError:
+    else:
         # don't do anything
 
         def initialize_editor(self):
@@ -248,8 +247,14 @@ class ConsoleIFace(object):
                     return
             if entry.parent is None:
                 self.phonebook.add(entry)
-            self.phonebook.save()
-            print >> stdout, _('The entry was saved.')
+            try:
+                self.phonebook.save()
+                print >> stdout, _('The entry was saved.')
+            except Exception, exp:
+                msg = (exp.strerror if isinstance(exp, EnvironmentError)
+                       else exp.message)
+                sys.exit(_('Couldn\'t save the phonebook: %s') % msg)
+
 
     def _find_entries(self, options, *args):
         """Finds entries according to command line arguments"""
@@ -535,15 +540,19 @@ Supported fields:
         try:
             (options, args) = self._parse_args()
             args = [arg.decode(sys.getfilesystemencoding()) for arg in args]
-            self.phonebook = phonebook.phonebook_open(options.uri)
-            self.phonebook.load()
+            try:
+                self.phonebook = phonebook.phonebook_open(options.uri)
+                self.phonebook.load()
+            except Exception, exp:
+                msg = (_('Couldn\'t load %(uri)s: %(message)s' %
+                         {'message': exp.message,
+                          'uri': (getattr(self.phonebook, 'uri', None)
+                                  or options.uri)}))
+                sys.exit(msg)
             options.command_function(options, *args)
         except KeyboardInterrupt:
             sys.exit(_('Dying peacefully ...'))
 
 
-def main():
-    ConsoleIFace().start()
-
 if __name__ == '__main__':
-    main()
+    ConsoleIFace().start()
