@@ -2,21 +2,20 @@ Before starting with the installation, you should make sure, that all
 required libraries and programs are available on your system. tel currently
 depends on:
 
-    * Python at least 2.4 - http://www.python.org
+    * Python at least 2.5 - http://www.python.org
+    * gettext - http://www.gnu.org/software/gettext/gettext.html
 
 Users of debian systems can install these with:
 
-    apt-get install python2.4
+    apt-get install python2.5 gettext
 
 If you have completed installing all dependencies, you can install tel by
 running the following command:
-    
+
     python setup.py install
 
-This will install tel under /usr. If you want to change the installation
-prefix, use the --prefix option:
-  
-    python setup.py install --prefix /usr/local
+This will install tel under the prefix of your python installation, which is
+absolutely recommended.
 
 A complete list of command line options of the installation script is
 available through python setup.py --help.
