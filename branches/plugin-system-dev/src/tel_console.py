@@ -445,7 +445,7 @@ Supported fields:
         make_option('--edit', action='command', args='required',
                     help=_('edit the specified entries.')),
         make_option('--remove', action='command', args='required',
-                    help=_('remove the entries at the specified indices.')),
+                    help=_('remove the specified entries.')),
         ## make_option('--export', action='command', args='required',
         ##             help=_('export phone book to all specified locations.'),
         ##             metavar=_('targets')),
