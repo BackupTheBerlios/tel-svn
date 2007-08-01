@@ -483,7 +483,7 @@ Supported fields:
                            'syntax as the --fields option.'))
         ]
 
-    def _parse_args(self):
+    def _parse_args(self, args):
         """Parses command line arguments"""
         parser = CommandOptionParser(prog='tel',
                                      usage=self.usage,
@@ -520,7 +520,7 @@ Supported fields:
         group.add_options(self.local_options)
 
         parser.set_defaults(**self.defaults)
-        (options, args) = parser.parse_args()
+        (options, args) = parser.parse_args(args[1:])
 
         if not hasattr(options, 'command'):
             parser.error(_('Please specify a command!'))
@@ -540,8 +540,9 @@ Supported fields:
         """Starts the interface"""
         try:
             locale.setlocale(locale.LC_ALL, '')
-            (options, args) = self._parse_args()
-            args = [arg.decode(sys.getfilesystemencoding()) for arg in args]
+            args = [arg.decode(sys.getfilesystemencoding()) for arg in
+                    sys.argv]
+            (options, args) = self._parse_args(args)
             try:
                 self.phonebook = phonebook.phonebook_open(options.uri)
                 self.phonebook.load()
