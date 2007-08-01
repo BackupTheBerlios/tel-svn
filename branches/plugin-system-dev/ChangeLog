@@ -1,3 +1,14 @@
+0.2.0-pre
+	New plugin system for phonebook backends
+	Phonebooks are now addressed through URIs
+	changed --file to --uri
+	added -f as short option for --fields
+	added --help-backends to print information about backends
+	Dropped indexes, entries are now always addressed through
+         regular expressions
+	Use unicode now for internal text handling
+	Install tel as global package
+
 0.1.7.1
 	Fixed crash, if --help should print non-ascii characters
 
