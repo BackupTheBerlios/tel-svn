@@ -3,7 +3,7 @@
 # Copyright (c) 2007 Sebastian Wiesner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the \"Software\"),
+# copy of this software and associated documentation files (the "Software"),
 # to deal in the Software without restriction, including without limitation
 # the rights to use, copy, modify, merge, publish, distribute, sublicense,
 # and/or sell copies of the Software, and to permit persons to whom the
@@ -12,7 +12,7 @@
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -20,16 +20,16 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+from __future__ import with_statement
 
 """This module provides access to phonebook backends."""
-
 
 __revision__ = '$Id$'
 
 
 import os
 import imp
-
+from itertools import ifilter
 from UserDict import DictMixin
 
 from tel import config
@@ -72,7 +72,7 @@ class BackendManager(DictMixin):
     def _find_backends(self):
         """Finds all backends"""
         backends = []
-        for path in filter(os.path.isdir, config.backend_directories):
+        for path in ifilter(os.path.isdir, config.backend_directories):
             files = os.listdir(path)
             for fso in files:
                 mod_name = get_backend_name(fso)
@@ -86,11 +86,8 @@ class BackendManager(DictMixin):
         if backend not in self._loaded_cache or force:
             mod_name = BACKEND_MODULE_PATTERN % backend
             desc = imp.find_module(mod_name, config.backend_directories)
-            try:
+            with desc[0]:
                 module = imp.load_module(mod_name, *desc)
-            finally:
-                # close the file object opened by find_module
-                desc[0].close()
             if not self._check_module(module):
                 raise ImportError(_(u'Invalid backend %s.') % backend)
             else:

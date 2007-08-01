@@ -3,9 +3,15 @@
 # Copyright (c) 2006-2007 Gerold Penz <gerold.penz@tirol.utanet.at>
 # Copyright (c) 2007 Sebastian Wiesner <basti.wiesner@gmx.net>
 
-# Unlike the rest of tel, which is subject to the terms of MIT License as
-# denoted in the file headers, this code is placed under public domain and
-# may therefore be used without any restrictions by anyone.
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -15,8 +21,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-# Based on Gerold Penz' encodinghelper.py
-# http://gelb.bcom.at/trac/misc/wiki/Encodinghelper
+
+# see http://gelb.bcom.at/trac/misc/wiki/Encodinghelper for original sources
 
 
 """
