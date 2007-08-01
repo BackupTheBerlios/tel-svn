@@ -20,13 +20,15 @@
 # DEALINGS IN THE SOFTWARE."""
 
 """Distutils extension to install applications, including support for
-gettext catalogs"""
+gettext catalogs, uninstallation support, extended script installation
+and improved source distribution generation."""
 
 from __future__ import with_statement
 
 import os
 import sys
 from glob import glob
+from itertools import ifilter
 
 from distutils import core
 from distutils import util
@@ -37,6 +39,7 @@ from distutils import dep_util
 from distutils.dist import Distribution
 from distutils.cmd import Command, install_misc
 from distutils.command import build_scripts
+from distutils.command.sdist import sdist
 from distutils.command.build import build
 from distutils.command.install import install, INSTALL_SCHEMES
 from distutils.command.install_lib import install_lib
@@ -50,7 +53,7 @@ for scheme in INSTALL_SCHEMES.values():
     scheme['data'] = scheme['purelib']
 
 
-INSTALL_LOG = 'installed_files'
+INSTALL_LOG = 'install.log'
 
 
 def setup(**kwargs):
@@ -59,6 +62,7 @@ def setup(**kwargs):
 
     cmdclasses = {
         'messages': Messages,
+        'sdist': SDist,
         'build_messages': BuildMessages,
         'build_scripts': BuildScripts,
 #        'build_manpages': BuildManPages,
@@ -67,7 +71,6 @@ def setup(**kwargs):
         'install_lib': InstallLib,
         'install': AppInstall,
         'uninstall': Uninstall,
-
         }
 
     for key in cmdclasses:
@@ -87,6 +90,9 @@ class AppDistribution(Distribution):
         self.po = None
         self.po_dir = None
         Distribution.__init__(self, attrs)
+
+    def has_messages(self):
+        return bool(self.po)
 
 
 class Messages(Command):
@@ -114,7 +120,7 @@ class Messages(Command):
             self.msgmerge_exe = spawn.find_executable('msgmerge')
             if self.msgmerge_exe is None:
                 raise SystemExit('Couldn\'t find "msgmerge".')
-            self.announce('  ...msgmerge found at %s' % self.msgmerge_exe)
+        self.announce('  ...msgmerge found at %s' % self.msgmerge_exe)
 
     def run(self):
         for name in self.distribution.po:
@@ -128,6 +134,50 @@ class Messages(Command):
                 cmd = [self.msgmerge_exe, '-q', '-o', po_file, po_file,
                        catalog_file]
                 self.spawn(cmd)
+
+
+class SDist(sdist):
+    """sdist implementation which is aware of message files"""
+    def add_defaults(self):
+        """Add all the default files to self.filelist:
+          - README or README.txt
+          - setup.py
+          - test/test*.py
+          - all pure Python modules mentioned in setup script
+          - all C sources listed as part of extensions or C libraries
+            in the setup script (doesn't catch C headers!)
+          - all gettext message files
+        Warns if (README or README.txt) or setup.py are missing; everything
+        else is optional."""
+        sdist.add_defaults(self)
+
+        # get the relative pathname of this module
+        appdistutils = __file__.rstrip('c')
+        prefix = os.path.commonprefix((os.getcwd(), appdistutils))
+        appdistutils = appdistutils[len(prefix  + os.sep):]
+        # include this module and some extra metadata files, which are
+        # standard for applications
+        standards = (appdistutils, 'INSTALL', 'COPYING', 'ChangeLog')
+        for fn in standards:
+            if os.path.exists(fn):
+                self.filelist.append(fn)
+            else:
+                self.warn("standard file '%s' not found" % fn)
+        # some optional metadata files, not bad, if they are missing
+        optional = ('AUTHORS', 'THANKSTO', 'TODO')
+        for fn in ifilter(os.path.exists, optional):
+            self.filelist.append(fn)
+        # include message files
+        if self.distribution.has_messages():
+            build_messages = self.get_finalized_command('build_messages')
+            self.filelist.extend(build_messages.get_source_files())
+        # include package data
+        if self.distribution.has_pure_modules():
+            build_py = self.get_finalized_command('build_py')
+            for pkg, src_dir, build_dir, filenames in build_py.data_files:
+                files = (os.path.join(src_dir, filename) for filename in
+                         filenames)
+                self.filelist.extend(files)
 
 
 class BuildMessages(Command):
@@ -150,15 +200,21 @@ class BuildMessages(Command):
                                    ('build_lib', 'build_lib'))
 
     def _po_packages(self):
+        """Returns an informative dict about every po packages specified
+        in setup"""
         for name in self.distribution.po:
             source_dir = os.path.join(self.distribution.po_dir, name)
             build_dir = os.path.join(self.build_lib, name, 'locale')
+            template = os.path.join(source_dir, name + '.pot')
             pkg = {'name': name,
+                   'template': template,
                    'source_dir': source_dir,
                    'build_dir': build_dir}
             yield pkg
 
     def _po_package_contents(self, package):
+        """Returns an informative dictionary about every source po file
+        in po `package`"""
         po_files = glob(os.path.join(package['source_dir'], '*.po'))
         for po_file in po_files:
             language = os.path.splitext(os.path.basename(po_file))[0]
@@ -184,7 +240,17 @@ class BuildMessages(Command):
                 self.spawn(cmd)
         self.announce('Done building message catalogs.')
 
+    def get_source_files(self):
+        """Returns a list of source files for sdist"""
+        files = []
+        for pkg in self._po_packages():
+            files.append(pkg['template'])
+            files.extend((item['po_file'] for item in
+                          self._po_package_contents(pkg)))
+        return files
+
     def get_outputs(self):
+        """Returns a list of files, which are created by this command"""
         outputs = []
         for pkg in self._po_packages():
             outputs.append(pkg['build_dir'])
@@ -198,6 +264,10 @@ class BuildMessages(Command):
 class BuildScripts(build_scripts.build_scripts):
     """Improved install_scripts implementation, which can install scripts
     under different names"""
+
+    def get_source_files(self):
+        """Returns a list of source files for sdist"""
+        return zip(*self.distribution.scripts)[0]
 
     def copy_scripts (self):
         """Copy each script listed in 'self.scripts'; if it's marked as a
@@ -230,8 +300,9 @@ class BuildScripts(build_scripts.build_scripts):
                 self.copy_file(script, outfile)
 
     def _adjust_shebang(self, script, outfile):
-        """Adjust shebands of `script` and write the adjusted script to
-        `outfile`"""
+        """Checks, if `script` has a sheband, adjust it, if necessary, and
+        write the result to `outfile`. Returns True, if anything was
+        adjusted."""
         # Always open the file, but ignore failures in dry-run mode --
         # that way, we'll get accurate feedback if we can read the
         # script.
@@ -249,11 +320,11 @@ class BuildScripts(build_scripts.build_scripts):
                             outstream.write("#!%s%s\n" %  (self.executable,
                                                            post_interp))
                             outstream.write(stream.read())
-                    return True
+                        return True
         except IOError:
             if not self.dry_run:
                 raise
-            return False
+        return False
 
     def _correct_file_mode(self):
         """Correct file modes of all scripts"""
@@ -300,12 +371,6 @@ class AppBuild(build):
         build.finalize_options(self)
 
 
-class InstallStuff(install_misc):
-    """Base class for some install commands"""
-    def mkpath (self, name, mode=0777):
-        return install_misc.mkpath(self, name, mode)
-
-
 class InstallLib(install_lib):
     """message files aware install_lib implementation"""
     def build(self):
@@ -315,7 +380,7 @@ class InstallLib(install_lib):
 
     def get_outputs (self):
         outputs = install_lib.get_outputs(self)
-        msg_outputs = self._mutate_outputs(has_messages(self),
+        msg_outputs = self._mutate_outputs(self.distribution.has_messages(),
                                            'build_messages', 'build_lib',
                                            self.install_dir)
         return msg_outputs + outputs
@@ -324,6 +389,7 @@ class InstallLib(install_lib):
 class AppInstall(install):
     def run(self):
         install.run(self)
+        # write installation log file
         stream = open(INSTALL_LOG, 'w')
         outputs = map(os.path.normpath, self.get_outputs())
         stream.write('\n'.join(outputs))
@@ -332,7 +398,7 @@ class AppInstall(install):
 
 
 class Uninstall(Command):
-    description = 'Whipes tel from this computer'
+    description = 'Whipes the program from this computer'
 
     user_options = []
 
@@ -344,12 +410,11 @@ class Uninstall(Command):
 
     def run(self):
         if not os.path.isfile(INSTALL_LOG):
-            msg = 'Cannot find the list file "%s".' % INSTALL_LOG
+            msg = 'Cannot find the installation log file %s.' % INSTALL_LOG
             sys.exit(msg)
 
-        stream = open(INSTALL_LOG)
-        files = stream.read().splitlines()
-        stream.close()
+        with open(INSTALL_LOG) as stream:
+            files = stream.read().splitlines()
 
         # sort and reverse the file list. This puts the directories after
         # the files
