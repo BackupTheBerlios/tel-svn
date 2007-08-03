@@ -38,7 +38,6 @@ through a codecs.DataWriter.
 __revision__ = "$Id$"
 
 
-
 import sys
 import codecs
 import subprocess
@@ -85,6 +84,7 @@ stdin = codecs.getreader(stdin_encoding)(sys.stdin)
 
 # preserve old raw_input in this module namespace
 no_encoding_raw_input = raw_input
+no_encoding_exit = sys.exit
 
 def raw_input(prompt=None):
     """A raw_input variant, which is encoding aware"""
@@ -92,3 +92,9 @@ def raw_input(prompt=None):
         prompt = prompt.encode(stdout_encoding)
     retval = no_encoding_raw_input(prompt)
     return retval.decode(stdin_encoding)
+
+def exit(status):
+    """Works like sys.exit, but is unicode-safe"""
+    if isinstance(status, unicode):
+        status = status.encode(stderr_encoding)
+    no_encoding_exit(status)
