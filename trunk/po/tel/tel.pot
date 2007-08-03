@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-08-01 14:23+0200\n"
+"POT-Creation-Date: 2007-08-03 19:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,104 +20,104 @@ msgstr ""
 msgid "readline wasn't found, text editing capabilities are restricted."
 msgstr ""
 
-#: src/tel_console.py:59
+#: src/tel_console.py:60
 #, python-format
 msgid "Editing entry \"%s\" ..."
 msgstr ""
 
-#: src/tel_console.py:60
+#: src/tel_console.py:61
 msgid "Creating a new entry ..."
 msgstr ""
 
-#: src/tel_console.py:90
+#: src/tel_console.py:91
 #, python-format
 msgid "You entered an invalid value for the field\"%s\"!"
 msgstr ""
 
-#: src/tel_console.py:100 src/tel_console.py:139
+#: src/tel_console.py:101 src/tel_console.py:140
 msgid "Please fill the following fields!"
 msgstr ""
 
-#: src/tel_console.py:141
+#: src/tel_console.py:142
 msgid ""
 "Please fill the following fields! The current value is shown in square "
 "brackets. NOTE: The current value is not preserved. You have to re-enter "
 "every value!"
 msgstr ""
 
-#: src/tel_console.py:223
+#: src/tel_console.py:224
 #, python-format
 msgid "%(question)s [%(yes)s,%(no)s] "
 msgstr ""
 
-#: src/tel_console.py:224 src/tel_console.py:226
+#: src/tel_console.py:225 src/tel_console.py:227
 msgid "y"
 msgstr ""
 
-#: src/tel_console.py:225
+#: src/tel_console.py:226
 msgid "n"
 msgstr ""
 
-#: src/tel_console.py:244
+#: src/tel_console.py:245
 msgid "Do you really want to save an emtpy entry?"
 msgstr ""
 
-#: src/tel_console.py:247
+#: src/tel_console.py:248
 msgid "The entry is not saved."
 msgstr ""
 
-#: src/tel_console.py:253
+#: src/tel_console.py:254
 msgid "The entry was saved."
 msgstr ""
 
-#: src/tel_console.py:257
+#: src/tel_console.py:262
 #, python-format
-msgid "Couldn't save the phonebook: %s"
+msgid "Couldn't save %(uri)s: %(message)s"
 msgstr ""
 
-#: src/tel_console.py:335
+#: src/tel_console.py:340
 msgid "--create needs a number."
 msgstr ""
 
-#: src/tel_console.py:337
+#: src/tel_console.py:342
 msgid "--create only accepts one argument."
 msgstr ""
 
-#: src/tel_console.py:346
+#: src/tel_console.py:351
 msgid "No entries found for given patterns."
 msgstr ""
 
-#: src/tel_console.py:351
+#: src/tel_console.py:356
 #, python-format
 msgid "Really delete entry \"%s\"?"
 msgstr ""
 
-#: src/tel_console.py:362
+#: src/tel_console.py:367
 #, python-format
 msgid "There is no field %s."
 msgstr ""
 
-#: src/tel_console.py:364
+#: src/tel_console.py:369
 msgid "Field"
 msgstr ""
 
-#: src/tel_console.py:364
+#: src/tel_console.py:369
 msgid "Internal name"
 msgstr ""
 
-#: src/tel_console.py:369
+#: src/tel_console.py:374
 msgid "Please specifiy only one backend!"
 msgstr ""
 
-#: src/tel_console.py:376
+#: src/tel_console.py:381
 msgid "Backend name"
 msgstr ""
 
-#: src/tel_console.py:376
+#: src/tel_console.py:381
 msgid "Description"
 msgstr ""
 
-#: src/tel_console.py:391
+#: src/tel_console.py:396
 #, python-format
 msgid ""
 "\n"
@@ -132,87 +132,87 @@ msgid ""
 "%(longdesc)s"
 msgstr ""
 
-#: src/tel_console.py:411
+#: src/tel_console.py:416
 msgid "%prog [options] command [arguments]"
 msgstr ""
 
-#: src/tel_console.py:413
+#: src/tel_console.py:418
 msgid "tel is a little address book program for your terminal."
 msgstr ""
 
-#: src/tel_console.py:428
+#: src/tel_console.py:433
 msgid "uri"
 msgstr ""
 
-#: src/tel_console.py:428
+#: src/tel_console.py:433
 msgid "load phonebook from URI."
 msgstr ""
 
-#: src/tel_console.py:435
+#: src/tel_console.py:440
 msgid "print a short list of the specified entries."
 msgstr ""
 
-#: src/tel_console.py:437
+#: src/tel_console.py:442
 msgid "print a table with the specified entries."
 msgstr ""
 
-#: src/tel_console.py:442
+#: src/tel_console.py:447
 msgid "show the specified entries."
 msgstr ""
 
-#: src/tel_console.py:443
+#: src/tel_console.py:448
 msgid "number"
 msgstr ""
 
-#: src/tel_console.py:444
+#: src/tel_console.py:449
 msgid "create the specified number of new entries."
 msgstr ""
 
-#: src/tel_console.py:446
+#: src/tel_console.py:451
 msgid "edit the specified entries."
 msgstr ""
 
-#: src/tel_console.py:448
+#: src/tel_console.py:453
 msgid "remove the specified entries."
 msgstr ""
 
-#: src/tel_console.py:460
+#: src/tel_console.py:465
 msgid ""
 "ignore case, when searching or sorting. The default is not to ignore case."
 msgstr ""
 
-#: src/tel_console.py:464 src/tel_console.py:481 src/tel_console.py:498
+#: src/tel_console.py:468 src/tel_console.py:485 src/tel_console.py:502
 msgid "fields"
 msgstr ""
 
-#: src/tel_console.py:465
+#: src/tel_console.py:469
 msgid ""
 "specify a list of fields to search in. Takes a comma-separated list of "
 "internal names as printed by --help-fields. Fields prefixed with \"-\" are "
 "not searched."
 msgstr ""
 
-#: src/tel_console.py:474
+#: src/tel_console.py:478
 msgid "field"
 msgstr ""
 
-#: src/tel_console.py:475
+#: src/tel_console.py:479
 msgid ""
 "sort output. Specify a field name as printed by --help-fields. If prefixed "
 "with +, sorting order is ascending, if prefixed with a -, sorting order is "
 "descending. The default is ascending, if no prefix is used."
 msgstr ""
 
-#: src/tel_console.py:482
+#: src/tel_console.py:486
 msgid ""
 "specify the fields to show. Uses the same syntax as the --fields option."
 msgstr ""
 
-#: src/tel_console.py:496
+#: src/tel_console.py:500
 msgid "backends"
 msgstr ""
 
-#: src/tel_console.py:500
+#: src/tel_console.py:504
 msgid ""
 "Commands to modify the phone book and to search or print entries. Only one "
 "of these options may be specified.\n"
@@ -220,58 +220,58 @@ msgid ""
 "org/lib/re-syntax.html for a description of regular expression syntax."
 msgstr ""
 
-#: src/tel_console.py:506
+#: src/tel_console.py:510
 msgid "Commands"
 msgstr ""
 
-#: src/tel_console.py:509
+#: src/tel_console.py:513
 msgid ""
 "These options apply to every command, that deals with entries. They tune the "
 "search for entries."
 msgstr ""
 
-#: src/tel_console.py:511
+#: src/tel_console.py:515
 msgid "Searching options"
 msgstr ""
 
-#: src/tel_console.py:514
+#: src/tel_console.py:518
 msgid "These options are valid with every command."
 msgstr ""
 
-#: src/tel_console.py:515
+#: src/tel_console.py:519
 msgid "Global options"
 msgstr ""
 
-#: src/tel_console.py:517
+#: src/tel_console.py:521
 msgid ""
 "These options are only supported by certain commands. If you use them with "
 "other commands, they are just ignored."
 msgstr ""
 
-#: src/tel_console.py:519
+#: src/tel_console.py:523
 msgid "Special options"
 msgstr ""
 
-#: src/tel_console.py:526
+#: src/tel_console.py:530
 msgid "Please specify a command!"
 msgstr ""
 
-#: src/tel_console.py:529
+#: src/tel_console.py:533
 #, python-format
 msgid "The command %s need arguments."
 msgstr ""
 
-#: src/tel_console.py:532
+#: src/tel_console.py:536
 #, python-format
 msgid "The command %s doesn't take any arguments."
 msgstr ""
 
-#: src/tel_console.py:549
+#: src/tel_console.py:554
 #, python-format
 msgid "Couldn't load %(uri)s: %(message)s"
 msgstr ""
 
-#: src/tel_console.py:556
+#: src/tel_console.py:561
 msgid "Dying peacefully ..."
 msgstr ""
 
@@ -376,33 +376,33 @@ msgstr ""
 msgid "%(firstname)s %(lastname)s"
 msgstr ""
 
-#: src/tel/cmdoptparse.py:61
+#: src/tel/cmdoptparse.py:58
 msgid "Supported options: "
 msgstr ""
 
-#: src/tel/cmdoptparse.py:79
+#: src/tel/cmdoptparse.py:76
 msgid "pattern"
 msgstr ""
 
-#: src/tel/cmdoptparse.py:179
+#: src/tel/cmdoptparse.py:176
 msgid "Please specify only one command option!"
 msgstr ""
 
-#: src/tel/cmdoptparse.py:220
+#: src/tel/cmdoptparse.py:217
 msgid "show author information and exit."
 msgstr ""
 
-#: src/tel/cmdoptparse.py:223
+#: src/tel/cmdoptparse.py:220
 msgid "show program's license and exit."
 msgstr ""
 
-#: src/tel/cmdoptparse.py:226
+#: src/tel/cmdoptparse.py:223
 msgid "show copyright information and exit."
 msgstr ""
 
-#: src/tel/cmdoptparse.py:232
+#: src/tel/cmdoptparse.py:229
 #, python-format
-msgid "%(prog)s: error: %(message)s\n"
+msgid "%(prog)s: error: %(message)s"
 msgstr ""
 
 #: src/tel/backends/csv_backend.py:41

@@ -253,9 +253,13 @@ class ConsoleIFace(object):
                 self.phonebook.save()
                 print _('The entry was saved.')
             except Exception, exp:
-                msg = (exp.strerror if isinstance(exp, EnvironmentError)
-                       else exp.message)
-                exit(_('Couldn\'t save the phonebook: %s') % msg)
+                args = {
+                    'uri': self.phonebook.uri,
+                    'message': (exp.strerror if
+                                isinstance(exp, EnvironmentError)
+                                else exp.message)}
+
+                exit(_('Couldn\'t save %(uri)s: %(message)s') % args)
 
 
     def _find_entries(self, options, *args):
