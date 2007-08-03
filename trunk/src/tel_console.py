@@ -24,6 +24,7 @@
 
 __revision__ = '$Id$'
 
+
 import os
 import sys
 import itertools
@@ -34,9 +35,8 @@ import locale
 # tel modules
 from tel import phonebook, config
 from tel.cmdoptparse import CommandOptionParser, make_option
-# standard streams and builtins, which handle encodings transparently
-from tel.encodinghelper import stdout, stderr, raw_input
-from tel.encodinghelper import stdout_encoding
+# encoding stuff
+from tel.encodinghelper import stdout_encoding, exit, raw_input
 
 
 _ = config.translation.ugettext
@@ -48,8 +48,9 @@ try:
 except ImportError:
     msg = _('readline wasn\'t found, text editing capabilities are '
             'restricted.')
-    print >> stderr, msg
+    print >> sys.stderr, msg
     have_readline = False
+
 
 class ConsoleEntryEditor(object):
     """This class provides a simple console-based entry editor.
@@ -65,18 +66,18 @@ class ConsoleEntryEditor(object):
         This only affects the printed help, ConsoleEntryEditor detects
         automatically, if a single entry is new"""
         self.print_help(new)
-        print
         self.fields = fields
 
     def edit(self, entry):
         """Edits `entry`.
         :returns: The edited `entry`"""
         new = entry.parent is None
+        print
         if new:
             # entry is new
-            print >> stdout, self.NEW_MSG
+            print self.NEW_MSG
         else:
-            print >> stdout, self.EDIT_MSG % entry
+            print self.EDIT_MSG % entry
 
         self.initialize_editor()
         for field in self.fields:
@@ -89,7 +90,7 @@ class ConsoleEntryEditor(object):
                 except ValueError:
                     msg = _('You entered an invalid value for the field'
                             '"%s"!')
-                    print >> stdout, msg % phonebook.translate_field(field)
+                    print msg % phonebook.translate_field(field)
         self.finalize_editor()
         return entry
 
@@ -97,7 +98,7 @@ class ConsoleEntryEditor(object):
     if have_readline:
         # input methods supporting readline
         def print_help(self, new):
-            print >> stdout, _('Please fill the following fields!')
+            print _('Please fill the following fields!')
 
         def initialize_editor(self):
             """Initialize the editor"""
@@ -142,7 +143,7 @@ class ConsoleEntryEditor(object):
                          'value is shown in square brackets. NOTE: The '
                          'current value is not preserved. You have to '
                          're-enter every value!')
-            print >> stdout, textwrap.fill(help, 79)
+            print textwrap.fill(help, 79)
 
         def get_input(self, field, oldvalue, new):
             """Gets a value from command line input.
@@ -164,15 +165,15 @@ def print_short_list(entries):
     """Prints all `entries` in a short format."""
     print
     for entry in entries:
-        print >> stdout, entry
+        print entry
 
 def print_long_list(entries):
     """Prints every single entry in `entries` in full detail.
     :param sortby: The field to sort by
     :param asc: True, if sorting order is descending"""
     for entry in entries:
-        print >> stdout, '-'*20
-        print >> stdout, entry.prettify()
+        print '-'*20
+        print entry.prettify()
 
 def print_entries_table(entries, fields):
     """Prints `entries` as a table.
@@ -194,12 +195,12 @@ def print_entries_table(entries, fields):
     headline = u'| %s |' % u' | '.join(headline)
     separator = (u'-'*(width+2) for width in column_widths)
     separator = u'|%s|' % u'+'.join(separator)
-    print >> stdout, headline
-    print >> stdout, separator
+    print headline
+    print separator
     for row in table_body:
         row = itertools.imap(unicode.ljust, row, column_widths)
         row = u'| %s |' % u' | '.join(row)
-        print >> stdout, row
+        print row
 
 
 def print_simple_table(headline, items):
@@ -209,12 +210,12 @@ def print_simple_table(headline, items):
         column_widths = map(max, map(len, item), column_widths)
     headline = itertools.imap(unicode.center, headline, column_widths)
     headline = ' %s' % u' - '.join(headline)
-    print >> stdout, headline
+    print headline
     # a separator
-    print >> stdout, u'-' * (column_widths[0] + column_widths[1] + 5)
+    print u'-' * (column_widths[0] + column_widths[1] + 5)
     for item in items:
         item = itertools.imap(unicode.ljust, item, column_widths)
-        print >> stdout, ' %s' % u' - '.join(item)
+        print ' %s' % u' - '.join(item)
 
 
 def yes_no_question(question):
@@ -244,17 +245,17 @@ class ConsoleIFace(object):
                 question = _('Do you really want to save an emtpy entry?')
                 if not yes_no_question(question):
                     # abort without saving
-                    print >> stdout, _('The entry is not saved.')
+                    print _('The entry is not saved.')
                     return
             if entry.parent is None:
                 self.phonebook.add(entry)
             try:
                 self.phonebook.save()
-                print >> stdout, _('The entry was saved.')
+                print _('The entry was saved.')
             except Exception, exp:
                 msg = (exp.strerror if isinstance(exp, EnvironmentError)
                        else exp.message)
-                sys.exit(_('Couldn\'t save the phonebook: %s') % msg)
+                exit(_('Couldn\'t save the phonebook: %s') % msg)
 
 
     def _find_entries(self, options, *args):
@@ -332,9 +333,9 @@ class ConsoleIFace(object):
             try:
                 number = int(args[0])
             except ValueError:
-                sys.exit(_('--create needs a number.'))
+                exit(_('--create needs a number.'))
         if len(args) > 1:
-            sys.exit(_('--create only accepts one argument.'))
+            exit(_('--create only accepts one argument.'))
         entries = [Entry() for Entry in itertools.repeat(phonebook.Entry,
                                                          number)]
         self.edit_entries(entries)
@@ -343,7 +344,7 @@ class ConsoleIFace(object):
         """Interactivly edit entries"""
         entries = self._find_entries(options, *args)
         if not entries:
-            sys.exit(_('No entries found for given patterns.'))
+            exit(_('No entries found for given patterns.'))
         self.edit_entries(entries)
 
     def _cmd_remove(self, options, *args):
@@ -359,14 +360,14 @@ class ConsoleIFace(object):
             items = [(phonebook.translate_field(field), unicode(field))
                      for field in args]
         except phonebook.NoSuchField, e:
-            sys.exit(_('There is no field %s.') % e.field)
+            exit(_('There is no field %s.') % e.field)
 
         headline = [_('Field'), _('Internal name')]
         print_simple_table(headline, items)
 
     def _cmd_help_backends(self, options, *args):
         if len(args) > 1:
-            sys.exit(_('Please specifiy only one backend!'))
+            exit(_('Please specifiy only one backend!'))
         from tel import backendmanager
         manager = backendmanager.manager()
         if not args:
@@ -380,7 +381,7 @@ class ConsoleIFace(object):
                 # print complete description for a single backend
                 backend = manager[args[0]]
             except KeyError, e:
-                sys.exit(e)
+                exit(e.message)
             fields = backend.__phonebook_class__.supported_fields()
             wrap = textwrap.TextWrapper(79)
             info = {'name': backend.__name__,
@@ -388,7 +389,7 @@ class ConsoleIFace(object):
                     'longdesc': wrap.fill(backend.__long_description__),
                     'fields': wrap.fill(', '.join(fields))
                     }
-            print >> stdout, _("""
+            print _("""
 %(name)s - %(shortdesc)s
 ------------
 
@@ -415,7 +416,7 @@ Supported fields:
 
     defaults = {
         'uri': 'csv://' + os.path.join(config.user_directory,
-                                        'phonebook.csv'),
+                                       'phonebook.csv'),
         'output': phonebook.FIELDS,
         'ignore_case': False,
         'sortby': ('lastname', False),
@@ -459,7 +460,6 @@ Supported fields:
                     dest='ignore_case',
                     help=_('ignore case, when searching or sorting. The '
                            'default is not to ignore case.')),
-        # FIXME: someone knows a good short options for --fields?
         make_option('-f', '--fields', action='store', dest='fields',
                     type='field_list', metavar=_('fields'),
                     help=_('specify a list of fields to search in. Takes a '
@@ -547,14 +547,14 @@ Supported fields:
                 self.phonebook = phonebook.phonebook_open(options.uri)
                 self.phonebook.load()
             except Exception, exp:
-                msg = (_('Couldn\'t load %(uri)s: %(message)s' %
+                msg = (_('Couldn\'t load %(uri)s: %(message)s') %
                          {'message': exp.message,
                           'uri': (getattr(self.phonebook, 'uri', None)
-                                  or options.uri)}))
-                sys.exit(msg)
+                                  or options.uri)})
+                exit(msg)
             options.command_function(options, *args)
         except KeyboardInterrupt:
-            sys.exit(_('Dying peacefully ...'))
+            exit(_('Dying peacefully ...'))
 
 
 if __name__ == '__main__':

@@ -41,9 +41,6 @@ from optparse import (Option, OptionError, OptionParser, OptionValueError,
 from tel import phonebook
 from tel import config
 
-# encoding aware standard streams
-from tel.encodinghelper import stdout, stderr
-
 # make optparse use our improved gettext ;)
 _ = optparse._ = config.translation.ugettext
 
@@ -61,7 +58,7 @@ class CommandHelpFormatter(IndentedHelpFormatter):
             msg = _('Supported options: ')
             # build the complete options string and wrap it to width of the
             # help
-            opt_str = ''.join([msg, options])
+            opt_str = ''.join((msg, options))
             initial_indent = ' '*(self.help_position + 4)
             subsequent_indent = ' '*(self.help_position + 4 + len(msg))
             width = self.help_position + self.help_width
@@ -78,7 +75,7 @@ class CommandHelpFormatter(IndentedHelpFormatter):
         if option.action == 'command' and not option.args == 'no':
             arg_name = option.metavar or _('pattern')
             if option.args == 'optional':
-                arg_name = ''.join(['[', arg_name, ']'])
+                arg_name = ''.join(('[', arg_name, ']'))
             lopts = (' '.join([lopt, arg_name]) for lopt in
                      option._long_opts)
             return ', '.join(lopts)
@@ -125,7 +122,7 @@ class CommandOption(Option):
 
     def _check_field_list(self, opt, value):
         """Parse field_list options into a list of fields"""
-        items = map(str.strip, value.split(','))
+        items = map(lambda item: item.strip(), value.split(','))
         # filter empty fields
         # (which came from something like "index,,firstname")
         items = filter(None, items)
@@ -162,16 +159,15 @@ class CommandOption(Option):
     def take_action(self, action, dest, opt, value, values, parser):
         """Executes `action`"""
         if action == 'license':
-            parser.print_license(stdout)
+            parser.print_license()
             parser.exit()
         elif action == 'copyright':
-            parser.print_copyright(stdout)
+            parser.print_copyright()
             parser.exit()
         elif action == 'authors':
-            parser.print_authors(stdout)
+            parser.print_authors()
             parser.exit()
         elif action == 'help':
-            #parser.print_help(stdout)
             parser.print_help()
             parser.exit()
         elif action == 'command':
@@ -229,15 +225,15 @@ class CommandOptionParser(OptionParser):
     def error(self, msg):
         """Print a usage message incorporating 'msg' to stderr and exit."""
         # reimplemented to support i18n and unicode
-        self.print_usage(stderr)
-        pattern = _('%(prog)s: error: %(message)s\n')
+        self.print_usage(sys.stderr)
+        pattern = _('%(prog)s: error: %(message)s')
         self.exit(2, pattern % {'prog': self.get_prog_name(),
                                 'message': msg})
 
     def exit(self, status=0, msg=None):
         # reimplemented to support unicode
         if msg:
-            stderr.write(msg)
+            print >> sys.stderr, msg
         sys.exit(status)
 
     def get_license(self):
@@ -282,12 +278,6 @@ class CommandOptionParser(OptionParser):
         """Print copyright information to `stream`"""
         if self.copyright:
             print >> stream, self.get_copyright()
-
-    def print_help(self, stream=None):
-        """Print help to `stream`"""
-        if stream is None:
-            stream = stdout
-        stream.write(self.format_help())
 
     def parse_args(self, args=None, values=None):
         """
