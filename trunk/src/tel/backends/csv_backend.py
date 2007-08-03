@@ -56,6 +56,11 @@ def supports(path):
 
 
 class CsvPhonebook(Phonebook):
+
+    def __init__(self, uri):
+        Phonebook.__init__(self, uri)
+        self.uri.location = os.path.expanduser(self.uri.location)
+
     def load(self):
         """Load entries."""
         self.clear()
