@@ -14,8 +14,8 @@ GPG Schlüssel: 0x82DE71BE auf hkp://wwwkeys.eu.gpg.net<br />
 <p>
 Remo "pot" Wenger<br />
 Projekt Leiter, Webmaster<br />
-potrmwn AT gmail DOT com<br />
-Jabber ID: pot AT jabber DOT freenet DOT de<br />
+remo.wenger AT gmail DOT com<br />
+<!--Jabber ID: pot AT jabber DOT freenet DOT de<br />-->
 GPG Schlüssel: 0xB6D4FFA0 auf hkp://wwwkeys.eu.gpg.net<br />
 </p>
 
