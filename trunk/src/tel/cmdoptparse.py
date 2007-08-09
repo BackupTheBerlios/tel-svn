@@ -40,6 +40,7 @@ from optparse import (Option, OptionError, OptionParser, OptionValueError,
 
 from tel import phonebook
 from tel import config
+from tel.encodinghelper import stdout, stderr
 
 # make optparse use our improved gettext ;)
 _ = optparse._ = config.translation.ugettext
@@ -159,16 +160,16 @@ class CommandOption(Option):
     def take_action(self, action, dest, opt, value, values, parser):
         """Executes `action`"""
         if action == 'license':
-            parser.print_license()
+            parser.print_license(stdout)
             parser.exit()
         elif action == 'copyright':
-            parser.print_copyright()
+            parser.print_copyright(stdout)
             parser.exit()
         elif action == 'authors':
-            parser.print_authors()
+            parser.print_authors(stdout)
             parser.exit()
         elif action == 'help':
-            parser.print_help()
+            parser.print_help(stdout)
             parser.exit()
         elif action == 'command':
             if hasattr(parser.values, 'command'):
@@ -233,7 +234,7 @@ class CommandOptionParser(OptionParser):
     def exit(self, status=0, msg=None):
         # reimplemented to support unicode
         if msg:
-            print >> sys.stderr, msg
+            print >> stderr, msg
         sys.exit(status)
 
     def get_license(self):
@@ -318,3 +319,11 @@ class CommandOptionParser(OptionParser):
 
         args = largs + rargs
         return self.check_values(values, args)
+
+    def print_help(self, stream=None):
+        """
+        Prints help
+        """
+        if stream is None:
+            stream = stdout
+        stream.write(self.format_help())
