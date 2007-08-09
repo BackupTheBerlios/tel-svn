@@ -55,7 +55,7 @@ setup(name='tel',
       long_description=long_description,
       author='Sebastian Wiesner',
       author_email='basti.wiesner@gmx.net',
-      url='http://tel.berlios.de',
+      url='http://tel.lunaryorn.de',
       license='MIT/X11',
       # list packages
       packages=['tel'],
