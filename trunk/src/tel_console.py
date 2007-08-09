@@ -273,10 +273,17 @@ class ConsoleIFace(object):
         flags = re.UNICODE
         if options.ignore_case:
             flags |= re.IGNORECASE
-        patterns = (re.compile(pat, flags) for pat in patterns)
+
         entries = []
         for pat in patterns:
-            entries.extend(self.phonebook.find_all(pat, *options.fields))
+            try:
+                entries.extend(self.phonebook.find_all(re.compile(pat,
+                                                                  flags),
+                                                       *options.fields))
+            except re.error, err:
+                msg = _('Search pattern "%(pattern)s" invalid: %(message)s')
+                print >> stderr, msg % {'pattern': pat,
+                                        'message': unicode(err)}
         # remove double entries
         return list(set(entries))
 
