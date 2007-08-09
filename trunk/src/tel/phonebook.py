@@ -38,9 +38,9 @@ from tel import config
 _ = config.translation.ugettext
 
 
-FIELDS = ('title', 'firstname', 'lastname', 'street', 'postcode',
-          'town', 'country', 'postbox', 'mobile', 'phone', 'email',
-          'birthdate', 'tags')
+FIELDS = ('title', 'nickname', 'firstname', 'lastname', 'street',
+          'postcode', 'town', 'country', 'postbox', 'mobile', 'phone',
+          'email', 'birthdate', 'tags')
 
 
 # this contains a mapping of field names to valuable information about
@@ -50,6 +50,7 @@ FIELDS = ('title', 'firstname', 'lastname', 'street', 'postcode',
 # functions provided by this module
 _FIELD_INFORMATION = {
     'title': (_(u'Title'), unicode),
+    'nickname': (_(u'Nickname'), unicode),
     'firstname': (_(u'First name'), unicode),
     'lastname': (_(u'Last name'), unicode),
     'street': (_(u'Street and number'), unicode),
