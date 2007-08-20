@@ -131,6 +131,6 @@ class Configuration(object):
     def short_entry_format(self):
         if not self._short_entry_format:
             _ = self.translation.ugettext
-            msg = _('%(firstname)s %(lastname)s')
+            msg = _('%(firstname)s "%(nickname)s" %(lastname)s')
             self._short_entry_format = msg
         return self._short_entry_format
