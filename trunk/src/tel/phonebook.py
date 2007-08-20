@@ -39,7 +39,7 @@ _ = config.translation.ugettext
 
 
 FIELDS = ('title', 'nickname', 'firstname', 'lastname', 'street',
-          'postcode', 'town', 'country', 'postbox', 'mobile', 'phone',
+          'postcode', 'town', 'country', 'pob', 'mobile', 'phone',
           'email', 'birthdate', 'tags')
 
 
@@ -57,7 +57,7 @@ _FIELD_INFORMATION = {
     'postcode': (_(u'Postal code'), unicode),
     'town': (_(u'Town'), unicode),
     'country': (_(u'Country'), unicode),
-    'postbox': (_(u'Post office box'), int),
+    'pob': (_(u'Post office box'), int),
     'mobile': (_(u'Mobile'), teltypes.phone_number),
     'phone': (_(u'Phone'), teltypes.phone_number),
     'email': (_(u'eMail'), teltypes.email),
