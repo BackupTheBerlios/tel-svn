@@ -82,7 +82,7 @@ class ConsoleEntryEditor(object):
 
         self.initialize_editor()
         for field in self.fields:
-            oldvalue = entry[field]
+            oldvalue = unicode(entry[field])
             while True:
                 value = self.get_input(field, oldvalue, new)
                 try:
