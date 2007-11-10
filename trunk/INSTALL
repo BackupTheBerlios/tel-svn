@@ -4,10 +4,16 @@ depends on:
 
     * Python at least 2.5 - http://www.python.org
     * gettext - http://www.gnu.org/software/gettext/gettext.html
+                (build dependency only, can be removed after installation)
+    * dateutil - http://labix.org/python-dateutil
 
 Users of debian systems can install these with:
 
-    apt-get install python2.5 gettext
+    apt-get install python2.5 gettext python-dateutil
+
+On gentoo the required packages can be installed with:
+
+    emerge >=dev-lang/python-2.5 sys-devel/gettext dev-python/dateutil
 
 If you have completed installing all dependencies, you can install tel by
 running the following command:

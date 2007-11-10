@@ -28,6 +28,9 @@ __revision__ = '$Id$'
 
 
 import re
+import datetime
+
+import dateutil.parser
 
 
 class email(unicode):
@@ -62,3 +65,24 @@ class phone_number(unicode):
         if args and not self.pattern.match(args[0]):
             raise ValueError('Invalid literal for phone number: %s'
                              % self)
+
+class date(datetime.date):
+    """Represents a date"""
+    def __new__(cls, *args):
+        """Creates a new instance. It takes the same arguments as
+        datetime.date, or a single argument of either a string type (in
+        which case dateutil.parser.parse is used to extract the date values)
+        or a datetime instance, in which case the values are copied."""
+        if len(args) == 1:
+            value = args[0]
+            if isinstance(value, basestring):
+                value = dateutil.parser.parse(value)
+            return datetime.date.__new__(cls, value.year, value.month,
+                                         value.day)
+        elif len(args) == 3:
+            return datetime.date.__new__(cls, *args)
+        else:
+            raise TypeError('Invalid number of arguments specified')
+
+    def __unicode__(self):
+        return unicode(self.strftime('%x'))
