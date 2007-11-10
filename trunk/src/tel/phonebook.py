@@ -38,7 +38,7 @@ from tel import config
 _ = config.translation.ugettext
 
 
-FIELDS = ('title', 'nickname', 'firstname', 'lastname', 'street',
+FIELDS = ('title', 'firstname', 'lastname', 'nickname', 'street',
           'postcode', 'town', 'country', 'pob', 'mobile', 'phone',
           'email', 'birthdate', 'tags')
 
@@ -61,7 +61,7 @@ _FIELD_INFORMATION = {
     'mobile': (_(u'Mobile'), teltypes.phone_number),
     'phone': (_(u'Phone'), teltypes.phone_number),
     'email': (_(u'eMail'), teltypes.email),
-    'birthdate': (_(u'Date of birth'), unicode),
+    'birthdate': (_(u'Date of birth'), teltypes.date),
     'tags': (_(u'Tags'), unicode)
 }
 
@@ -195,7 +195,7 @@ class Entry(object, UserDict.DictMixin):
         Any keyword arguments are regarded as field values, and are stored
         if no other value has been given"""
         self.parent = None
-        self.fields = dict.fromkeys(FIELDS, "")
+        self.fields = dict.fromkeys(FIELDS, '')
         if entry:
             # copy constructor
             self.fields.update(entry)

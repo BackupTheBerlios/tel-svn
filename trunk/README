@@ -14,13 +14,13 @@ Calc.
 
 
 Installing tel
-=================================
+==============
 
 See the INSTALL file for this.
 
 
 Running tel
-================
+===========
 
 tel --help gives you an overview of the options and commands tel supports.
 
