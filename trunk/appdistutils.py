@@ -390,11 +390,10 @@ class AppInstall(install):
     def run(self):
         install.run(self)
         # write installation log file
-        stream = open(INSTALL_LOG, 'w')
-        outputs = map(os.path.normpath, self.get_outputs())
-        stream.write('\n'.join(outputs))
-        stream.write('\n')
-        stream.close()
+        with open(INSTALL_LOG, 'w') as stream:
+            outputs = map(os.path.normpath, self.get_outputs())
+            stream.write('\n'.join(outputs))
+            stream.write('\n')
 
 
 class Uninstall(Command):
