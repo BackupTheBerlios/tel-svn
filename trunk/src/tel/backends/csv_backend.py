@@ -33,6 +33,7 @@ import errno
 
 from tel.phonebook import Entry, Phonebook
 from tel import config
+from tel import teltypes
 
 
 _ = config.translation.ugettext
@@ -85,11 +86,16 @@ class CsvPhonebook(Phonebook):
     def save(self):
         """Save entries."""
         with open(self.uri.location, 'wb') as stream:
-            writer = csv.writer(stream)
-            writer.writerow(self.supported_fields())
+            # write field name header
+            csv.writer(stream).writerow(self.supported_fields())
+            writer = csv.DictWriter(stream, self.supported_fields())
             for entry in self:
-                row = [unicode(entry[field]).encode('utf-8') for field in
-                       self.supported_fields()]
+                row = {}
+                for k, v in entry.iteritems():
+                    # write date values in international format
+                    if isinstance(v, teltypes.date):
+                        v = v.isoformat()
+                    row[k] = v.encode('utf-8')
                 writer.writerow(row)
 
 
