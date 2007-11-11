@@ -59,6 +59,25 @@ def get_backend_name(filename):
     return None
 
 
+class BackendError(ImportError):
+    """Raised if backend loading fails"""
+    def __init__(self, backend, filename, exception=None):
+        self.backend = backend
+        self.filename = filename
+        self.exception = exception
+        if exception is not None:
+            msg = _(u'Loading backend %(backend)s from %(filename)s '
+                    u'failed with %(exception)s: %(message)s')
+            args = {'backend': backend, 'filename': filename,
+                    'exception': exception.__class__.__name__,
+                    'message': exception.message}
+            super(ImportError, self).__init__(msg % args)
+            else:
+        super(ImportError, self).__init__(_(u'Invalid backend %s in %s')
+                                          % {'backend': backend,
+                                             'filename': filename})
+
+
 class BackendManager(DictMixin):
     """Responsible for loading backends.
     Backends don't need to be loaded explicitly. Just use the provided
@@ -87,9 +106,13 @@ class BackendManager(DictMixin):
             mod_name = BACKEND_MODULE_PATTERN % backend
             desc = imp.find_module(mod_name, config.backend_directories)
             with desc[0]:
-                module = imp.load_module(mod_name, *desc)
+                try:
+                    module = imp.load_module(mod_name, *desc)
+                except Exception, ex:
+                    # handle exception during loading
+                    raise BackendError(backend, desc[1], ex)
             if not self._check_module(module):
-                raise ImportError(_(u'Invalid backend %s.') % backend)
+                raise BackendErrot(backend, desc[1])
             else:
                 self._loaded_cache[backend] = module
                 # set the module name
@@ -105,7 +128,7 @@ class BackendManager(DictMixin):
     def __getitem__(self, name):
         try:
             return self._load_backend(name)
-        except ImportError:
+        except BackendError:
             raise KeyError(_(u'No backend "%s" found.') % name)
 
     def __iter__(self):
