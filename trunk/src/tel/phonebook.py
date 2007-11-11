@@ -40,7 +40,7 @@ _ = config.translation.ugettext
 
 FIELDS = ('title', 'firstname', 'lastname', 'nickname', 'street',
           'postcode', 'town', 'country', 'pob', 'mobile', 'phone',
-          'email', 'birthdate', 'tags')
+          'email', 'birthday', 'tags')
 
 
 # this contains a mapping of field names to valuable information about
@@ -61,7 +61,7 @@ _FIELD_INFORMATION = {
     'mobile': (_(u'Mobile'), teltypes.phone_number),
     'phone': (_(u'Phone'), teltypes.phone_number),
     'email': (_(u'eMail'), teltypes.email),
-    'birthdate': (_(u'Date of birth'), teltypes.date),
+    'birthday': (_(u'Date of birth'), teltypes.date),
     'tags': (_(u'Tags'), unicode)
 }
 
@@ -161,6 +161,7 @@ class Phonebook(object):
         entries = []
         if isinstance(pattern, basestring):
             # plain text comparison
+            # XXX: perform type-safe comparison
             for entry in self:
                 if any((unicode(entry[f]) == pattern for f in fields)):
                     entries.append(entry)
@@ -205,10 +206,10 @@ class Entry(object, UserDict.DictMixin):
     def keys(self):
         """Return a list of all keys, which is basically a copy of
         `FIELDS`"""
-        return list(FIELDS)
+        return FIELDS
 
     def __getitem__(self, field):
-        if field not in FIELDS:
+        if field not in self.keys():
             raise NoSuchField(field)
         return self.fields[field]
 
@@ -227,7 +228,7 @@ class Entry(object, UserDict.DictMixin):
         return config.long_entry_format % self
 
     def __setitem__(self, field, value):
-        if field not in FIELDS:
+        if field not in self.keys():
             raise KeyError(u'Invalid field %s' % field)
         # get the field type
         ftype = field_type(field)
@@ -237,7 +238,7 @@ class Entry(object, UserDict.DictMixin):
         self.fields[field] = value
 
     def __delitem__(self, field):
-        if field not in FIELDS:
+        if field not in self.keys():
             raise KeyError(u'Invalid field %s' % field)
         self.fields[field] = ''
 
@@ -255,7 +256,7 @@ class Entry(object, UserDict.DictMixin):
         return self[field] != ''
 
     def __iter__(self):
-        return iter(FIELDS)
+        return iter(self.keys())
 
     def iteritems(self):
         """Returns an iterator over key, value pairs"""
