@@ -314,8 +314,8 @@ class ConsoleIFace(object):
     # - Add the option --foo to the command_options list.
     #   If --foo requires arguments, set the keyword argument 'args' to
     #   'required'. If it must not have any arguments, set it to 'no'.
-    #   The default is 'optional'. Command options *must* always invoke the
-    #   callback cb_cmd_opt!
+    #   The default is 'optional'. The action argument must be set to
+    #   'command'
     # - If --foo should support options, add the options to the
     #   local_options list. To make these options appear along with the
     #   command help, add the keyword argument "options" to the command

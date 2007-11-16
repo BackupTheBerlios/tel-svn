@@ -107,7 +107,7 @@ class CommandOption(Option):
             if self.args is None:
                 self.args = 'optional'
             elif self.args not in ('optional', 'required', 'no'):
-                raise OptionError("args must be on of: 'optional', "
+                raise OptionError("args must be one of: 'optional', "
                                   "'required', no'", self)
         elif self.args is not None:
             raise OptionError("'args' must not be supplied for action "
